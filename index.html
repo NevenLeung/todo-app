@@ -21,12 +21,29 @@
       flex-direction: column;
     }
 
-    #input-bar {
-      /*width: 100%;*/
+    .input-form {
+      
     }
 
+    input[name=todo-input] {
+      display: inline-block;
+      width: 250px;
+    }
+    
     .todo-list {
-      /*width: 100%;*/
+      padding-left: 0;
+    }
+
+    ul > li {
+      list-style: none;
+    }
+
+    .todo-checkbox {
+
+    }
+
+    .todo-content {
+      display: inline-block;
     }
 
     .todo-is-done {
@@ -40,7 +57,7 @@
       <h1>Todo App</h1>
     </header>
     <div class="app">
-      <form id="input-bar" name="input-bar">
+      <form class="input-form" name="input-bar">
         <input type="text" name="todo-input" placeholder="write down something you need to do">
         <button class="button-add" type="submit">add</button>
       </form>

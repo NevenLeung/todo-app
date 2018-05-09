@@ -1,44 +1,31 @@
 'use strict';
 
-// DOM
-// let _app = document.getElementsByClassName('app')[0];
-let _todoList = document.getElementsByClassName('todo-list')[0];
-let _inputBar = document.getElementById('input-bar');
+// get the DOM elements
+
+const $todoList = document.querySelector('.todo-list');
+const $inputForm = document.querySelector('.input-form');
 
 // data source
-// let todoList = [
-//   {
-//     text: 'Buy some fruit after school',
-//     isDone: false
-//   },
-//   {
-//     text: 'Read the CLRS book to the page 178',
-//     isDone: false
-//   },
-//   {
-//     text: 'Discuss the Network problem with Bill',
-//     isDone: true
-//   },
-//   {
-//     text: 'Finish the assignment of Database course',
-//     isDone: false
-//   }
-// ];
-let data = {
+
+const data = {
   "todoList": [
     {
+      "id": 0,
       "text": "Buy some fruit after school",
       "isDone": false
     },
     {
-      "text": "Read the CLRS book to the page 178",
+      "id": 1,
+      "text": "Read the CLRS book to the page of 178",
       "isDone": false
     },
     {
+      "id": 2,
       "text": "Discuss the Network problem with Bill",
       "isDone": true
     },
     {
+      "id": 3,
       "text": "Finish the assignment of Database course",
       "isDone": false
     }
@@ -51,17 +38,19 @@ let data = {
 todoListRender();
 
 // 使用表单提交input的内容
-_inputBar.addEventListener('submit', function(event) {
-
+$inputForm.addEventListener('submit', function(event) {
   // 防止表单的提交
   event.preventDefault();
 
-  let inputData = _inputBar.elements['todo-input'].value;
+  const inputData = $inputForm.elements['todo-input'].value;
   addTodo(inputData);
 
   // 重置表单数据
-  _inputBar.reset();
+  $inputForm.reset();
 });
+
+// 使用事件委托，将todoStatusToggle绑定到todoList上，在处理函数内部加上event.target判断
+$todoList.addEventListener('click', todoStatusToggle);
 
 // methods
 
@@ -70,14 +59,13 @@ _inputBar.addEventListener('submit', function(event) {
  * 自定义创建元素节点方法
  *
  * @param tagName 标签名
- * @param content 文本内容
  * @param className 样式名称
+ * @param content 文本内容
  * @param attributeData 设置节点的属性，属性值应为成对出现，前者为属性名称，后者为属性值
  * @returns 返回创建的元素节点
  */
-function createNewElementNode(tagName, content='', className='', ...attributeData) {
-
-  let newElement = document.createElement(tagName);
+function createNewElementNode(tagName, className='', content='', ...attributeData) {
+  const newElement = document.createElement(tagName);
   newElement.textContent = content;
   newElement.className = className;
 
@@ -93,16 +81,23 @@ function createNewElementNode(tagName, content='', className='', ...attributeDat
 
 /**
  * addTodo()
- * 添加一个新的todo（节点），同时将text的内容加入data.todoList中
+ * 添加一条新的todo，同时将一个新的todo对象的加入data.todoList数组中
  *
  * @param text todo的文本内容
  */
 function addTodo(text) {
+  const $li = createNewElementNode('li', 'todo', '');
+  const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
+  const $todoContent = createNewElementNode('span', 'todo-content', text, 'data-is-done', 'false', 'data-id', data.todoList.length);
 
-  let _newElement = createNewElementNode('li', text);
-  _todoList.appendChild(_newElement);
+  // 将checkbox和todo-content节点分别添加到li节点，作为其子节点
+  $li.appendChild($checkbox);
+  $li.appendChild($todoContent);
+  $todoList.appendChild($li);
 
   data.todoList.push({
+    // todo的id从0开始，新的todo的id刚好可以等于之前的todoList.length
+    "id": data.todoList.length,
     "text": text,
     "isDone": false
   });
@@ -111,23 +106,26 @@ function addTodo(text) {
 
 /**
  * todoListRender()
- * 渲染todoList，并给相应的节点加上data-is-done属性
+ * 渲染todoList，并给相应的节点加上合适的属性
+ * 每个todo为一个li元素，li元素内部包括一个checkbox和inline-block的todo-content
  */
 function todoListRender() {
-
   data.todoList.forEach(function (todo) {
-    let todoNode =  createNewElementNode('li', todo.text, '', 'data-is-done', todo.isDone);
-    /**
-     * todo
-     *
-     * 在每个todo前加上一个checkbox，最理想的情况下是在li内部加checkbox，但又容易hardcoded,
-     * 同时，这个checkbox与todo的data-is-done需要关联起来，由checkbox来改变todo的状态，
-     * 之后在改变样式
-     */
+    const $li = createNewElementNode('li', 'todo', '');
+    const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
+    const $todoContent =  createNewElementNode('span', 'todo-content', todo.text, 'data-is-done', todo.isDone, 'data-id', todo.id);
 
-    // let todoStatusNode = createNewElementNode('input');
-     todoNode.className = checkTodoIsDone(todoNode);
-    _todoList.appendChild(todoNode);
+    if (todo.isDone) {
+      // 为todo-content添加class 'todo-is-done'
+      $todoContent.classList.toggle('todo-is-done');
+      // 由于todo为已完成状态，需要将checkbox设置为已勾选状态
+      $checkbox.setAttribute('checked', 'checked');
+    }
+
+    $li.appendChild($checkbox);
+    $li.appendChild($todoContent);
+
+    $todoList.appendChild($li);
   });
 }
 
@@ -138,13 +136,31 @@ function removeAllChildren(parent) {
   }
 }
 
+
 /**
- * checkTodoIsDone()
- * 检查todo是否已经完成，返回相应的className
+ * todoStatusToggle()
+ * 切换todo的完成状态，更改显示样式，更改data中的数据，用作事件处理函数
  *
- * @param todoNode 传入一个todo节点，检查它的dataSet.isDone(类型为字符串，不是布尔值)，
- * @returns {string} 返回
+ * @param event 事件对象
  */
-function checkTodoIsDone(todoNode) {
-  return todoNode.dataset.isDone === 'true'? 'todo-is-done': '';
+function todoStatusToggle(event) {
+  // 判断点击的是否是checkbox
+  if (event.target.classList.contains('todo-checkbox')) {
+    // 每一个todo的todo-content是checkbox的下一个同级元素
+    const $todoContent = event.target.nextElementSibling;
+
+    if ($todoContent.dataset.isDone === 'false') {
+      $todoContent.classList.toggle('todo-is-done');
+
+      $todoContent.dataset.isDone = 'true';
+      // 改变data中的值，其中todo的id刚好等于在todoList中的下标
+      data.todoList[$todoContent.dataset.id].isDone = true;
+
+    } else {
+      $todoContent.classList.toggle('todo-is-done');
+
+      $todoContent.dataset.isDone = 'false';
+      data.todoList[$todoContent.dataset.id].isDone = false;
+    }
+  }
 }
