@@ -1,6 +1,6 @@
-# todo-app
+# todo app
 
-一个使用原生js写的待办事项应用:memo:
+一个使用原生js写的待办事项应用 :memo:
 
 ## 功能
 
@@ -33,5 +33,11 @@
 - [ ] 项目名称补全
 - [ ] 过滤器
 - [ ] 评论系统
-- [ ] 提醒功能
-- [ ] 合作项目中的指派todo负责人
+
+## script
+
+compile with babel
+
+```
+npm run compile
+```
