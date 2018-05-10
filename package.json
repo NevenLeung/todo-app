@@ -1,0 +1,27 @@
+{
+  "name": "todo-app",
+  "version": "1.0.0",
+  "description": "A todo app build in Vanilla JS",
+  "main": "js/app.js",
+  "scripts": {
+    "compile": "babel app.js -d compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NevenLeung/todo-app.git"
+  },
+  "keywords": [
+    "todo-app",
+    "js"
+  ],
+  "author": "NevenLeung",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/NevenLeung/todo-app/issues"
+  },
+  "homepage": "https://github.com/NevenLeung/todo-app#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1"
+  }
+}

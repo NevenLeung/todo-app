@@ -1,0 +1,47 @@
+@charset "UTF-8";
+
+.container {
+  width: 800px;
+  margin: 0 auto;
+}
+
+.header {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.app {
+  display: flex;
+  /*justify-content: center;*/
+  align-items: center;
+  flex-direction: column;
+}
+
+.input-form {
+
+}
+
+input[name=todo-input] {
+  display: inline-block;
+  width: 250px;
+}
+
+.todo-list {
+  padding-left: 0;
+}
+
+ul > li {
+  list-style: none;
+}
+
+.todo-checkbox {
+
+}
+
+.todo-content {
+  display: inline-block;
+}
+
+.todo-is-done {
+  text-decoration: line-through;
+}
