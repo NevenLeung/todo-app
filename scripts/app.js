@@ -217,11 +217,15 @@ function todoEditSave(event) {
   const $todoDisplay = $todoEdit.previousElementSibling;
   const todoContent = $todoEditBar.value;
 
-  $todoDisplay.children[1].textContent = todoContent;
-  data.todoList[$todoDisplay.children[1].dataset.id].text = todoContent;
+  if (todoContent.length === 0) {
+    alert('Todo should not be empty. Please write something you need to do.');
+  } else {
+    $todoDisplay.children[1].textContent = todoContent;
+    data.todoList[$todoDisplay.children[1].dataset.id].text = todoContent;
 
-  $todoDisplay.style.display = 'block';
-  $todoEdit.style.display = 'none';
+    $todoDisplay.style.display = 'block';
+    $todoEdit.style.display = 'none';
+  }
 }
 
 

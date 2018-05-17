@@ -212,11 +212,15 @@ function todoEditSave(event) {
   var $todoDisplay = $todoEdit.previousElementSibling;
   var todoContent = $todoEditBar.value;
 
-  $todoDisplay.children[1].textContent = todoContent;
-  data.todoList[$todoDisplay.children[1].dataset.id].text = todoContent;
+  if (todoContent.length === 0) {
+    alert('Todo should not be empty. Please write something you need to do.');
+  } else {
+    $todoDisplay.children[1].textContent = todoContent;
+    data.todoList[$todoDisplay.children[1].dataset.id].text = todoContent;
 
-  $todoDisplay.style.display = 'block';
-  $todoEdit.style.display = 'none';
+    $todoDisplay.style.display = 'block';
+    $todoEdit.style.display = 'none';
+  }
 }
 
 // 如何保存一个todo未修改之前的值，用于取消操作的回滚，
