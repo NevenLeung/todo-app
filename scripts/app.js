@@ -43,7 +43,11 @@ $inputForm.addEventListener('submit', function(event) {
   event.preventDefault();
 
   const inputData = $inputForm.elements['todo-input'].value;
-  addTodo(inputData);
+  if (inputData.length === 0) {
+    alert('You should type something in the input bar.');
+  } else {
+    addTodo(inputData);
+  }
 
   // 重置表单数据
   $inputForm.reset();
@@ -112,6 +116,7 @@ function addTodo(text) {
 function todoListRender() {
   data.todoList.forEach(function (todo) {
     const $li = createNewElementNode('li', 'todo', '');
+    const $div = createNewElementNode('div', 'todo-display', '');
     const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
     const $todoContent =  createNewElementNode('span', 'todo-content', todo.text, 'data-is-done', todo.isDone, 'data-id', todo.id);
 
@@ -122,8 +127,9 @@ function todoListRender() {
       $checkbox.setAttribute('checked', 'checked');
     }
 
-    $li.appendChild($checkbox);
-    $li.appendChild($todoContent);
+    $div.appendChild($checkbox);
+    $div.appendChild($todoContent);
+    $li.appendChild($div);
 
     $todoList.appendChild($li);
   });
@@ -144,7 +150,7 @@ function removeAllChildren(parent) {
  * @param event 事件对象
  */
 function todoStatusToggle(event) {
-  // 判断点击的是否是checkbox
+  // 判断点击的元素是不是todo-checkbox
   if (event.target.classList.contains('todo-checkbox')) {
     // 每一个todo的todo-content是checkbox的下一个同级元素
     const $todoContent = event.target.nextElementSibling;
@@ -153,7 +159,7 @@ function todoStatusToggle(event) {
       $todoContent.classList.toggle('todo-is-done');
 
       $todoContent.dataset.isDone = 'true';
-      // 改变data中的值，其中todo的id刚好等于在todoList中的下标
+      // todo 改变data中的值，其中todo的id刚好等于在todoList中的下标 (需要一个更好的方案来维护id)
       data.todoList[$todoContent.dataset.id].isDone = true;
 
     } else {
@@ -163,4 +169,69 @@ function todoStatusToggle(event) {
       data.todoList[$todoContent.dataset.id].isDone = false;
     }
   }
+
+  // 判断点击元素的是不是todo-content，是的话，开启edit in place
+  if (event.target.classList.contains('todo-content')) {
+    editTodoInPlace(event.target);
+  }
+}
+
+// let count = 1;
+// todo 每次只能有一个todo能处于待编辑状态，获取所有todo跟todo-edit（需要检测是否存在），将他们reset为是否的显示状态
+// todo toggle时，元素位置有抖动
+function editTodoInPlace($el) {
+  // 判断点击元素的是不是todo-content
+  if ($el.classList.contains('todo-content') && $el.style.display !== 'none') {
+    const $todoDisplay = $el.parentElement;
+    // 判断是否已经有下一个兄弟元素，即todo-edit，防止重复添加todo-edit
+    if($todoDisplay.nextElementSibling === null) {
+      $todoDisplay.style.display = 'none';
+
+      const $div = createNewElementNode('div', 'todo-edit', '');
+      const $editBar = createNewElementNode('input', 'todo-edit-bar', '',  'value', $el.textContent);
+      const $saveButton =  createNewElementNode('button', 'button todo-edit-save', 'save');
+      const $cancelButton =  createNewElementNode('button', 'button todo-edit-cancel', 'cancel');
+
+      $saveButton.addEventListener('click', todoEditSave);
+      $cancelButton.addEventListener('click', todoEditCancel);
+
+      $div.appendChild($editBar);
+      $div.appendChild($saveButton);
+      $div.appendChild($cancelButton);
+
+      $el.parentNode.parentNode.appendChild($div);
+    } else {
+      $todoDisplay.style.display = 'none';
+      $todoDisplay.nextElementSibling.style.display = 'block';
+
+      // 确保input中的value与todo的content相同
+      $todoDisplay.nextElementSibling.children[0].value = $el.textContent;
+    }
+  }
+}
+
+// 保存content的修改，修改todo-content的内容，以及将修改更新到data中
+function todoEditSave(event) {
+  const $todoEditBar = event.target.previousElementSibling;
+  const $todoEdit = $todoEditBar.parentElement;
+  const $todoDisplay = $todoEdit.previousElementSibling;
+  const todoContent = $todoEditBar.value;
+
+  $todoDisplay.children[1].textContent = todoContent;
+  data.todoList[$todoDisplay.children[1].dataset.id].text = todoContent;
+
+  $todoDisplay.style.display = 'block';
+  $todoEdit.style.display = 'none';
+}
+
+
+// 如何保存一个todo未修改之前的值，用于取消操作的回滚，
+// 不需要做回滚操作，input上的值，不影响span的textContent
+function todoEditCancel(event) {
+  const $todoEditBar = event.target.previousElementSibling.previousElementSibling;
+  const $todoEdit = $todoEditBar.parentElement;
+  const $todoDisplay = $todoEdit.previousElementSibling;
+
+  $todoDisplay.style.display = 'block';
+  $todoEdit.style.display = 'none';
 }

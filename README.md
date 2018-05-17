@@ -34,7 +34,7 @@
 - [ ] 过滤器
 - [ ] 评论系统
 
-## script
+## scripts
 
 compile with babel
 

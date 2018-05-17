@@ -45,3 +45,12 @@ ul > li {
 .todo-is-done {
   text-decoration: line-through;
 }
+
+.todo-edit {
+  display: list-item;
+}
+
+.todo-edit-bar {
+  display: inline-block;
+  width: 210px;
+}

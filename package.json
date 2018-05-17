@@ -4,7 +4,7 @@
   "description": "A todo app build in Vanilla JS",
   "main": "js/app.js",
   "scripts": {
-    "compile": "babel app.js -d compile"
+    "compile": "babel ./scripts/app.js -o ./scripts/compile/app.compatible.js"
   },
   "repository": {
     "type": "git",
