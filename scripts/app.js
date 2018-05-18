@@ -43,7 +43,9 @@ $inputForm.addEventListener('submit', function(event) {
   event.preventDefault();
 
   const inputData = $inputForm.elements['todo-input'].value;
-  if (inputData.length === 0) {
+
+  // 不允许修改后，todo的内容为空，或者为纯空白字符
+  if (inputData.trim().length === 0) {
     alert('You should type something in the input bar.');
   } else {
     addTodo(inputData);
@@ -60,6 +62,7 @@ $todoList.addEventListener('click', todoStatusToggle);
 
 /**
  * createNewElementNode()
+ *
  * 自定义创建元素节点方法
  *
  * @param tagName 标签名
@@ -85,6 +88,7 @@ function createNewElementNode(tagName, className='', content='', ...attributeDat
 
 /**
  * addTodo()
+ *
  * 添加一条新的todo，同时将一个新的todo对象的加入data.todoList数组中
  *
  * @param text todo的文本内容
@@ -110,8 +114,8 @@ function addTodo(text) {
 
 /**
  * todoListRender()
- * 渲染todoList，并给相应的节点加上合适的属性
- * 每个todo为一个li元素，li元素内部包括一个checkbox和inline-block的todo-content
+ *
+ * 渲染todoList，并给相应的节点加上合适的属性，每个todo为一个li元素，li元素内部包括一个checkbox和inline-block的todo-content
  */
 function todoListRender() {
   data.todoList.forEach(function (todo) {
@@ -145,6 +149,7 @@ function removeAllChildren(parent) {
 
 /**
  * todoStatusToggle()
+ *
  * 切换todo的完成状态，更改显示样式，更改data中的数据，用作事件处理函数
  *
  * @param event 事件对象
@@ -176,12 +181,21 @@ function todoStatusToggle(event) {
   }
 }
 
-// let count = 1;
-// todo 每次只能有一个todo能处于待编辑状态，获取所有todo跟todo-edit（需要检测是否存在），将他们reset为是否的显示状态
 // todo toggle时，元素位置有抖动
+
+/**
+ * editTodoInPlace()
+ *
+ * 响应todo-content被点击时的一系列操作，比如重置todo显示内容，todo-display与todo-edit的display属性的toggle
+ *
+ * @param $el
+ */
 function editTodoInPlace($el) {
   // 判断点击元素的是不是todo-content
   if ($el.classList.contains('todo-content') && $el.style.display !== 'none') {
+    // 重置所有todo的显示状态，只显示todo-display
+    resetTodoDisplay();
+
     const $todoDisplay = $el.parentElement;
     // 判断是否已经有下一个兄弟元素，即todo-edit，防止重复添加todo-edit
     if($todoDisplay.nextElementSibling === null) {
@@ -201,6 +215,7 @@ function editTodoInPlace($el) {
 
       $el.parentNode.parentNode.appendChild($div);
     } else {
+      // 由于已经有了todo-edit，只需要改变display属性即可，无需重复创建，提高性能
       $todoDisplay.style.display = 'none';
       $todoDisplay.nextElementSibling.style.display = 'block';
 
@@ -210,15 +225,22 @@ function editTodoInPlace($el) {
   }
 }
 
-// 保存content的修改，修改todo-content的内容，以及将修改更新到data中
+/**
+ * todoEditSave()
+ *
+ * 作为todo-edit中save button的事件处理方法，用于保存content的修改，修改todo-content的内容，以及将修改更新到data，以及改变todo-display和todo-edit的display属性
+ *
+ * * @param event
+ */
 function todoEditSave(event) {
   const $todoEditBar = event.target.previousElementSibling;
   const $todoEdit = $todoEditBar.parentElement;
   const $todoDisplay = $todoEdit.previousElementSibling;
   const todoContent = $todoEditBar.value;
 
-  if (todoContent.length === 0) {
-    alert('Todo should not be empty. Please write something you need to do.');
+  // 不允许修改后，todo的内容为空，或者为纯空白字符
+  if (todoContent.trim().length === 0) {
+    alert('The content of todo should not be empty. Please write something you need to do.');
   } else {
     $todoDisplay.children[1].textContent = todoContent;
     data.todoList[$todoDisplay.children[1].dataset.id].text = todoContent;
@@ -231,6 +253,14 @@ function todoEditSave(event) {
 
 // 如何保存一个todo未修改之前的值，用于取消操作的回滚，
 // 不需要做回滚操作，input上的值，不影响span的textContent
+
+/**
+ * todoEditCancel()
+ *
+ * 作为todo-edit中cancel button的事件处理方法，用于抛弃修改结果后，改变todo-display和todo-edit的display属性
+ *
+ * @param event
+ */
 function todoEditCancel(event) {
   const $todoEditBar = event.target.previousElementSibling.previousElementSibling;
   const $todoEdit = $todoEditBar.parentElement;
@@ -238,4 +268,22 @@ function todoEditCancel(event) {
 
   $todoDisplay.style.display = 'block';
   $todoEdit.style.display = 'none';
+}
+
+/**
+ * resetTodoDisplay()
+ *
+ * 重置todo list中所有todo的显示内容，让所有todo只显示todo-display
+ */
+function resetTodoDisplay() {
+  for (let i= 0 , n = $todoList.children.length; i < n; i++) {
+    const $todoDisplay = $todoList.children[i].firstElementChild;
+    $todoDisplay.style.display = 'block';
+
+    // 检查是否已经有todo-edit
+    if ($todoDisplay.nextElementSibling !== null) {
+      // 改变todo-edit的display属性
+      $todoDisplay.nextElementSibling.style.display = 'none';
+    }
+  }
 }
