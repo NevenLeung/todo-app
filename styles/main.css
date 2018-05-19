@@ -28,18 +28,30 @@ input[name=todo-input] {
 
 .todo-list {
   padding-left: 0;
+  width: 400px;
 }
 
 ul > li {
   list-style: none;
 }
 
+.todo {
+  height: 30px;
+}
+
+/**
+  todo 但todo-content内多于一行时，checkbox下方会显示内容
+ */
 .todo-checkbox {
 
 }
 
+/**
+  取消inline-block，不然todo-content多于一行时，会出现奇怪的事情
+ */
 .todo-content {
-  display: inline-block;
+  /*display: inline-block;*/
+  cursor: text;
 }
 
 .todo-is-done {
@@ -52,5 +64,28 @@ ul > li {
 
 .todo-edit-bar {
   display: inline-block;
-  width: 210px;
+  width: 280px;
 }
+
+.button {
+  border: 1px solid transparent;
+  padding: 4px 8px;
+  margin: 0 2px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.button-add-todo {
+  color: #fff;
+  background-color: salmon;
+}
+
+.button-edit-save {
+  color: #fff;
+  background-color: #1DA1F2;
+}
+
+.button-edit-cancel {
+  background-color: lightgray;
+}
+

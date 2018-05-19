@@ -95,12 +95,16 @@ function createNewElementNode(tagName, className='', content='', ...attributeDat
  */
 function addTodo(text) {
   const $li = createNewElementNode('li', 'todo', '');
+  const $div = createNewElementNode('div', 'todo-display', '');
   const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
   const $todoContent = createNewElementNode('span', 'todo-content', text, 'data-is-done', 'false', 'data-id', data.todoList.length);
 
-  // 将checkbox和todo-content节点分别添加到li节点，作为其子节点
-  $li.appendChild($checkbox);
-  $li.appendChild($todoContent);
+  // 将checkbox和todo-content节点分别添加到div节点，作为其子节点
+  $div.appendChild($checkbox);
+  $div.appendChild($todoContent);
+  $li.appendChild($div);
+
+  // 最后把li添加到DOM树上，完成渲染
   $todoList.appendChild($li);
 
   data.todoList.push({
@@ -203,8 +207,8 @@ function editTodoInPlace($el) {
 
       const $div = createNewElementNode('div', 'todo-edit', '');
       const $editBar = createNewElementNode('input', 'todo-edit-bar', '',  'value', $el.textContent);
-      const $saveButton =  createNewElementNode('button', 'button todo-edit-save', 'save');
-      const $cancelButton =  createNewElementNode('button', 'button todo-edit-cancel', 'cancel');
+      const $saveButton =  createNewElementNode('button', 'button button-edit-save', 'save');
+      const $cancelButton =  createNewElementNode('button', 'button button-edit-cancel', 'cancel');
 
       $saveButton.addEventListener('click', todoEditSave);
       $cancelButton.addEventListener('click', todoEditCancel);
