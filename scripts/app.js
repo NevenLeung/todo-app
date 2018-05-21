@@ -96,12 +96,24 @@ function createNewElementNode(tagName, className='', content='', ...attributeDat
 function addTodo(text) {
   const $li = createNewElementNode('li', 'todo', '');
   const $div = createNewElementNode('div', 'todo-display', '');
+  const $table = createNewElementNode('table');
+  const $tr = createNewElementNode('tr');
+  const $td_1 = createNewElementNode('td');
+  const $td_2 = createNewElementNode('td');
   const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
   const $todoContent = createNewElementNode('span', 'todo-content', text, 'data-is-done', 'false', 'data-id', data.todoList.length);
 
   // 将checkbox和todo-content节点分别添加到div节点，作为其子节点
-  $div.appendChild($checkbox);
-  $div.appendChild($todoContent);
+  $td_1.appendChild($checkbox);
+  $td_2.appendChild($todoContent);
+
+  $tr.appendChild($td_1);
+  $tr.appendChild($td_2);
+
+  $table.appendChild($tr);
+
+  $div.appendChild($table);
+
   $li.appendChild($div);
 
   // 最后把li添加到DOM树上，完成渲染
@@ -119,12 +131,41 @@ function addTodo(text) {
 /**
  * todoListRender()
  *
- * 渲染todoList，并给相应的节点加上合适的属性，每个todo为一个li元素，li元素内部包括一个checkbox和inline-block的todo-content
+ * 渲染todoList，并给相应的节点加上合适的属性
+ *
+ * DOM 结构
+ *
+ <ul class="todo-list">
+   <li class='todo'>
+    <div class='todo-display'>
+      <table>
+        <tr>
+          <td>
+            <input type="todo-checkbox">
+          </td>
+          <td>
+            <span class='todo-content'></span>
+          </td>
+          <td>
+            <button class='button todo-delete'>
+              X
+            </button>
+          </td>
+         </tr>
+       </table>
+     </div>
+   </li>
+ </ul>
+ *
  */
 function todoListRender() {
   data.todoList.forEach(function (todo) {
     const $li = createNewElementNode('li', 'todo', '');
     const $div = createNewElementNode('div', 'todo-display', '');
+    const $table = createNewElementNode('table');
+    const $tr = createNewElementNode('tr');
+    const $td_1 = createNewElementNode('td');
+    const $td_2 = createNewElementNode('td');
     const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
     const $todoContent =  createNewElementNode('span', 'todo-content', todo.text, 'data-is-done', todo.isDone, 'data-id', todo.id);
 
@@ -135,8 +176,16 @@ function todoListRender() {
       $checkbox.setAttribute('checked', 'checked');
     }
 
-    $div.appendChild($checkbox);
-    $div.appendChild($todoContent);
+    $td_1.appendChild($checkbox);
+    $td_2.appendChild($todoContent);
+
+    $tr.appendChild($td_1);
+    $tr.appendChild($td_2);
+
+    $table.appendChild($tr);
+
+    $div.appendChild($table);
+
     $li.appendChild($div);
 
     $todoList.appendChild($li);
@@ -162,7 +211,7 @@ function todoStatusToggle(event) {
   // 判断点击的元素是不是todo-checkbox
   if (event.target.classList.contains('todo-checkbox')) {
     // 每一个todo的todo-content是checkbox的下一个同级元素
-    const $todoContent = event.target.nextElementSibling;
+    const $todoContent = event.target.parentElement.nextElementSibling.children[0];
 
     if ($todoContent.dataset.isDone === 'false') {
       $todoContent.classList.toggle('todo-is-done');
@@ -192,7 +241,25 @@ function todoStatusToggle(event) {
  *
  * 响应todo-content被点击时的一系列操作，比如重置todo显示内容，todo-display与todo-edit的display属性的toggle
  *
- * @param $el
+ * @param $el 点击的元素
+ *
+ * DOM 结构
+ *
+<ul class='todo-list'>
+  <li class="todo">
+    <div class='todo-display'>
+      <input class='todo-checkbox'>
+      <span class='todo-content'></span>
+       <button class='button todo-delete'>X</button>
+    </div>
+    <div class='todo-edit'>
+      <input class='todo-edit-bar'>
+      <button class='button edit-save'>save</button>
+      <button class='button edit-cancel'>cancel</button>
+    </div>
+  </li>
+</ul>
+ *
  */
 function editTodoInPlace($el) {
   // 判断点击元素的是不是todo-content
@@ -200,7 +267,7 @@ function editTodoInPlace($el) {
     // 重置所有todo的显示状态，只显示todo-display
     resetTodoDisplay();
 
-    const $todoDisplay = $el.parentElement;
+    const $todoDisplay = $el.parentElement.parentElement.parentElement.parentElement;
     // 判断是否已经有下一个兄弟元素，即todo-edit，防止重复添加todo-edit
     if($todoDisplay.nextElementSibling === null) {
       $todoDisplay.style.display = 'none';
@@ -217,7 +284,7 @@ function editTodoInPlace($el) {
       $div.appendChild($saveButton);
       $div.appendChild($cancelButton);
 
-      $el.parentNode.parentNode.appendChild($div);
+      $todoDisplay.parentNode.appendChild($div);
     } else {
       // 由于已经有了todo-edit，只需要改变display属性即可，无需重复创建，提高性能
       $todoDisplay.style.display = 'none';

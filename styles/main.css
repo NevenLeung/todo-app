@@ -36,7 +36,15 @@ ul > li {
 }
 
 .todo {
-  height: 30px;
+  height: 25px;
+}
+
+.todo-display {
+
+}
+
+table {
+  border-spacing: 0;
 }
 
 /**
