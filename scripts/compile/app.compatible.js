@@ -49,9 +49,12 @@ $inputForm.addEventListener('submit', function (event) {
   $inputForm.reset();
 });
 
-// 使用事件委托，将todoStatusToggle绑定到todoList上，在处理函数内部加上event.target判断
-$todoList.addEventListener('click', todoStatusToggle);
+// 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
+$todoList.addEventListener('click', clickOnTodo);
 
+// 使用事件委托，将mouseover与mouseout事件绑定到todo-list，实现当鼠标悬浮以及离开todo时，显示或隐藏删除按钮的效果。在处理函数对event.target作判断
+$todoList.addEventListener('mouseover', deleteButtonDisplay);
+$todoList.addEventListener('mouseout', deleteButtonHidden);
 // methods
 
 /**
@@ -65,13 +68,14 @@ $todoList.addEventListener('click', todoStatusToggle);
  * @param attributeData 设置节点的属性，属性值应为成对出现，前者为属性名称，后者为属性值
  * @returns 返回创建的元素节点
  */
-function createNewElementNode(tagName) {
-  var className = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
-  var content = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
-
+function createNewElementNode(tagName, className, content) {
   var newElement = document.createElement(tagName);
-  newElement.textContent = content;
-  newElement.className = className;
+  if (content !== undefined) {
+    newElement.textContent = content;
+  }
+  if (className !== undefined) {
+    newElement.className = className;
+  }
 
   for (var _len = arguments.length, attributeData = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
     attributeData[_key - 3] = arguments[_key];
@@ -94,21 +98,25 @@ function createNewElementNode(tagName) {
  * @param text todo的文本内容
  */
 function addTodo(text) {
-  var $li = createNewElementNode('li', 'todo', '');
-  var $div = createNewElementNode('div', 'todo-display', '');
+  var $li = createNewElementNode('li', 'todo');
+  var $div = createNewElementNode('div', 'todo-display');
   var $table = createNewElementNode('table');
   var $tr = createNewElementNode('tr');
   var $td_1 = createNewElementNode('td');
   var $td_2 = createNewElementNode('td');
+  var $td_3 = createNewElementNode('td');
   var $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
   var $todoContent = createNewElementNode('span', 'todo-content', text, 'data-is-done', 'false', 'data-id', data.todoList.length);
+  var $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
 
   // 将checkbox和todo-content节点分别添加到div节点，作为其子节点
   $td_1.appendChild($checkbox);
   $td_2.appendChild($todoContent);
+  $td_3.appendChild($deleteButton);
 
   $tr.appendChild($td_1);
   $tr.appendChild($td_2);
+  $tr.appendChild($td_3);
 
   $table.appendChild($tr);
 
@@ -146,7 +154,7 @@ function addTodo(text) {
             <span class='todo-content'></span>
           </td>
           <td>
-            <button class='button todo-delete'>
+            <button class='button button-delete-todo'>
               X
             </button>
           </td>
@@ -159,14 +167,16 @@ function addTodo(text) {
  */
 function todoListRender() {
   data.todoList.forEach(function (todo) {
-    var $li = createNewElementNode('li', 'todo', '');
-    var $div = createNewElementNode('div', 'todo-display', '');
+    var $li = createNewElementNode('li', 'todo');
+    var $div = createNewElementNode('div', 'todo-display');
     var $table = createNewElementNode('table');
     var $tr = createNewElementNode('tr');
     var $td_1 = createNewElementNode('td');
     var $td_2 = createNewElementNode('td');
+    var $td_3 = createNewElementNode('td');
     var $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
     var $todoContent = createNewElementNode('span', 'todo-content', todo.text, 'data-is-done', todo.isDone, 'data-id', todo.id);
+    var $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
 
     if (todo.isDone) {
       // 为todo-content添加class 'todo-is-done'
@@ -177,9 +187,11 @@ function todoListRender() {
 
     $td_1.appendChild($checkbox);
     $td_2.appendChild($todoContent);
+    $td_3.appendChild($deleteButton);
 
     $tr.appendChild($td_1);
     $tr.appendChild($td_2);
+    $tr.appendChild($td_3);
 
     $table.appendChild($tr);
 
@@ -197,39 +209,46 @@ function removeAllChildren(parent) {
 }
 
 /**
- * todoStatusToggle()
+ * clickOnTodo()
  *
- * 切换todo的完成状态，更改显示样式，更改data中的数据，用作事件处理函数
- *
- * @param event 事件对象
+ * 作为在todo上点击事件的事件处理函数，不同的点击元素会触发不同的处理事件
  */
-function todoStatusToggle(event) {
+function clickOnTodo(event) {
   // 判断点击的元素是不是todo-checkbox
   if (event.target.classList.contains('todo-checkbox')) {
-    // 每一个todo的todo-content是checkbox的下一个同级元素
-    var $todoContent = event.target.parentElement.nextElementSibling.children[0];
-
-    if ($todoContent.dataset.isDone === 'false') {
-      $todoContent.classList.toggle('todo-is-done');
-
-      $todoContent.dataset.isDone = 'true';
-      // todo 改变data中的值，其中todo的id刚好等于在todoList中的下标 (需要一个更好的方案来维护id)
-      data.todoList[$todoContent.dataset.id].isDone = true;
-    } else {
-      $todoContent.classList.toggle('todo-is-done');
-
-      $todoContent.dataset.isDone = 'false';
-      data.todoList[$todoContent.dataset.id].isDone = false;
-    }
+    todoStatusToggle(event.target);
   }
-
   // 判断点击元素的是不是todo-content，是的话，开启edit in place
   if (event.target.classList.contains('todo-content')) {
     editTodoInPlace(event.target);
   }
+  // 判断点击的元素是不是删除按钮
+  if (event.target.classList.contains('button-delete-todo')) {
+    deleteTodo(event.target);
+  }
 }
 
-// todo toggle时，元素位置有抖动
+/**
+ * todoStatusToggle()
+ *
+ * 切换todo的完成状态，更改显示样式，更改data中的数据，用作事件处理函数
+ */
+function todoStatusToggle($el) {
+  // 每一个todo的todo-content是checkbox的下一个同级元素
+  var $todoContent = $el.parentElement.nextElementSibling.children[0];
+  if ($todoContent.dataset.isDone === 'false') {
+    $todoContent.classList.toggle('todo-is-done');
+    $todoContent.dataset.isDone = 'true';
+
+    // todo 改变data中的值，其中todo的id刚好等于在todoList中的下标 (需要一个更好的方案来维护id)
+    data.todoList[$todoContent.dataset.id].isDone = true;
+  } else {
+    $todoContent.classList.toggle('todo-is-done');
+    $todoContent.dataset.isDone = 'false';
+
+    data.todoList[$todoContent.dataset.id].isDone = false;
+  }
+}
 
 /**
  * editTodoInPlace()
@@ -245,12 +264,12 @@ function todoStatusToggle(event) {
     <div class='todo-display'>
       <input class='todo-checkbox'>
       <span class='todo-content'></span>
-       <button class='button todo-delete'>X</button>
+       <button class='button button-delete-todo'>X</button>
     </div>
     <div class='todo-edit'>
       <input class='todo-edit-bar'>
-      <button class='button edit-save'>save</button>
-      <button class='button edit-cancel'>cancel</button>
+      <button class='button button-edit-save'>save</button>
+      <button class='button button-edit-cancel'>cancel</button>
     </div>
   </li>
 </ul>
@@ -294,9 +313,8 @@ function editTodoInPlace($el) {
 /**
  * todoEditSave()
  *
- * 作为todo-edit中save button的事件处理方法，用于保存content的修改，修改todo-content的内容，以及将修改更新到data，以及改变todo-display和todo-edit的display属性
- *
- * * @param event
+ * 作为todo-edit中save button的事件处理方法，用于保存content的修改，修改todo-content的内容，
+ * 以及将修改更新到data，以及改变todo-display和todo-edit的display属性
  */
 function todoEditSave(event) {
   var $todoEditBar = event.target.previousElementSibling;
@@ -323,8 +341,6 @@ function todoEditSave(event) {
  * todoEditCancel()
  *
  * 作为todo-edit中cancel button的事件处理方法，用于抛弃修改结果后，改变todo-display和todo-edit的display属性
- *
- * @param event
  */
 function todoEditCancel(event) {
   var $todoEditBar = event.target.previousElementSibling.previousElementSibling;
@@ -350,5 +366,52 @@ function resetTodoDisplay() {
       // 改变todo-edit的display属性
       $todoDisplay.nextElementSibling.style.display = 'none';
     }
+  }
+}
+
+/**
+ * deleteTodo()
+ *
+ * 删除todo，从DOM上移除相应的$todo与相应的数据
+ */
+function deleteTodo($el) {
+  var $todoDisplay = $el.parentElement.parentElement.parentElement.parentElement;
+  var $todo = $todoDisplay.parentElement;
+  var $todoContent = $todoDisplay.children[0].children[0].children[1].children[0];
+  var id = parseInt($todoContent.dataset.id);
+  var index = data.todoList.findIndex(function (todo) {
+    return todo.id === id;
+  });
+
+  data.todoList.splice(index, 1);
+  $todoList.removeChild($todo);
+}
+
+/**
+ * deleteButtonDisplay()
+ *
+ * 作为mouseover的事件处理函数，当鼠标hover在todo上时，显示删除按钮
+ */
+function deleteButtonDisplay(event) {
+  if (event.target.classList.contains('todo-checkbox') || event.target.classList.contains('todo-content') || event.target.classList.contains('button-delete-todo')) {
+    var $todoDisplay = event.target.parentElement.parentElement.parentElement.parentElement;
+    var $deleteButton = $todoDisplay.children[0].children[0].children[2].children[0];
+
+    // 由于display: none和visibility: hidden时不能触发鼠标的mouseover事件，所以使用opacity实现隐藏效果
+    $deleteButton.style.opacity = '1';
+  }
+}
+
+/**
+ * deleteButtonHidden()
+ *
+ * 作为mouseout的事件处理函数，当鼠标离开todo时，隐藏删除按钮
+ */
+function deleteButtonHidden(event) {
+  if (event.target.classList.contains('todo-checkbox') || event.target.classList.contains('todo-content') || event.target.classList.contains('button-delete-todo')) {
+    var $todoDisplay = event.target.parentElement.parentElement.parentElement.parentElement;
+    var $deleteButton = $todoDisplay.children[0].children[0].children[2].children[0];
+
+    $deleteButton.style.opacity = '0';
   }
 }

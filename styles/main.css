@@ -36,15 +36,21 @@ ul > li {
 }
 
 .todo {
-  height: 25px;
+  line-height: 30px;
+  margin: 1px 0;
 }
 
 .todo-display {
 
 }
 
-table {
+.todo table {
+  height: 27px;
   border-spacing: 0;
+}
+
+.todo td {
+  padding: 0;
 }
 
 /**
@@ -54,11 +60,9 @@ table {
 
 }
 
-/**
-  取消inline-block，不然todo-content多于一行时，会出现奇怪的事情
- */
 .todo-content {
-  /*display: inline-block;*/
+  display: block;
+  width: 345px;
   cursor: text;
 }
 
@@ -86,6 +90,12 @@ table {
 .button-add-todo {
   color: #fff;
   background-color: salmon;
+}
+
+.button-delete-todo {
+  opacity: 0;
+  color: #fff;
+  background-color: black;
 }
 
 .button-edit-save {
