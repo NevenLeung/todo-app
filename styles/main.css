@@ -40,10 +40,6 @@ ul > li {
   margin: 1px 0;
 }
 
-.todo-display {
-
-}
-
 .todo table {
   height: 27px;
   border-spacing: 0;
@@ -53,6 +49,13 @@ ul > li {
   padding: 0;
 }
 
+.todo-display {
+
+}
+
+.todo-display-hide {
+  display: none;
+}
 /**
   todo 但todo-content内多于一行时，checkbox下方会显示内容
  */
@@ -71,7 +74,11 @@ ul > li {
 }
 
 .todo-edit {
-  display: list-item;
+  display: none;
+}
+
+.todo-edit-show {
+  display: block;
 }
 
 .todo-edit-bar {

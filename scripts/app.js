@@ -292,9 +292,9 @@ function editTodoInPlace($el) {
     const $todoDisplay = $el.parentElement.parentElement.parentElement.parentElement;
     // 判断是否已经有下一个兄弟元素，即todo-edit，防止重复添加todo-edit
     if($todoDisplay.nextElementSibling === null) {
-      $todoDisplay.style.display = 'none';
+      $todoDisplay.classList.toggle('todo-display-hide');
 
-      const $div = createNewElementNode('div', 'todo-edit', '');
+      const $div = createNewElementNode('div', 'todo-edit todo-edit-show');
       const $editBar = createNewElementNode('input', 'todo-edit-bar', '',  'value', $el.textContent);
       const $saveButton =  createNewElementNode('button', 'button button-edit-save', 'save');
       const $cancelButton =  createNewElementNode('button', 'button button-edit-cancel', 'cancel');
@@ -309,8 +309,8 @@ function editTodoInPlace($el) {
       $todoDisplay.parentNode.appendChild($div);
     } else {
       // 由于已经有了todo-edit，只需要改变display属性即可，无需重复创建，提高性能
-      $todoDisplay.style.display = 'none';
-      $todoDisplay.nextElementSibling.style.display = 'block';
+      $todoDisplay.classList.toggle('todo-display-hide');
+      $todoDisplay.nextElementSibling.classList.toggle('todo-edit-show');
 
       // 确保input中的value与todo的content相同
       $todoDisplay.nextElementSibling.children[0].value = $el.textContent;
@@ -328,17 +328,17 @@ function todoEditSave(event) {
   const $todoEditBar = event.target.previousElementSibling;
   const $todoEdit = $todoEditBar.parentElement;
   const $todoDisplay = $todoEdit.previousElementSibling;
-  const todoContent = $todoEditBar.value;
+  const $todoContent = $todoDisplay.children[0].children[0].children[1].children[0];
 
   // 不允许修改后，todo的内容为空，或者为纯空白字符
-  if (todoContent.trim().length === 0) {
+  if ($todoEditBar.value.trim().length === 0) {
     alert('The content of todo should not be empty. Please write something you need to do.');
   } else {
-    $todoDisplay.children[1].textContent = todoContent;
-    data.todoList[$todoDisplay.children[1].dataset.id].text = todoContent;
+    $todoContent.textContent = $todoEditBar.value;
+    data.todoList[$todoContent.dataset.id].text = $todoEditBar.value;
 
-    $todoDisplay.style.display = 'block';
-    $todoEdit.style.display = 'none';
+    $todoDisplay.classList.toggle('todo-display-hide');
+    $todoEdit.classList.toggle('todo-edit-show');
   }
 }
 
@@ -356,8 +356,8 @@ function todoEditCancel(event) {
   const $todoEdit = $todoEditBar.parentElement;
   const $todoDisplay = $todoEdit.previousElementSibling;
 
-  $todoDisplay.style.display = 'block';
-  $todoEdit.style.display = 'none';
+  $todoDisplay.classList.toggle('todo-display-hide');
+  $todoEdit.classList.toggle('todo-edit-show');
 }
 
 /**
@@ -368,12 +368,12 @@ function todoEditCancel(event) {
 function resetTodoDisplay() {
   for (let i= 0 , n = $todoList.children.length; i < n; i++) {
     const $todoDisplay = $todoList.children[i].firstElementChild;
-    $todoDisplay.style.display = 'block';
+    $todoDisplay.classList.remove('todo-display-hide');
 
     // 检查是否已经有todo-edit
     if ($todoDisplay.nextElementSibling !== null) {
       // 改变todo-edit的display属性
-      $todoDisplay.nextElementSibling.style.display = 'none';
+      $todoDisplay.nextElementSibling.classList.remove('todo-edit-show');
     }
   }
 }
