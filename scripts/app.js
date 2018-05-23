@@ -4,6 +4,8 @@
 
 const $todoList = document.querySelector('.todo-list');
 const $inputForm = document.querySelector('.input-form');
+let $lastEditedTodoContent;
+let lastEditedTodoData;
 
 // data source
 
@@ -286,10 +288,13 @@ function todoStatusToggle($el) {
 function editTodoInPlace($el) {
   // 判断点击元素的是不是todo-content
   if ($el.classList.contains('todo-content') && $el.style.display !== 'none') {
-    // 重置所有todo的显示状态，只显示todo-display
-    resetTodoDisplay();
+    // 判断是否有前一次的编辑操作
+    if (typeof $lastEditedTodoContent !== 'undefined') {
+      saveUnsavedEdition();
+    }
 
     const $todoDisplay = $el.parentElement.parentElement.parentElement.parentElement;
+
     // 判断是否已经有下一个兄弟元素，即todo-edit，防止重复添加todo-edit
     if($todoDisplay.nextElementSibling === null) {
       $todoDisplay.classList.toggle('todo-display-hide');
@@ -315,6 +320,9 @@ function editTodoInPlace($el) {
       // 确保input中的value与todo的content相同
       $todoDisplay.nextElementSibling.children[0].value = $el.textContent;
     }
+
+    // 将当前的操作的todo-content节点保存起来
+    saveTodoEditForTemporaryBackup($el);
   }
 }
 
@@ -339,6 +347,9 @@ function todoEditSave(event) {
 
     $todoDisplay.classList.toggle('todo-display-hide');
     $todoEdit.classList.toggle('todo-edit-show');
+
+    $lastEditedTodoContent = undefined;
+    lastEditedTodoData = undefined;
   }
 }
 
@@ -358,24 +369,54 @@ function todoEditCancel(event) {
 
   $todoDisplay.classList.toggle('todo-display-hide');
   $todoEdit.classList.toggle('todo-edit-show');
+
+  $lastEditedTodoContent = undefined;
+  lastEditedTodoData = undefined;
 }
 
 /**
- * resetTodoDisplay()
+ * saveUnsavedEdition()
  *
- * 重置todo list中所有todo的显示内容，让所有todo只显示todo-display
+ * 每次开启edit in place，先尝试执行该函数
+ *
+ * 作用：
+ * - 当已经有一个todo处于可编辑状态，此时点击另一个todo，需要保存前一个todo的数据，还需要将数据修改进行保存，同时进行class toggle
+ * - 简单来说是为了，编辑todo的操作互斥，同时会对未点击save按钮的修改进行保存
  */
-function resetTodoDisplay() {
-  for (let i= 0 , n = $todoList.children.length; i < n; i++) {
-    const $todoDisplay = $todoList.children[i].firstElementChild;
-    $todoDisplay.classList.remove('todo-display-hide');
+function saveUnsavedEdition() {
+  if (typeof $lastEditedTodoContent !== 'undefined' && typeof lastEditedTodoData !== 'undefined') {
+    const $lastTodoDisplay = $lastEditedTodoContent.parentElement.parentElement.parentElement.parentElement;
+    const $lastTodoEdit = $lastTodoDisplay.nextElementSibling;
+    // 待保存的content应该是input中的value，而不是$todoContent中的textContent，那应该如何保存value呢？
+    // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以这时input中value就是被修改后的值
+    const lastTodoContentAfterEdited = $lastTodoEdit.children[0].value;
+    const index = data.todoList.findIndex((todo) => {
+      return todo.id === parseInt(lastEditedTodoData.id);
+    });
 
-    // 检查是否已经有todo-edit
-    if ($todoDisplay.nextElementSibling !== null) {
-      // 改变todo-edit的display属性
-      $todoDisplay.nextElementSibling.classList.remove('todo-edit-show');
-    }
+    // 保存修改
+    $lastEditedTodoContent.textContent = lastTodoContentAfterEdited;
+    data.todoList[index].text = lastTodoContentAfterEdited;
+
+    // 让前一个未保存的todo恢复正常的显示
+    $lastTodoDisplay.classList.remove('todo-display-hide');
+    $lastTodoEdit.classList.remove('todo-edit-show');
   }
+}
+
+/**
+ * saveTodoEditForTemporaryBackup()
+ *
+ * 当一个todo被点击进入可编辑状态时，调用该函数，记录当前被点击的todo-content节点，以及todo的id值
+ *
+ * @param $todoContent 被点击的todo-content节点
+ */
+function saveTodoEditForTemporaryBackup($todoContent) {
+  $lastEditedTodoContent = $todoContent;
+
+  lastEditedTodoData = {
+    id: $todoContent.dataset.id,
+  };
 }
 
 /**
@@ -408,7 +449,7 @@ function deleteButtonDisplay(event) {
     const $deleteButton = $todoDisplay.children[0].children[0].children[2].children[0];
 
     // 由于display: none和visibility: hidden时不能触发鼠标的mouseover事件，所以使用opacity实现隐藏效果
-    $deleteButton.style.opacity = '1';
+    $deleteButton.classList.add('button-delete-todo-show');
   }
 }
 
@@ -422,6 +463,6 @@ function deleteButtonHidden(event) {
     const $todoDisplay = event.target.parentElement.parentElement.parentElement.parentElement;
     const $deleteButton = $todoDisplay.children[0].children[0].children[2].children[0];
 
-    $deleteButton.style.opacity = '0';
+    $deleteButton.classList.remove('button-delete-todo-show');
   }
 }

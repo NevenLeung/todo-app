@@ -4,6 +4,8 @@
 
 var $todoList = document.querySelector('.todo-list');
 var $inputForm = document.querySelector('.input-form');
+var $lastEditedTodoContent = void 0;
+var lastEditedTodoData = void 0;
 
 // data source
 
@@ -278,15 +280,18 @@ function todoStatusToggle($el) {
 function editTodoInPlace($el) {
   // 判断点击元素的是不是todo-content
   if ($el.classList.contains('todo-content') && $el.style.display !== 'none') {
-    // 重置所有todo的显示状态，只显示todo-display
-    resetTodoDisplay();
+    // 判断是否有前一次的编辑操作
+    if (typeof $lastEditedTodoContent !== 'undefined') {
+      saveUnsavedEdition();
+    }
 
     var $todoDisplay = $el.parentElement.parentElement.parentElement.parentElement;
+
     // 判断是否已经有下一个兄弟元素，即todo-edit，防止重复添加todo-edit
     if ($todoDisplay.nextElementSibling === null) {
-      $todoDisplay.style.display = 'none';
+      $todoDisplay.classList.toggle('todo-display-hide');
 
-      var $div = createNewElementNode('div', 'todo-edit', '');
+      var $div = createNewElementNode('div', 'todo-edit todo-edit-show');
       var $editBar = createNewElementNode('input', 'todo-edit-bar', '', 'value', $el.textContent);
       var $saveButton = createNewElementNode('button', 'button button-edit-save', 'save');
       var $cancelButton = createNewElementNode('button', 'button button-edit-cancel', 'cancel');
@@ -301,12 +306,15 @@ function editTodoInPlace($el) {
       $todoDisplay.parentNode.appendChild($div);
     } else {
       // 由于已经有了todo-edit，只需要改变display属性即可，无需重复创建，提高性能
-      $todoDisplay.style.display = 'none';
-      $todoDisplay.nextElementSibling.style.display = 'block';
+      $todoDisplay.classList.toggle('todo-display-hide');
+      $todoDisplay.nextElementSibling.classList.toggle('todo-edit-show');
 
       // 确保input中的value与todo的content相同
       $todoDisplay.nextElementSibling.children[0].value = $el.textContent;
     }
+
+    // 将当前的操作的todo-content节点保存起来
+    saveTodoEditForTemporaryBackup($el);
   }
 }
 
@@ -320,17 +328,20 @@ function todoEditSave(event) {
   var $todoEditBar = event.target.previousElementSibling;
   var $todoEdit = $todoEditBar.parentElement;
   var $todoDisplay = $todoEdit.previousElementSibling;
-  var todoContent = $todoEditBar.value;
+  var $todoContent = $todoDisplay.children[0].children[0].children[1].children[0];
 
   // 不允许修改后，todo的内容为空，或者为纯空白字符
-  if (todoContent.trim().length === 0) {
+  if ($todoEditBar.value.trim().length === 0) {
     alert('The content of todo should not be empty. Please write something you need to do.');
   } else {
-    $todoDisplay.children[1].textContent = todoContent;
-    data.todoList[$todoDisplay.children[1].dataset.id].text = todoContent;
+    $todoContent.textContent = $todoEditBar.value;
+    data.todoList[$todoContent.dataset.id].text = $todoEditBar.value;
 
-    $todoDisplay.style.display = 'block';
-    $todoEdit.style.display = 'none';
+    $todoDisplay.classList.toggle('todo-display-hide');
+    $todoEdit.classList.toggle('todo-edit-show');
+
+    $lastEditedTodoContent = undefined;
+    lastEditedTodoData = undefined;
   }
 }
 
@@ -347,26 +358,56 @@ function todoEditCancel(event) {
   var $todoEdit = $todoEditBar.parentElement;
   var $todoDisplay = $todoEdit.previousElementSibling;
 
-  $todoDisplay.style.display = 'block';
-  $todoEdit.style.display = 'none';
+  $todoDisplay.classList.toggle('todo-display-hide');
+  $todoEdit.classList.toggle('todo-edit-show');
+
+  $lastEditedTodoContent = undefined;
+  lastEditedTodoData = undefined;
 }
 
 /**
- * resetTodoDisplay()
+ * saveUnsavedEdition()
  *
- * 重置todo list中所有todo的显示内容，让所有todo只显示todo-display
+ * 每次开启edit in place，先尝试执行该函数
+ *
+ * 作用：
+ * - 当已经有一个todo处于可编辑状态，此时点击另一个todo，需要保存前一个todo的数据，还需要将数据修改进行保存，同时进行class toggle
+ * - 简单来说是为了，编辑todo的操作互斥，同时会对未点击save按钮的修改进行保存
  */
-function resetTodoDisplay() {
-  for (var i = 0, n = $todoList.children.length; i < n; i++) {
-    var $todoDisplay = $todoList.children[i].firstElementChild;
-    $todoDisplay.style.display = 'block';
+function saveUnsavedEdition() {
+  if (typeof $lastEditedTodoContent !== 'undefined' && typeof lastEditedTodoData !== 'undefined') {
+    var $lastTodoDisplay = $lastEditedTodoContent.parentElement.parentElement.parentElement.parentElement;
+    var $lastTodoEdit = $lastTodoDisplay.nextElementSibling;
+    // 待保存的content应该是input中的value，而不是$todoContent中的textContent，那应该如何保存value呢？
+    // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以这时input中value就是被修改后的值
+    var lastTodoContentAfterEdited = $lastTodoEdit.children[0].value;
+    var index = data.todoList.findIndex(function (todo) {
+      return todo.id === parseInt(lastEditedTodoData.id);
+    });
 
-    // 检查是否已经有todo-edit
-    if ($todoDisplay.nextElementSibling !== null) {
-      // 改变todo-edit的display属性
-      $todoDisplay.nextElementSibling.style.display = 'none';
-    }
+    // 保存修改
+    $lastEditedTodoContent.textContent = lastTodoContentAfterEdited;
+    data.todoList[index].text = lastTodoContentAfterEdited;
+
+    // 让前一个未保存的todo恢复正常的显示
+    $lastTodoDisplay.classList.remove('todo-display-hide');
+    $lastTodoEdit.classList.remove('todo-edit-show');
   }
+}
+
+/**
+ * saveTodoEditForTemporaryBackup()
+ *
+ * 当一个todo被点击进入可编辑状态时，调用该函数，记录当前被点击的todo-content节点，以及todo的id值
+ *
+ * @param $todoContent 被点击的todo-content节点
+ */
+function saveTodoEditForTemporaryBackup($todoContent) {
+  $lastEditedTodoContent = $todoContent;
+
+  lastEditedTodoData = {
+    id: $todoContent.dataset.id
+  };
 }
 
 /**
@@ -398,7 +439,7 @@ function deleteButtonDisplay(event) {
     var $deleteButton = $todoDisplay.children[0].children[0].children[2].children[0];
 
     // 由于display: none和visibility: hidden时不能触发鼠标的mouseover事件，所以使用opacity实现隐藏效果
-    $deleteButton.style.opacity = '1';
+    $deleteButton.classList.add('button-delete-todo-show');
   }
 }
 
@@ -412,6 +453,6 @@ function deleteButtonHidden(event) {
     var $todoDisplay = event.target.parentElement.parentElement.parentElement.parentElement;
     var $deleteButton = $todoDisplay.children[0].children[0].children[2].children[0];
 
-    $deleteButton.style.opacity = '0';
+    $deleteButton.classList.remove('button-delete-todo-show');
   }
 }

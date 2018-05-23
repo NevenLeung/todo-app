@@ -105,6 +105,10 @@ ul > li {
   background-color: black;
 }
 
+.button-delete-todo-show {
+  opacity: 1;
+}
+
 .button-edit-save {
   color: #fff;
   background-color: #1DA1F2;
