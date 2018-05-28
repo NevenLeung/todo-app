@@ -70,12 +70,15 @@ $todoList.addEventListener('mouseout', deleteButtonHidden);
  * @param attributeData 设置节点的属性，属性值应为成对出现，前者为属性名称，后者为属性值
  * @returns 返回创建的元素节点
  */
-function createNewElementNode(tagName, className, content) {
+function createNewElementNode(tagName) {
+  var className = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+  var content = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+
   var newElement = document.createElement(tagName);
-  if (content !== undefined) {
+  if (content !== '') {
     newElement.textContent = content;
   }
-  if (className !== undefined) {
+  if (className !== '') {
     newElement.className = className;
   }
 
@@ -210,6 +213,173 @@ function removeAllChildren(parent) {
   if (parent.children.length !== 0) {}
 }
 
+var todoEditInPlaceModule = function () {
+  var $lastEditedTodoContent = void 0;
+  var lastEditedTodoData = void 0;
+
+  /**
+   * editTodoInPlace()
+   *
+   * 响应todo-content被点击时的一系列操作，比如重置todo显示内容，todo-display与todo-edit的display属性的toggle
+   *
+   * @param $el 点击的元素
+   *
+   * DOM 结构
+   *
+   <ul class='todo-list'>
+   <li class="todo">
+   <div class='todo-display'>
+   <input class='todo-checkbox'>
+   <span class='todo-content'></span>
+   <button class='button button-delete-todo'>X</button>
+   </div>
+   <div class='todo-edit'>
+   <input class='todo-edit-bar'>
+   <button class='button button-edit-save'>save</button>
+   <button class='button button-edit-cancel'>cancel</button>
+   </div>
+   </li>
+   </ul>
+   *
+   */
+  function editTodoInPlace($el) {
+    // 判断点击元素的是不是todo-content
+    if ($el.classList.contains('todo-content') && $el.style.display !== 'none') {
+      // 判断是否有前一次的编辑操作
+      if (typeof $lastEditedTodoContent !== 'undefined') {
+        saveUnsavedEdition();
+      }
+
+      var $todoDisplay = $el.parentElement.parentElement.parentElement.parentElement;
+
+      // 判断是否已经有下一个兄弟元素，即todo-edit，防止重复添加todo-edit
+      if ($todoDisplay.nextElementSibling === null) {
+        $todoDisplay.classList.toggle('todo-display-hide');
+
+        var $div = createNewElementNode('div', 'todo-edit todo-edit-show');
+        var $editBar = createNewElementNode('input', 'todo-edit-bar', '', 'value', $el.textContent);
+        var $saveButton = createNewElementNode('button', 'button button-edit-save', 'save');
+        var $cancelButton = createNewElementNode('button', 'button button-edit-cancel', 'cancel');
+
+        $saveButton.addEventListener('click', todoEditSave);
+        $cancelButton.addEventListener('click', todoEditCancel);
+
+        $div.appendChild($editBar);
+        $div.appendChild($saveButton);
+        $div.appendChild($cancelButton);
+
+        $todoDisplay.parentNode.appendChild($div);
+      } else {
+        // 由于已经有了todo-edit，只需要改变display属性即可，无需重复创建，提高性能
+        $todoDisplay.classList.toggle('todo-display-hide');
+        $todoDisplay.nextElementSibling.classList.toggle('todo-edit-show');
+
+        // 确保input中的value与todo的content相同
+        $todoDisplay.nextElementSibling.children[0].value = $el.textContent;
+      }
+
+      // 将当前的操作的todo-content节点保存起来
+      saveTodoEditForTemporaryBackup($el);
+    }
+  }
+
+  /**
+   * todoEditSave()
+   *
+   * 作为todo-edit中save button的事件处理方法，用于保存content的修改，修改todo-content的内容，
+   * 以及将修改更新到data，以及改变todo-display和todo-edit的display属性
+   */
+  function todoEditSave(event) {
+    var $todoEditBar = event.target.previousElementSibling;
+    var $todoEdit = $todoEditBar.parentElement;
+    var $todoDisplay = $todoEdit.previousElementSibling;
+    var $todoContent = $todoDisplay.children[0].children[0].children[1].children[0];
+
+    // 不允许修改后，todo的内容为空，或者为纯空白字符
+    if ($todoEditBar.value.trim().length === 0) {
+      alert('The content of todo should not be empty. Please write something you need to do.');
+    } else {
+      $todoContent.textContent = $todoEditBar.value;
+      data.todoList[$todoContent.dataset.id].text = $todoEditBar.value;
+
+      $todoDisplay.classList.toggle('todo-display-hide');
+      $todoEdit.classList.toggle('todo-edit-show');
+
+      $lastEditedTodoContent = undefined;
+      lastEditedTodoData = undefined;
+    }
+  }
+
+  // 如何保存一个todo未修改之前的值，用于取消操作的回滚，
+  // 不需要做回滚操作，input上的值，不影响span的textContent
+
+  /**
+   * todoEditCancel()
+   *
+   * 作为todo-edit中cancel button的事件处理方法，用于抛弃修改结果后，改变todo-display和todo-edit的display属性
+   */
+  function todoEditCancel(event) {
+    var $todoEditBar = event.target.previousElementSibling.previousElementSibling;
+    var $todoEdit = $todoEditBar.parentElement;
+    var $todoDisplay = $todoEdit.previousElementSibling;
+
+    $todoDisplay.classList.toggle('todo-display-hide');
+    $todoEdit.classList.toggle('todo-edit-show');
+
+    $lastEditedTodoContent = undefined;
+    lastEditedTodoData = undefined;
+  }
+
+  /**
+   * saveUnsavedEdition()
+   *
+   * 每次开启edit in place，先尝试执行该函数
+   *
+   * 作用：
+   * - 当已经有一个todo处于可编辑状态，此时点击另一个todo，需要保存前一个todo的数据，还需要将数据修改进行保存，同时进行class toggle
+   * - 简单来说是为了，编辑todo的操作互斥，同时会对未点击save按钮的修改进行保存
+   */
+  function saveUnsavedEdition() {
+    if (typeof $lastEditedTodoContent !== 'undefined' && typeof lastEditedTodoData !== 'undefined') {
+      var $lastTodoDisplay = $lastEditedTodoContent.parentElement.parentElement.parentElement.parentElement;
+      var $lastTodoEdit = $lastTodoDisplay.nextElementSibling;
+      // 待保存的content应该是input中的value，而不是$todoContent中的textContent，那应该如何保存value呢？
+      // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以这时input中value就是被修改后的值
+      var lastTodoContentAfterEdited = $lastTodoEdit.children[0].value;
+      var index = data.todoList.findIndex(function (todo) {
+        return todo.id === parseInt(lastEditedTodoData.id);
+      });
+
+      // 保存修改
+      $lastEditedTodoContent.textContent = lastTodoContentAfterEdited;
+      data.todoList[index].text = lastTodoContentAfterEdited;
+
+      // 让前一个未保存的todo恢复正常的显示
+      $lastTodoDisplay.classList.remove('todo-display-hide');
+      $lastTodoEdit.classList.remove('todo-edit-show');
+    }
+  }
+
+  /**
+   * saveTodoEditForTemporaryBackup()
+   *
+   * 当一个todo被点击进入可编辑状态时，调用该函数，记录当前被点击的todo-content节点，以及todo的id值
+   *
+   * @param $todoContent 被点击的todo-content节点
+   */
+  function saveTodoEditForTemporaryBackup($todoContent) {
+    $lastEditedTodoContent = $todoContent;
+
+    lastEditedTodoData = {
+      id: $todoContent.dataset.id
+    };
+  }
+
+  return {
+    activatedTodoEditInPlace: editTodoInPlace
+  };
+}();
+
 /**
  * clickOnTodo()
  *
@@ -222,7 +392,7 @@ function clickOnTodo(event) {
   }
   // 判断点击元素的是不是todo-content，是的话，开启edit in place
   if (event.target.classList.contains('todo-content')) {
-    editTodoInPlace(event.target);
+    todoEditInPlaceModule.activatedTodoEditInPlace(event.target);
   }
   // 判断点击的元素是不是删除按钮
   if (event.target.classList.contains('button-delete-todo')) {
@@ -242,7 +412,6 @@ function todoStatusToggle($el) {
     $todoContent.classList.toggle('todo-is-done');
     $todoContent.dataset.isDone = 'true';
 
-    // todo 改变data中的值，其中todo的id刚好等于在todoList中的下标 (需要一个更好的方案来维护id)
     data.todoList[$todoContent.dataset.id].isDone = true;
   } else {
     $todoContent.classList.toggle('todo-is-done');
@@ -250,164 +419,6 @@ function todoStatusToggle($el) {
 
     data.todoList[$todoContent.dataset.id].isDone = false;
   }
-}
-
-/**
- * editTodoInPlace()
- *
- * 响应todo-content被点击时的一系列操作，比如重置todo显示内容，todo-display与todo-edit的display属性的toggle
- *
- * @param $el 点击的元素
- *
- * DOM 结构
- *
-<ul class='todo-list'>
-  <li class="todo">
-    <div class='todo-display'>
-      <input class='todo-checkbox'>
-      <span class='todo-content'></span>
-       <button class='button button-delete-todo'>X</button>
-    </div>
-    <div class='todo-edit'>
-      <input class='todo-edit-bar'>
-      <button class='button button-edit-save'>save</button>
-      <button class='button button-edit-cancel'>cancel</button>
-    </div>
-  </li>
-</ul>
- *
- */
-function editTodoInPlace($el) {
-  // 判断点击元素的是不是todo-content
-  if ($el.classList.contains('todo-content') && $el.style.display !== 'none') {
-    // 判断是否有前一次的编辑操作
-    if (typeof $lastEditedTodoContent !== 'undefined') {
-      saveUnsavedEdition();
-    }
-
-    var $todoDisplay = $el.parentElement.parentElement.parentElement.parentElement;
-
-    // 判断是否已经有下一个兄弟元素，即todo-edit，防止重复添加todo-edit
-    if ($todoDisplay.nextElementSibling === null) {
-      $todoDisplay.classList.toggle('todo-display-hide');
-
-      var $div = createNewElementNode('div', 'todo-edit todo-edit-show');
-      var $editBar = createNewElementNode('input', 'todo-edit-bar', '', 'value', $el.textContent);
-      var $saveButton = createNewElementNode('button', 'button button-edit-save', 'save');
-      var $cancelButton = createNewElementNode('button', 'button button-edit-cancel', 'cancel');
-
-      $saveButton.addEventListener('click', todoEditSave);
-      $cancelButton.addEventListener('click', todoEditCancel);
-
-      $div.appendChild($editBar);
-      $div.appendChild($saveButton);
-      $div.appendChild($cancelButton);
-
-      $todoDisplay.parentNode.appendChild($div);
-    } else {
-      // 由于已经有了todo-edit，只需要改变display属性即可，无需重复创建，提高性能
-      $todoDisplay.classList.toggle('todo-display-hide');
-      $todoDisplay.nextElementSibling.classList.toggle('todo-edit-show');
-
-      // 确保input中的value与todo的content相同
-      $todoDisplay.nextElementSibling.children[0].value = $el.textContent;
-    }
-
-    // 将当前的操作的todo-content节点保存起来
-    saveTodoEditForTemporaryBackup($el);
-  }
-}
-
-/**
- * todoEditSave()
- *
- * 作为todo-edit中save button的事件处理方法，用于保存content的修改，修改todo-content的内容，
- * 以及将修改更新到data，以及改变todo-display和todo-edit的display属性
- */
-function todoEditSave(event) {
-  var $todoEditBar = event.target.previousElementSibling;
-  var $todoEdit = $todoEditBar.parentElement;
-  var $todoDisplay = $todoEdit.previousElementSibling;
-  var $todoContent = $todoDisplay.children[0].children[0].children[1].children[0];
-
-  // 不允许修改后，todo的内容为空，或者为纯空白字符
-  if ($todoEditBar.value.trim().length === 0) {
-    alert('The content of todo should not be empty. Please write something you need to do.');
-  } else {
-    $todoContent.textContent = $todoEditBar.value;
-    data.todoList[$todoContent.dataset.id].text = $todoEditBar.value;
-
-    $todoDisplay.classList.toggle('todo-display-hide');
-    $todoEdit.classList.toggle('todo-edit-show');
-
-    $lastEditedTodoContent = undefined;
-    lastEditedTodoData = undefined;
-  }
-}
-
-// 如何保存一个todo未修改之前的值，用于取消操作的回滚，
-// 不需要做回滚操作，input上的值，不影响span的textContent
-
-/**
- * todoEditCancel()
- *
- * 作为todo-edit中cancel button的事件处理方法，用于抛弃修改结果后，改变todo-display和todo-edit的display属性
- */
-function todoEditCancel(event) {
-  var $todoEditBar = event.target.previousElementSibling.previousElementSibling;
-  var $todoEdit = $todoEditBar.parentElement;
-  var $todoDisplay = $todoEdit.previousElementSibling;
-
-  $todoDisplay.classList.toggle('todo-display-hide');
-  $todoEdit.classList.toggle('todo-edit-show');
-
-  $lastEditedTodoContent = undefined;
-  lastEditedTodoData = undefined;
-}
-
-/**
- * saveUnsavedEdition()
- *
- * 每次开启edit in place，先尝试执行该函数
- *
- * 作用：
- * - 当已经有一个todo处于可编辑状态，此时点击另一个todo，需要保存前一个todo的数据，还需要将数据修改进行保存，同时进行class toggle
- * - 简单来说是为了，编辑todo的操作互斥，同时会对未点击save按钮的修改进行保存
- */
-function saveUnsavedEdition() {
-  if (typeof $lastEditedTodoContent !== 'undefined' && typeof lastEditedTodoData !== 'undefined') {
-    var $lastTodoDisplay = $lastEditedTodoContent.parentElement.parentElement.parentElement.parentElement;
-    var $lastTodoEdit = $lastTodoDisplay.nextElementSibling;
-    // 待保存的content应该是input中的value，而不是$todoContent中的textContent，那应该如何保存value呢？
-    // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以这时input中value就是被修改后的值
-    var lastTodoContentAfterEdited = $lastTodoEdit.children[0].value;
-    var index = data.todoList.findIndex(function (todo) {
-      return todo.id === parseInt(lastEditedTodoData.id);
-    });
-
-    // 保存修改
-    $lastEditedTodoContent.textContent = lastTodoContentAfterEdited;
-    data.todoList[index].text = lastTodoContentAfterEdited;
-
-    // 让前一个未保存的todo恢复正常的显示
-    $lastTodoDisplay.classList.remove('todo-display-hide');
-    $lastTodoEdit.classList.remove('todo-edit-show');
-  }
-}
-
-/**
- * saveTodoEditForTemporaryBackup()
- *
- * 当一个todo被点击进入可编辑状态时，调用该函数，记录当前被点击的todo-content节点，以及todo的id值
- *
- * @param $todoContent 被点击的todo-content节点
- */
-function saveTodoEditForTemporaryBackup($todoContent) {
-  $lastEditedTodoContent = $todoContent;
-
-  lastEditedTodoData = {
-    id: $todoContent.dataset.id
-  };
 }
 
 /**
