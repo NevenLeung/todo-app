@@ -94,6 +94,160 @@ function createNewElementNode(tagName, className='', content='', ...attributeDat
 
 
 /**
+ * domOperationModule  将常用的DOM操作进行封装
+ *
+ * @return {object} {appendMultiChild, hasClass, query, queryAll, findClosestAncestor, findSiblingForward, findSiblingBackward}
+ *
+ ******************************************************************************************
+ * appendMultiChild()  将多个节点按顺序添加到parentNode，作为其子节点
+ *
+ * @param parentNode  父节点
+ * @param childrenNodes  一个或多个待添加的子节点，多个节点用','隔开
+ ******************************************************************************************
+ * hasClass()  判断某个元素是否含有相应的className
+ *
+ * @param $el  需要判断的元素
+ * @param {string} className  单个class名称
+ ******************************************************************************************
+ * query()  基于$el去查找第一个符合selector的元素
+ *
+ * @param $el  基准元素
+ * @param {string} selector  合法的css选择器字符串
+ ******************************************************************************************
+ * queryAll()  基于$el去查找符合selector的元素集合
+ *
+ * @param $el  基准元素
+ * @param {string} selector  合法的css选择器字符串
+ ******************************************************************************************
+ * findClosestAncestor()  寻找第一个拥有相应className的祖先节点
+ *
+ * @param $el  开始寻找的基准元素
+ * @param {string} selector  单个class名称
+ ******************************************************************************************
+ * findSiblingForward()  向前寻找第一个拥有相应className的兄弟元素
+ *
+ * @param $el  开始寻找的基准元素
+ * @param {string} className  单个class名称
+ ******************************************************************************************
+ * findSiblingBackward()  向后寻找第一个拥有相应className的兄弟元素
+ *
+ * @param $el  开始寻找的基准元素
+ * @param {string} className  单个class名称
+ ******************************************************************************************
+ */
+
+const domOperationModule = (function () {
+  function appendMultiChild(parentNode, ...childrenNodes) {
+    if(typeof parentNode !== 'undefined' && typeof childrenNodes !== 'undefined') {
+      childrenNodes.forEach((childNode) => {
+        parentNode.appendChild(childNode);
+      })
+    } else {
+      console.log('ParentNode or childrenNodes is not defined.');
+    }
+  }
+
+  function hasClass($el, className) {
+    if ('classList' in $el) {
+      return $el.classList.contains(className);
+    }
+  }
+
+  // 将document.querySelector与element.querySelector区分开，对后者作了一些改进，基于element向子代元素查找，使得查找的结果符合预期
+  function query($el, selector) {
+    if (typeof $el !== 'undefined' && typeof selector !== 'undefined') {
+      if ($el === document) {
+        return $el.querySelector(selector);
+      } else {
+        const originID = $el.getAttribute('id');
+        const newID = originID || 'temp';
+
+        selector = `#${newID} ${selector}`;
+        const result = $el.querySelector(selector);
+
+        // 移除临时的id属性
+        if (!originID) {
+          $el.removeAttribute('id');
+        }
+
+        return result;
+      }
+    }
+  }
+
+  // 将document.querySelectorAll与element.querySelectorAll区分开，对后者作了一些改进，基于element向子代元素查找，使得查找的结果符合预期
+  function queryAll($el, selector) {
+    if (typeof $el !== 'undefined' && typeof selector !== 'undefined') {
+      if ($el === document) {
+        return $el.querySelectorAll(selector);
+      } else {
+        const originID = $el.getAttribute('id');
+        const newID = originID || 'temp';
+
+        selector = `#${newID} ${selector}`;
+        const result = $el.querySelectorAll(selector);
+
+        // 移除临时的id属性
+        if (!originID) {
+          $el.removeAttribute('id');
+        }
+
+        return result;
+      }
+    }
+  }
+
+  // $el.closest()会返回自身，这并不符合实际的使用需求，以下代码对这一点作了特殊处理
+  function findClosestAncestor($el, selector) {
+    if (typeof $el !== 'undefined' && typeof selector !== 'undefined') {
+      if ($el.closest(selector) === $el) {
+        if ($el.parentElement && $el.parentElement !== document) {
+          return $el.parentElement.closest(selector);
+        } else {
+          return null;
+        }
+      } else {
+        return $el.closest(selector);
+      }
+    }
+  }
+
+  function findSiblingForward($el, className) {
+    if (typeof $el !== 'undefined' && typeof className !== 'undefined' && $el.previousElementSibling) {
+      if (hasClass($el.previousElementSibling, className)) {
+        return $el.previousElementSibling;
+      } else {
+        return findSiblingForward($el.previousElementSibling, className);
+      }
+    } else {
+      console.log('Such a previous sibling element node is not found');
+    }
+  }
+
+  function findSiblingBackward($el, className) {
+    if (typeof $el !== 'undefined' && typeof className !== 'undefined' && $el.nextElementSibling) {
+      if (hasClass($el.nextElementSibling, className)) {
+        return $el.nextElementSibling;
+      } else {
+        return findSiblingBackward($el.nextElementSibling, className);
+      }
+    } else {
+      console.log('Such a next sibling element node is not found');
+    }
+  }
+
+  return {
+    appendMultiChild,
+    hasClass,
+    query,
+    queryAll,
+    findClosestAncestor,
+    findSiblingForward,
+    findSiblingBackward
+  }
+}());
+
+/**
  * addTodo()
  *
  * 添加一条新的todo，同时将一个新的todo对象的加入data.todoList数组中

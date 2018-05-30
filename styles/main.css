@@ -96,13 +96,13 @@ ul > li {
 
 .button-add-todo {
   color: #fff;
-  background-color: salmon;
+  background-color: #51e898;
 }
 
 .button-delete-todo {
   opacity: 0;
   color: #fff;
-  background-color: black;
+  background-color: salmon;
 }
 
 .button-delete-todo-show {
