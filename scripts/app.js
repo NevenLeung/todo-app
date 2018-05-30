@@ -32,35 +32,6 @@ const data = {
   ]
 };
 
-
-// logic
-
-todoListRender();
-
-// 使用表单提交input的内容
-$inputForm.addEventListener('submit', function(event) {
-  // 防止表单的提交
-  event.preventDefault();
-
-  const inputData = $inputForm.elements['todo-input'].value;
-
-  // 不允许修改后，todo的内容为空，或者为纯空白字符
-  if (inputData.trim().length === 0) {
-    alert('You should type something in the input bar.');
-  } else {
-    addTodo(inputData);
-  }
-
-  // 重置表单数据
-  $inputForm.reset();
-});
-
-// 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
-$todoList.addEventListener('click', clickOnTodo);
-
-// 使用事件委托，将mouseover与mouseout事件绑定到todo-list，实现当鼠标悬浮以及离开todo时，显示或隐藏删除按钮的效果。在处理函数对event.target作判断
-$todoList.addEventListener('mouseover', deleteButtonDisplay);
-$todoList.addEventListener('mouseout', deleteButtonHidden);
 // methods
 
 /**
@@ -162,7 +133,9 @@ const domOperationModule = (function () {
         const originID = $el.getAttribute('id');
         const newID = originID || 'temp';
 
+        $el.setAttribute('id', newID);
         selector = `#${newID} ${selector}`;
+
         const result = $el.querySelector(selector);
 
         // 移除临时的id属性
@@ -184,7 +157,9 @@ const domOperationModule = (function () {
         const originID = $el.getAttribute('id');
         const newID = originID || 'temp';
 
+        $el.setAttribute('id', newID);
         selector = `#${newID} ${selector}`;
+
         const result = $el.querySelectorAll(selector);
 
         // 移除临时的id属性
@@ -245,7 +220,7 @@ const domOperationModule = (function () {
     findSiblingForward,
     findSiblingBackward
   }
-}());
+})();
 
 /**
  * addTodo()
@@ -257,31 +232,17 @@ const domOperationModule = (function () {
 function addTodo(text) {
   const $li = createNewElementNode('li', 'todo');
   const $div = createNewElementNode('div', 'todo-display');
-  const $table = createNewElementNode('table');
-  const $tr = createNewElementNode('tr');
-  const $td_1 = createNewElementNode('td');
-  const $td_2 = createNewElementNode('td');
-  const $td_3 = createNewElementNode('td');
   const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
   const $todoContent = createNewElementNode('span', 'todo-content', text, 'data-is-done', 'false', 'data-id', data.todoList.length);
   const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
 
-  // 将checkbox和todo-content节点分别添加到div节点，作为其子节点
-  $td_1.appendChild($checkbox);
-  $td_2.appendChild($todoContent);
-  $td_3.appendChild($deleteButton);
+  // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
 
-  $tr.appendChild($td_1);
-  $tr.appendChild($td_2);
-  $tr.appendChild($td_3);
-
-  $table.appendChild($tr);
-
-  $div.appendChild($table);
+  domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
 
   $li.appendChild($div);
 
-  // 最后把li添加到DOM树上，完成渲染
+  // 最后把li添加到domWrapper树上，完成渲染
   $todoList.appendChild($li);
 
   data.todoList.push({
@@ -302,23 +263,11 @@ function addTodo(text) {
  *
  <ul class="todo-list">
    <li class='todo'>
-    <div class='todo-display'>
-      <table>
-        <tr>
-          <td>
-            <input type="todo-checkbox">
-          </td>
-          <td>
-            <span class='todo-content'></span>
-          </td>
-          <td>
-            <button class='button button-delete-todo'>
-              X
-            </button>
-          </td>
-         </tr>
-       </table>
-     </div>
+   <div class='todo-display'>
+     <input class='todo-checkbox'>
+     <span class='todo-content'></span>
+     <button class='button button-delete-todo'>X</button>
+   </div>
    </li>
  </ul>
  *
@@ -327,11 +276,6 @@ function todoListRender() {
   data.todoList.forEach(function (todo) {
     const $li = createNewElementNode('li', 'todo');
     const $div = createNewElementNode('div', 'todo-display');
-    const $table = createNewElementNode('table');
-    const $tr = createNewElementNode('tr');
-    const $td_1 = createNewElementNode('td');
-    const $td_2 = createNewElementNode('td');
-    const $td_3 = createNewElementNode('td');
     const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
     const $todoContent =  createNewElementNode('span', 'todo-content', todo.text, 'data-is-done', todo.isDone, 'data-id', todo.id);
     const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
@@ -343,17 +287,7 @@ function todoListRender() {
       $checkbox.setAttribute('checked', 'checked');
     }
 
-    $td_1.appendChild($checkbox);
-    $td_2.appendChild($todoContent);
-    $td_3.appendChild($deleteButton);
-
-    $tr.appendChild($td_1);
-    $tr.appendChild($td_2);
-    $tr.appendChild($td_3);
-
-    $table.appendChild($tr);
-
-    $div.appendChild($table);
+    domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
 
     $li.appendChild($div);
 
@@ -368,7 +302,7 @@ function removeAllChildren(parent) {
   }
 }
 
-const todoEditInPlaceModule = (function () {
+const todoEditInPlaceModule = (function (domWrapper) {
   let $lastEditedTodoContent;
   let lastEditedTodoData;
 
@@ -382,33 +316,34 @@ const todoEditInPlaceModule = (function () {
    * DOM 结构
    *
    <ul class='todo-list'>
-   <li class="todo">
-   <div class='todo-display'>
-   <input class='todo-checkbox'>
-   <span class='todo-content'></span>
-   <button class='button button-delete-todo'>X</button>
-   </div>
-   <div class='todo-edit'>
-   <input class='todo-edit-bar'>
-   <button class='button button-edit-save'>save</button>
-   <button class='button button-edit-cancel'>cancel</button>
-   </div>
-   </li>
+     <li class="todo">
+       <div class='todo-display'>
+         <input class='todo-checkbox'>
+         <span class='todo-content'></span>
+         <button class='button button-delete-todo'>X</button>
+       </div>
+       <div class='todo-edit'>
+         <input class='todo-edit-bar'>
+         <button class='button button-edit-save'>save</button>
+         <button class='button button-edit-cancel'>cancel</button>
+       </div>
+     </li>
    </ul>
    *
    */
   function editTodoInPlace($el) {
     // 判断点击元素的是不是todo-content
-    if ($el.classList.contains('todo-content') && $el.style.display !== 'none') {
+    if (domWrapper.hasClass($el,'todo-content') && $el.style.display !== 'none') {
       // 判断是否有前一次的编辑操作
       if (typeof $lastEditedTodoContent !== 'undefined') {
         saveUnsavedEdition();
       }
 
-      const $todoDisplay = $el.parentElement.parentElement.parentElement.parentElement;
+      const $todoDisplay = domWrapper.findClosestAncestor($el, '.todo-display');
+      const $todo = domWrapper.findClosestAncestor($todoDisplay, '.todo');
 
       // 判断是否已经有下一个兄弟元素，即todo-edit，防止重复添加todo-edit
-      if($todoDisplay.nextElementSibling === null) {
+      if(domWrapper.query($todo, '.todo-edit') === null) {
         $todoDisplay.classList.toggle('todo-display-hide');
 
         const $div = createNewElementNode('div', 'todo-edit todo-edit-show');
@@ -419,18 +354,18 @@ const todoEditInPlaceModule = (function () {
         $saveButton.addEventListener('click', todoEditSave);
         $cancelButton.addEventListener('click', todoEditCancel);
 
-        $div.appendChild($editBar);
-        $div.appendChild($saveButton);
-        $div.appendChild($cancelButton);
+        domWrapper.appendMultiChild($div,$editBar, $saveButton, $cancelButton);
 
-        $todoDisplay.parentNode.appendChild($div);
+        $todo.appendChild($div);
       } else {
         // 由于已经有了todo-edit，只需要改变display属性即可，无需重复创建，提高性能
+        const $todoEdit = domWrapper.query($todo, '.todo-edit');
+        const $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
         $todoDisplay.classList.toggle('todo-display-hide');
-        $todoDisplay.nextElementSibling.classList.toggle('todo-edit-show');
+        $todoEdit.classList.toggle('todo-edit-show');
 
         // 确保input中的value与todo的content相同
-        $todoDisplay.nextElementSibling.children[0].value = $el.textContent;
+        $todoEditBar.value = $el.textContent;
       }
 
       // 将当前的操作的todo-content节点保存起来
@@ -445,10 +380,11 @@ const todoEditInPlaceModule = (function () {
    * 以及将修改更新到data，以及改变todo-display和todo-edit的display属性
    */
   function todoEditSave(event) {
-    const $todoEditBar = event.target.previousElementSibling;
-    const $todoEdit = $todoEditBar.parentElement;
-    const $todoDisplay = $todoEdit.previousElementSibling;
-    const $todoContent = $todoDisplay.children[0].children[0].children[1].children[0];
+    const $todoEdit = domWrapper.findClosestAncestor(event.target, '.todo-edit');
+    const $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
+    const $todo = domWrapper.findClosestAncestor($todoEdit, '.todo');
+    const $todoDisplay = domWrapper.query($todo, '.todo-display');
+    const $todoContent = domWrapper.query($todoDisplay, '.todo-content');
 
     // 不允许修改后，todo的内容为空，或者为纯空白字符
     if ($todoEditBar.value.trim().length === 0) {
@@ -475,9 +411,9 @@ const todoEditInPlaceModule = (function () {
    * 作为todo-edit中cancel button的事件处理方法，用于抛弃修改结果后，改变todo-display和todo-edit的display属性
    */
   function todoEditCancel(event) {
-    const $todoEditBar = event.target.previousElementSibling.previousElementSibling;
-    const $todoEdit = $todoEditBar.parentElement;
-    const $todoDisplay = $todoEdit.previousElementSibling;
+    const $todoEdit = domWrapper.findClosestAncestor(event.target, '.todo-edit');
+    const $todo = domWrapper.findClosestAncestor($todoEdit, '.todo');
+    const $todoDisplay = domWrapper.query($todo, '.todo-display');
 
     $todoDisplay.classList.toggle('todo-display-hide');
     $todoEdit.classList.toggle('todo-edit-show');
@@ -497,11 +433,13 @@ const todoEditInPlaceModule = (function () {
    */
   function saveUnsavedEdition() {
     if (typeof $lastEditedTodoContent !== 'undefined' && typeof lastEditedTodoData !== 'undefined') {
-      const $lastTodoDisplay = $lastEditedTodoContent.parentElement.parentElement.parentElement.parentElement;
-      const $lastTodoEdit = $lastTodoDisplay.nextElementSibling;
+      const $lastTodoDisplay = domWrapper.findClosestAncestor($lastEditedTodoContent, '.todo-display');
+      const $lastTodo = domWrapper.findClosestAncestor($lastTodoDisplay, '.todo');
+      const $lastTodoEdit = domWrapper.query($lastTodo, '.todo-edit');
+
       // 待保存的content应该是input中的value，而不是$todoContent中的textContent，那应该如何保存value呢？
       // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以这时input中value就是被修改后的值
-      const lastTodoContentAfterEdited = $lastTodoEdit.children[0].value;
+      const lastTodoContentAfterEdited = domWrapper.query($lastTodoEdit, '.todo-edit-bar').value;
       const index = data.todoList.findIndex((todo) => {
         return todo.id === parseInt(lastEditedTodoData.id);
       });
@@ -535,7 +473,7 @@ const todoEditInPlaceModule = (function () {
     activatedTodoEditInPlace: editTodoInPlace
   };
 
-}());
+}(domOperationModule));
 
 /**
  * clickOnTodo()
@@ -543,16 +481,17 @@ const todoEditInPlaceModule = (function () {
  * 作为在todo上点击事件的事件处理函数，不同的点击元素会触发不同的处理事件
  */
 function clickOnTodo(event) {
+  const $el = event.target;
   // 判断点击的元素是不是todo-checkbox
-  if (event.target.classList.contains('todo-checkbox')) {
+  if (domOperationModule.hasClass($el, 'todo-checkbox')) {
     todoStatusToggle(event.target);
   }
   // 判断点击元素的是不是todo-content，是的话，开启edit in place
-  if (event.target.classList.contains('todo-content')) {
+  if (domOperationModule.hasClass($el, 'todo-content')) {
     todoEditInPlaceModule.activatedTodoEditInPlace(event.target);
   }
   // 判断点击的元素是不是删除按钮
-  if (event.target.classList.contains('button-delete-todo')) {
+  if (domOperationModule.hasClass($el, 'button-delete-todo')) {
     deleteTodo(event.target);
   }
 }
@@ -585,9 +524,9 @@ function todoStatusToggle($el) {
  * 删除todo，从DOM上移除相应的$todo与相应的数据
  */
 function deleteTodo($el) {
-  const $todoDisplay = $el.parentElement.parentElement.parentElement.parentElement;
-  const $todo = $todoDisplay.parentElement;
-  const $todoContent = $todoDisplay.children[0].children[0].children[1].children[0];
+  const $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
+  const $todo = domOperationModule.findClosestAncestor($todoDisplay, '.todo');
+  const $todoContent = domOperationModule.query($todoDisplay, '.todo-content');
   const id = parseInt($todoContent.dataset.id);
   const index = data.todoList.findIndex((todo) => {
     return todo.id === id;
@@ -604,9 +543,10 @@ function deleteTodo($el) {
  * 作为mouseover的事件处理函数，当鼠标hover在todo上时，显示删除按钮
  */
 function deleteButtonDisplay(event) {
-  if (event.target.classList.contains('todo-checkbox') || event.target.classList.contains('todo-content') || event.target.classList.contains('button-delete-todo')) {
-    const $todoDisplay = event.target.parentElement.parentElement.parentElement.parentElement;
-    const $deleteButton = $todoDisplay.children[0].children[0].children[2].children[0];
+  const $el = event.target;
+  if (domOperationModule.findClosestAncestor($el, '.todo-display')) {
+    const $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
+    const $deleteButton = domOperationModule.query($todoDisplay, '.button-delete-todo');
 
     // 由于display: none和visibility: hidden时不能触发鼠标的mouseover事件，所以使用opacity实现隐藏效果
     $deleteButton.classList.add('button-delete-todo-show');
@@ -619,10 +559,41 @@ function deleteButtonDisplay(event) {
  * 作为mouseout的事件处理函数，当鼠标离开todo时，隐藏删除按钮
  */
 function deleteButtonHidden(event) {
-  if (event.target.classList.contains('todo-checkbox') || event.target.classList.contains('todo-content') || event.target.classList.contains('button-delete-todo')) {
-    const $todoDisplay = event.target.parentElement.parentElement.parentElement.parentElement;
-    const $deleteButton = $todoDisplay.children[0].children[0].children[2].children[0];
+  const $el = event.target;
+  if (domOperationModule.findClosestAncestor($el, '.todo-display')) {
+    const $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
+    const $deleteButton = domOperationModule.query($todoDisplay, '.button-delete-todo');
 
     $deleteButton.classList.remove('button-delete-todo-show');
   }
 }
+
+
+// ----------------------------------- logic ---------------------------------------
+
+todoListRender();
+
+// 使用表单提交input的内容
+$inputForm.addEventListener('submit', function(event) {
+  // 防止表单的提交
+  event.preventDefault();
+
+  const inputData = $inputForm.elements['todo-input'].value;
+
+  // 不允许修改后，todo的内容为空，或者为纯空白字符
+  if (inputData.trim().length === 0) {
+    alert('You should type something in the input bar.');
+  } else {
+    addTodo(inputData);
+  }
+
+  // 重置表单数据
+  $inputForm.reset();
+});
+
+// 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
+$todoList.addEventListener('click', clickOnTodo);
+
+// 使用事件委托，将mouseover与mouseout事件绑定到todo-list，实现当鼠标悬浮以及离开todo时，显示或隐藏删除按钮的效果。在处理函数对event.target作判断
+$todoList.addEventListener('mouseover', deleteButtonDisplay);
+$todoList.addEventListener('mouseout', deleteButtonHidden);

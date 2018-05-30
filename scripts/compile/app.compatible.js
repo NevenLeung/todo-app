@@ -4,8 +4,6 @@
 
 var $todoList = document.querySelector('.todo-list');
 var $inputForm = document.querySelector('.input-form');
-var $lastEditedTodoContent = void 0;
-var lastEditedTodoData = void 0;
 
 // data source
 
@@ -29,34 +27,6 @@ var data = {
   }]
 };
 
-// logic
-
-todoListRender();
-
-// 使用表单提交input的内容
-$inputForm.addEventListener('submit', function (event) {
-  // 防止表单的提交
-  event.preventDefault();
-
-  var inputData = $inputForm.elements['todo-input'].value;
-
-  // 不允许修改后，todo的内容为空，或者为纯空白字符
-  if (inputData.trim().length === 0) {
-    alert('You should type something in the input bar.');
-  } else {
-    addTodo(inputData);
-  }
-
-  // 重置表单数据
-  $inputForm.reset();
-});
-
-// 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
-$todoList.addEventListener('click', clickOnTodo);
-
-// 使用事件委托，将mouseover与mouseout事件绑定到todo-list，实现当鼠标悬浮以及离开todo时，显示或隐藏删除按钮的效果。在处理函数对event.target作判断
-$todoList.addEventListener('mouseover', deleteButtonDisplay);
-$todoList.addEventListener('mouseout', deleteButtonHidden);
 // methods
 
 /**
@@ -96,6 +66,168 @@ function createNewElementNode(tagName) {
 }
 
 /**
+ * domOperationModule  将常用的DOM操作进行封装
+ *
+ * @return {object} {appendMultiChild, hasClass, query, queryAll, findClosestAncestor, findSiblingForward, findSiblingBackward}
+ *
+ ******************************************************************************************
+ * appendMultiChild()  将多个节点按顺序添加到parentNode，作为其子节点
+ *
+ * @param parentNode  父节点
+ * @param childrenNodes  一个或多个待添加的子节点，多个节点用','隔开
+ ******************************************************************************************
+ * hasClass()  判断某个元素是否含有相应的className
+ *
+ * @param $el  需要判断的元素
+ * @param {string} className  单个class名称
+ ******************************************************************************************
+ * query()  基于$el去查找第一个符合selector的元素
+ *
+ * @param $el  基准元素
+ * @param {string} selector  合法的css选择器字符串
+ ******************************************************************************************
+ * queryAll()  基于$el去查找符合selector的元素集合
+ *
+ * @param $el  基准元素
+ * @param {string} selector  合法的css选择器字符串
+ ******************************************************************************************
+ * findClosestAncestor()  寻找第一个拥有相应className的祖先节点
+ *
+ * @param $el  开始寻找的基准元素
+ * @param {string} selector  单个class名称
+ ******************************************************************************************
+ * findSiblingForward()  向前寻找第一个拥有相应className的兄弟元素
+ *
+ * @param $el  开始寻找的基准元素
+ * @param {string} className  单个class名称
+ ******************************************************************************************
+ * findSiblingBackward()  向后寻找第一个拥有相应className的兄弟元素
+ *
+ * @param $el  开始寻找的基准元素
+ * @param {string} className  单个class名称
+ ******************************************************************************************
+ */
+
+var domOperationModule = function () {
+  function appendMultiChild(parentNode) {
+    for (var _len2 = arguments.length, childrenNodes = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+      childrenNodes[_key2 - 1] = arguments[_key2];
+    }
+
+    if (typeof parentNode !== 'undefined' && typeof childrenNodes !== 'undefined') {
+      childrenNodes.forEach(function (childNode) {
+        parentNode.appendChild(childNode);
+      });
+    } else {
+      console.log('ParentNode or childrenNodes is not defined.');
+    }
+  }
+
+  function hasClass($el, className) {
+    if ('classList' in $el) {
+      return $el.classList.contains(className);
+    }
+  }
+
+  // 将document.querySelector与element.querySelector区分开，对后者作了一些改进，基于element向子代元素查找，使得查找的结果符合预期
+  function query($el, selector) {
+    if (typeof $el !== 'undefined' && typeof selector !== 'undefined') {
+      if ($el === document) {
+        return $el.querySelector(selector);
+      } else {
+        var originID = $el.getAttribute('id');
+        var newID = originID || 'temp';
+
+        $el.setAttribute('id', newID);
+        selector = '#' + newID + ' ' + selector;
+
+        var result = $el.querySelector(selector);
+
+        // 移除临时的id属性
+        if (!originID) {
+          $el.removeAttribute('id');
+        }
+
+        return result;
+      }
+    }
+  }
+
+  // 将document.querySelectorAll与element.querySelectorAll区分开，对后者作了一些改进，基于element向子代元素查找，使得查找的结果符合预期
+  function queryAll($el, selector) {
+    if (typeof $el !== 'undefined' && typeof selector !== 'undefined') {
+      if ($el === document) {
+        return $el.querySelectorAll(selector);
+      } else {
+        var originID = $el.getAttribute('id');
+        var newID = originID || 'temp';
+
+        $el.setAttribute('id', newID);
+        selector = '#' + newID + ' ' + selector;
+
+        var result = $el.querySelectorAll(selector);
+
+        // 移除临时的id属性
+        if (!originID) {
+          $el.removeAttribute('id');
+        }
+
+        return result;
+      }
+    }
+  }
+
+  // $el.closest()会返回自身，这并不符合实际的使用需求，以下代码对这一点作了特殊处理
+  function findClosestAncestor($el, selector) {
+    if (typeof $el !== 'undefined' && typeof selector !== 'undefined') {
+      if ($el.closest(selector) === $el) {
+        if ($el.parentElement && $el.parentElement !== document) {
+          return $el.parentElement.closest(selector);
+        } else {
+          return null;
+        }
+      } else {
+        return $el.closest(selector);
+      }
+    }
+  }
+
+  function findSiblingForward($el, className) {
+    if (typeof $el !== 'undefined' && typeof className !== 'undefined' && $el.previousElementSibling) {
+      if (hasClass($el.previousElementSibling, className)) {
+        return $el.previousElementSibling;
+      } else {
+        return findSiblingForward($el.previousElementSibling, className);
+      }
+    } else {
+      console.log('Such a previous sibling element node is not found');
+    }
+  }
+
+  function findSiblingBackward($el, className) {
+    if (typeof $el !== 'undefined' && typeof className !== 'undefined' && $el.nextElementSibling) {
+      if (hasClass($el.nextElementSibling, className)) {
+        return $el.nextElementSibling;
+      } else {
+        return findSiblingBackward($el.nextElementSibling, className);
+      }
+    } else {
+      console.log('Such a next sibling element node is not found');
+    }
+  }
+
+  return {
+    appendMultiChild: appendMultiChild,
+    hasClass: hasClass,
+    query: query,
+    queryAll: queryAll,
+    findClosestAncestor: findClosestAncestor,
+    findSiblingForward: findSiblingForward,
+    findSiblingBackward: findSiblingBackward
+  };
+}();
+
+/**
  * addTodo()
  *
  * 添加一条新的todo，同时将一个新的todo对象的加入data.todoList数组中
@@ -105,31 +237,17 @@ function createNewElementNode(tagName) {
 function addTodo(text) {
   var $li = createNewElementNode('li', 'todo');
   var $div = createNewElementNode('div', 'todo-display');
-  var $table = createNewElementNode('table');
-  var $tr = createNewElementNode('tr');
-  var $td_1 = createNewElementNode('td');
-  var $td_2 = createNewElementNode('td');
-  var $td_3 = createNewElementNode('td');
   var $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
   var $todoContent = createNewElementNode('span', 'todo-content', text, 'data-is-done', 'false', 'data-id', data.todoList.length);
   var $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
 
-  // 将checkbox和todo-content节点分别添加到div节点，作为其子节点
-  $td_1.appendChild($checkbox);
-  $td_2.appendChild($todoContent);
-  $td_3.appendChild($deleteButton);
+  // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
 
-  $tr.appendChild($td_1);
-  $tr.appendChild($td_2);
-  $tr.appendChild($td_3);
-
-  $table.appendChild($tr);
-
-  $div.appendChild($table);
+  domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
 
   $li.appendChild($div);
 
-  // 最后把li添加到DOM树上，完成渲染
+  // 最后把li添加到domWrapper树上，完成渲染
   $todoList.appendChild($li);
 
   data.todoList.push({
@@ -149,23 +267,11 @@ function addTodo(text) {
  *
  <ul class="todo-list">
    <li class='todo'>
-    <div class='todo-display'>
-      <table>
-        <tr>
-          <td>
-            <input type="todo-checkbox">
-          </td>
-          <td>
-            <span class='todo-content'></span>
-          </td>
-          <td>
-            <button class='button button-delete-todo'>
-              X
-            </button>
-          </td>
-         </tr>
-       </table>
-     </div>
+   <div class='todo-display'>
+     <input class='todo-checkbox'>
+     <span class='todo-content'></span>
+     <button class='button button-delete-todo'>X</button>
+   </div>
    </li>
  </ul>
  *
@@ -174,11 +280,6 @@ function todoListRender() {
   data.todoList.forEach(function (todo) {
     var $li = createNewElementNode('li', 'todo');
     var $div = createNewElementNode('div', 'todo-display');
-    var $table = createNewElementNode('table');
-    var $tr = createNewElementNode('tr');
-    var $td_1 = createNewElementNode('td');
-    var $td_2 = createNewElementNode('td');
-    var $td_3 = createNewElementNode('td');
     var $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
     var $todoContent = createNewElementNode('span', 'todo-content', todo.text, 'data-is-done', todo.isDone, 'data-id', todo.id);
     var $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
@@ -190,17 +291,7 @@ function todoListRender() {
       $checkbox.setAttribute('checked', 'checked');
     }
 
-    $td_1.appendChild($checkbox);
-    $td_2.appendChild($todoContent);
-    $td_3.appendChild($deleteButton);
-
-    $tr.appendChild($td_1);
-    $tr.appendChild($td_2);
-    $tr.appendChild($td_3);
-
-    $table.appendChild($tr);
-
-    $div.appendChild($table);
+    domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
 
     $li.appendChild($div);
 
@@ -213,7 +304,7 @@ function removeAllChildren(parent) {
   if (parent.children.length !== 0) {}
 }
 
-var todoEditInPlaceModule = function () {
+var todoEditInPlaceModule = function (domWrapper) {
   var $lastEditedTodoContent = void 0;
   var lastEditedTodoData = void 0;
 
@@ -227,33 +318,34 @@ var todoEditInPlaceModule = function () {
    * DOM 结构
    *
    <ul class='todo-list'>
-   <li class="todo">
-   <div class='todo-display'>
-   <input class='todo-checkbox'>
-   <span class='todo-content'></span>
-   <button class='button button-delete-todo'>X</button>
-   </div>
-   <div class='todo-edit'>
-   <input class='todo-edit-bar'>
-   <button class='button button-edit-save'>save</button>
-   <button class='button button-edit-cancel'>cancel</button>
-   </div>
-   </li>
+     <li class="todo">
+       <div class='todo-display'>
+         <input class='todo-checkbox'>
+         <span class='todo-content'></span>
+         <button class='button button-delete-todo'>X</button>
+       </div>
+       <div class='todo-edit'>
+         <input class='todo-edit-bar'>
+         <button class='button button-edit-save'>save</button>
+         <button class='button button-edit-cancel'>cancel</button>
+       </div>
+     </li>
    </ul>
    *
    */
   function editTodoInPlace($el) {
     // 判断点击元素的是不是todo-content
-    if ($el.classList.contains('todo-content') && $el.style.display !== 'none') {
+    if (domWrapper.hasClass($el, 'todo-content') && $el.style.display !== 'none') {
       // 判断是否有前一次的编辑操作
       if (typeof $lastEditedTodoContent !== 'undefined') {
         saveUnsavedEdition();
       }
 
-      var $todoDisplay = $el.parentElement.parentElement.parentElement.parentElement;
+      var $todoDisplay = domWrapper.findClosestAncestor($el, '.todo-display');
+      var $todo = domWrapper.findClosestAncestor($todoDisplay, '.todo');
 
       // 判断是否已经有下一个兄弟元素，即todo-edit，防止重复添加todo-edit
-      if ($todoDisplay.nextElementSibling === null) {
+      if (domWrapper.query($todo, '.todo-edit') === null) {
         $todoDisplay.classList.toggle('todo-display-hide');
 
         var $div = createNewElementNode('div', 'todo-edit todo-edit-show');
@@ -264,18 +356,18 @@ var todoEditInPlaceModule = function () {
         $saveButton.addEventListener('click', todoEditSave);
         $cancelButton.addEventListener('click', todoEditCancel);
 
-        $div.appendChild($editBar);
-        $div.appendChild($saveButton);
-        $div.appendChild($cancelButton);
+        domWrapper.appendMultiChild($div, $editBar, $saveButton, $cancelButton);
 
-        $todoDisplay.parentNode.appendChild($div);
+        $todo.appendChild($div);
       } else {
         // 由于已经有了todo-edit，只需要改变display属性即可，无需重复创建，提高性能
+        var $todoEdit = domWrapper.query($todo, '.todo-edit');
+        var $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
         $todoDisplay.classList.toggle('todo-display-hide');
-        $todoDisplay.nextElementSibling.classList.toggle('todo-edit-show');
+        $todoEdit.classList.toggle('todo-edit-show');
 
         // 确保input中的value与todo的content相同
-        $todoDisplay.nextElementSibling.children[0].value = $el.textContent;
+        $todoEditBar.value = $el.textContent;
       }
 
       // 将当前的操作的todo-content节点保存起来
@@ -290,10 +382,11 @@ var todoEditInPlaceModule = function () {
    * 以及将修改更新到data，以及改变todo-display和todo-edit的display属性
    */
   function todoEditSave(event) {
-    var $todoEditBar = event.target.previousElementSibling;
-    var $todoEdit = $todoEditBar.parentElement;
-    var $todoDisplay = $todoEdit.previousElementSibling;
-    var $todoContent = $todoDisplay.children[0].children[0].children[1].children[0];
+    var $todoEdit = domWrapper.findClosestAncestor(event.target, '.todo-edit');
+    var $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
+    var $todo = domWrapper.findClosestAncestor($todoEdit, '.todo');
+    var $todoDisplay = domWrapper.query($todo, '.todo-display');
+    var $todoContent = domWrapper.query($todoDisplay, '.todo-content');
 
     // 不允许修改后，todo的内容为空，或者为纯空白字符
     if ($todoEditBar.value.trim().length === 0) {
@@ -319,9 +412,9 @@ var todoEditInPlaceModule = function () {
    * 作为todo-edit中cancel button的事件处理方法，用于抛弃修改结果后，改变todo-display和todo-edit的display属性
    */
   function todoEditCancel(event) {
-    var $todoEditBar = event.target.previousElementSibling.previousElementSibling;
-    var $todoEdit = $todoEditBar.parentElement;
-    var $todoDisplay = $todoEdit.previousElementSibling;
+    var $todoEdit = domWrapper.findClosestAncestor(event.target, '.todo-edit');
+    var $todo = domWrapper.findClosestAncestor($todoEdit, '.todo');
+    var $todoDisplay = domWrapper.query($todo, '.todo-display');
 
     $todoDisplay.classList.toggle('todo-display-hide');
     $todoEdit.classList.toggle('todo-edit-show');
@@ -341,11 +434,13 @@ var todoEditInPlaceModule = function () {
    */
   function saveUnsavedEdition() {
     if (typeof $lastEditedTodoContent !== 'undefined' && typeof lastEditedTodoData !== 'undefined') {
-      var $lastTodoDisplay = $lastEditedTodoContent.parentElement.parentElement.parentElement.parentElement;
-      var $lastTodoEdit = $lastTodoDisplay.nextElementSibling;
+      var $lastTodoDisplay = domWrapper.findClosestAncestor($lastEditedTodoContent, '.todo-display');
+      var $lastTodo = domWrapper.findClosestAncestor($lastTodoDisplay, '.todo');
+      var $lastTodoEdit = domWrapper.query($lastTodo, '.todo-edit');
+
       // 待保存的content应该是input中的value，而不是$todoContent中的textContent，那应该如何保存value呢？
       // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以这时input中value就是被修改后的值
-      var lastTodoContentAfterEdited = $lastTodoEdit.children[0].value;
+      var lastTodoContentAfterEdited = domWrapper.query($lastTodoEdit, '.todo-edit-bar').value;
       var index = data.todoList.findIndex(function (todo) {
         return todo.id === parseInt(lastEditedTodoData.id);
       });
@@ -378,7 +473,7 @@ var todoEditInPlaceModule = function () {
   return {
     activatedTodoEditInPlace: editTodoInPlace
   };
-}();
+}(domOperationModule);
 
 /**
  * clickOnTodo()
@@ -386,16 +481,17 @@ var todoEditInPlaceModule = function () {
  * 作为在todo上点击事件的事件处理函数，不同的点击元素会触发不同的处理事件
  */
 function clickOnTodo(event) {
+  var $el = event.target;
   // 判断点击的元素是不是todo-checkbox
-  if (event.target.classList.contains('todo-checkbox')) {
+  if (domOperationModule.hasClass($el, 'todo-checkbox')) {
     todoStatusToggle(event.target);
   }
   // 判断点击元素的是不是todo-content，是的话，开启edit in place
-  if (event.target.classList.contains('todo-content')) {
+  if (domOperationModule.hasClass($el, 'todo-content')) {
     todoEditInPlaceModule.activatedTodoEditInPlace(event.target);
   }
   // 判断点击的元素是不是删除按钮
-  if (event.target.classList.contains('button-delete-todo')) {
+  if (domOperationModule.hasClass($el, 'button-delete-todo')) {
     deleteTodo(event.target);
   }
 }
@@ -427,9 +523,9 @@ function todoStatusToggle($el) {
  * 删除todo，从DOM上移除相应的$todo与相应的数据
  */
 function deleteTodo($el) {
-  var $todoDisplay = $el.parentElement.parentElement.parentElement.parentElement;
-  var $todo = $todoDisplay.parentElement;
-  var $todoContent = $todoDisplay.children[0].children[0].children[1].children[0];
+  var $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
+  var $todo = domOperationModule.findClosestAncestor($todoDisplay, '.todo');
+  var $todoContent = domOperationModule.query($todoDisplay, '.todo-content');
   var id = parseInt($todoContent.dataset.id);
   var index = data.todoList.findIndex(function (todo) {
     return todo.id === id;
@@ -445,9 +541,10 @@ function deleteTodo($el) {
  * 作为mouseover的事件处理函数，当鼠标hover在todo上时，显示删除按钮
  */
 function deleteButtonDisplay(event) {
-  if (event.target.classList.contains('todo-checkbox') || event.target.classList.contains('todo-content') || event.target.classList.contains('button-delete-todo')) {
-    var $todoDisplay = event.target.parentElement.parentElement.parentElement.parentElement;
-    var $deleteButton = $todoDisplay.children[0].children[0].children[2].children[0];
+  var $el = event.target;
+  if (domOperationModule.findClosestAncestor($el, '.todo-display')) {
+    var $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
+    var $deleteButton = domOperationModule.query($todoDisplay, '.button-delete-todo');
 
     // 由于display: none和visibility: hidden时不能触发鼠标的mouseover事件，所以使用opacity实现隐藏效果
     $deleteButton.classList.add('button-delete-todo-show');
@@ -460,10 +557,40 @@ function deleteButtonDisplay(event) {
  * 作为mouseout的事件处理函数，当鼠标离开todo时，隐藏删除按钮
  */
 function deleteButtonHidden(event) {
-  if (event.target.classList.contains('todo-checkbox') || event.target.classList.contains('todo-content') || event.target.classList.contains('button-delete-todo')) {
-    var $todoDisplay = event.target.parentElement.parentElement.parentElement.parentElement;
-    var $deleteButton = $todoDisplay.children[0].children[0].children[2].children[0];
+  var $el = event.target;
+  if (domOperationModule.findClosestAncestor($el, '.todo-display')) {
+    var $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
+    var $deleteButton = domOperationModule.query($todoDisplay, '.button-delete-todo');
 
     $deleteButton.classList.remove('button-delete-todo-show');
   }
 }
+
+// ----------------------------------- logic ---------------------------------------
+
+todoListRender();
+
+// 使用表单提交input的内容
+$inputForm.addEventListener('submit', function (event) {
+  // 防止表单的提交
+  event.preventDefault();
+
+  var inputData = $inputForm.elements['todo-input'].value;
+
+  // 不允许修改后，todo的内容为空，或者为纯空白字符
+  if (inputData.trim().length === 0) {
+    alert('You should type something in the input bar.');
+  } else {
+    addTodo(inputData);
+  }
+
+  // 重置表单数据
+  $inputForm.reset();
+});
+
+// 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
+$todoList.addEventListener('click', clickOnTodo);
+
+// 使用事件委托，将mouseover与mouseout事件绑定到todo-list，实现当鼠标悬浮以及离开todo时，显示或隐藏删除按钮的效果。在处理函数对event.target作判断
+$todoList.addEventListener('mouseover', deleteButtonDisplay);
+$todoList.addEventListener('mouseout', deleteButtonHidden);

@@ -40,17 +40,8 @@ ul > li {
   margin: 1px 0;
 }
 
-.todo table {
-  height: 27px;
-  border-spacing: 0;
-}
-
-.todo td {
-  padding: 0;
-}
-
 .todo-display {
-
+  display: flex;
 }
 
 .todo-display-hide {
@@ -60,12 +51,15 @@ ul > li {
   todo 但todo-content内多于一行时，checkbox下方会显示内容
  */
 .todo-checkbox {
-
+  align-self: center;
+  margin: 0;
 }
 
 .todo-content {
-  display: block;
+  /*display: block;*/
+  flex: 1;
   width: 345px;
+  padding: 0 5px;
   cursor: text;
 }
 
@@ -83,7 +77,7 @@ ul > li {
 
 .todo-edit-bar {
   display: inline-block;
-  width: 280px;
+  width: 285px;
 }
 
 .button {
@@ -103,6 +97,8 @@ ul > li {
   opacity: 0;
   color: #fff;
   background-color: salmon;
+  align-self: center;
+  margin: 0;
 }
 
 .button-delete-todo-show {
