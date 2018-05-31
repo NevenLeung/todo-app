@@ -32,37 +32,7 @@ const data = {
   ]
 };
 
-// methods
-
-/**
- * createNewElementNode()
- *
- * 自定义创建元素节点方法
- *
- * @param tagName 标签名
- * @param className 样式名称
- * @param content 文本内容
- * @param attributeData 设置节点的属性，属性值应为成对出现，前者为属性名称，后者为属性值
- * @returns 返回创建的元素节点
- */
-function createNewElementNode(tagName, className='', content='', ...attributeData) {
-  const newElement = document.createElement(tagName);
-  if (content !== '') {
-    newElement.textContent = content;
-  }
-  if (className !== '') {
-    newElement.className = className;
-  }
-
-  if (attributeData.length !== 0) {
-    for (let i = 0; i < attributeData.length; i = i + 2) {
-      newElement.setAttribute(attributeData[i], attributeData[i + 1]);
-    }
-  }
-
-  return newElement;
-}
-
+// ------------------------- modules --------------------------------
 
 /**
  * domOperationModule  将常用的DOM操作进行封装
@@ -222,86 +192,6 @@ const domOperationModule = (function () {
   }
 })();
 
-/**
- * addTodo()
- *
- * 添加一条新的todo，同时将一个新的todo对象的加入data.todoList数组中
- *
- * @param text todo的文本内容
- */
-function addTodo(text) {
-  const $li = createNewElementNode('li', 'todo');
-  const $div = createNewElementNode('div', 'todo-display');
-  const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
-  const $todoContent = createNewElementNode('span', 'todo-content', text, 'data-is-done', 'false', 'data-id', data.todoList.length);
-  const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
-
-  // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
-
-  domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
-
-  $li.appendChild($div);
-
-  // 最后把li添加到domWrapper树上，完成渲染
-  $todoList.appendChild($li);
-
-  data.todoList.push({
-    // todo的id从0开始，新的todo的id刚好可以等于之前的todoList.length
-    "id": data.todoList.length,
-    "text": text,
-    "isDone": false
-  });
-}
-
-
-/**
- * todoListRender()
- *
- * 渲染todoList，并给相应的节点加上合适的属性
- *
- * DOM 结构
- *
- <ul class="todo-list">
-   <li class='todo'>
-   <div class='todo-display'>
-     <input class='todo-checkbox'>
-     <span class='todo-content'></span>
-     <button class='button button-delete-todo'>X</button>
-   </div>
-   </li>
- </ul>
- *
- */
-function todoListRender() {
-  data.todoList.forEach(function (todo) {
-    const $li = createNewElementNode('li', 'todo');
-    const $div = createNewElementNode('div', 'todo-display');
-    const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
-    const $todoContent =  createNewElementNode('span', 'todo-content', todo.text, 'data-is-done', todo.isDone, 'data-id', todo.id);
-    const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
-
-    if (todo.isDone) {
-      // 为todo-content添加class 'todo-is-done'
-      $todoContent.classList.toggle('todo-is-done');
-      // 由于todo为已完成状态，需要将checkbox设置为已勾选状态
-      $checkbox.setAttribute('checked', 'checked');
-    }
-
-    domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
-
-    $li.appendChild($div);
-
-    $todoList.appendChild($li);
-  });
-}
-
-// todo 有没有需要将全部todo移除，重新渲染todoList的需要
-function removeAllChildren(parent) {
-  if(parent.children.length !== 0) {
-
-  }
-}
-
 const todoEditInPlaceModule = (function (domWrapper) {
   let $lastEditedTodoContent;
   let lastEditedTodoData;
@@ -331,7 +221,7 @@ const todoEditInPlaceModule = (function (domWrapper) {
    </ul>
    *
    */
-  function editTodoInPlace($el) {
+  function activatedTodoEditInPlace($el) {
     // 判断点击元素的是不是todo-content
     if (domWrapper.hasClass($el,'todo-content') && $el.style.display !== 'none') {
       // 判断是否有前一次的编辑操作
@@ -348,11 +238,8 @@ const todoEditInPlaceModule = (function (domWrapper) {
 
         const $div = createNewElementNode('div', 'todo-edit todo-edit-show');
         const $editBar = createNewElementNode('input', 'todo-edit-bar', '',  'value', $el.textContent);
-        const $saveButton =  createNewElementNode('button', 'button button-edit-save', 'save');
-        const $cancelButton =  createNewElementNode('button', 'button button-edit-cancel', 'cancel');
-
-        $saveButton.addEventListener('click', todoEditSave);
-        $cancelButton.addEventListener('click', todoEditCancel);
+        const $saveButton =  createNewElementNode('button', 'button button-save-todo-edit', 'save');
+        const $cancelButton =  createNewElementNode('button', 'button button-cancel-todo-edit', 'cancel');
 
         domWrapper.appendMultiChild($div,$editBar, $saveButton, $cancelButton);
 
@@ -379,8 +266,8 @@ const todoEditInPlaceModule = (function (domWrapper) {
    * 作为todo-edit中save button的事件处理方法，用于保存content的修改，修改todo-content的内容，
    * 以及将修改更新到data，以及改变todo-display和todo-edit的display属性
    */
-  function todoEditSave(event) {
-    const $todoEdit = domWrapper.findClosestAncestor(event.target, '.todo-edit');
+  function todoEditSave($el) {
+    const $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
     const $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
     const $todo = domWrapper.findClosestAncestor($todoEdit, '.todo');
     const $todoDisplay = domWrapper.query($todo, '.todo-display');
@@ -402,16 +289,15 @@ const todoEditInPlaceModule = (function (domWrapper) {
   }
 
 
-// 如何保存一个todo未修改之前的值，用于取消操作的回滚，
-// 不需要做回滚操作，input上的值，不影响span的textContent
-
   /**
    * todoEditCancel()
    *
    * 作为todo-edit中cancel button的事件处理方法，用于抛弃修改结果后，改变todo-display和todo-edit的display属性
    */
-  function todoEditCancel(event) {
-    const $todoEdit = domWrapper.findClosestAncestor(event.target, '.todo-edit');
+  function todoEditCancel($el) {
+    // 如何保存一个todo未修改之前的值，用于取消操作的回滚，
+    // 不需要做回滚操作，input上的值，不影响span的textContent
+    const $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
     const $todo = domWrapper.findClosestAncestor($todoEdit, '.todo');
     const $todoDisplay = domWrapper.query($todo, '.todo-display');
 
@@ -470,10 +356,122 @@ const todoEditInPlaceModule = (function (domWrapper) {
   }
 
   return {
-    activatedTodoEditInPlace: editTodoInPlace
+    activatedTodoEditInPlace,
+    todoEditSave,
+    todoEditCancel
   };
 
 }(domOperationModule));
+
+// ---------------------------- methods ----------------------------------
+
+/**
+ * createNewElementNode()
+ *
+ * 自定义创建元素节点方法
+ *
+ * @param tagName 标签名
+ * @param className 样式名称
+ * @param content 文本内容
+ * @param attributeData 设置节点的属性，属性值应为成对出现，前者为属性名称，后者为属性值
+ * @returns 返回创建的元素节点
+ */
+function createNewElementNode(tagName, className='', content='', ...attributeData) {
+  const newElement = document.createElement(tagName);
+  if (content !== '') {
+    newElement.textContent = content;
+  }
+  if (className !== '') {
+    newElement.className = className;
+  }
+
+  if (attributeData.length !== 0) {
+    for (let i = 0; i < attributeData.length; i = i + 2) {
+      newElement.setAttribute(attributeData[i], attributeData[i + 1]);
+    }
+  }
+
+  return newElement;
+}
+
+/**
+ * addTodo()
+ *
+ * 添加一条新的todo，同时将一个新的todo对象的加入data.todoList数组中
+ *
+ * @param text todo的文本内容
+ */
+function addTodo(text) {
+  const $li = createNewElementNode('li', 'todo');
+  const $div = createNewElementNode('div', 'todo-display');
+  const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
+  const $todoContent = createNewElementNode('span', 'todo-content', text, 'data-is-done', 'false', 'data-id', data.todoList.length);
+  const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
+
+  // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
+
+  domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
+
+  $li.appendChild($div);
+
+  // 把li添加到todo-list上
+  $todoList.appendChild($li);
+
+  data.todoList.push({
+    // todo的id从0开始，新的todo的id刚好可以等于之前的todoList.length
+    "id": data.todoList.length,
+    "text": text,
+    "isDone": false
+  });
+}
+
+/**
+ * todoListRender()
+ *
+ * 渲染todoList，并给相应的节点加上合适的属性
+ *
+ * DOM 结构
+ *
+ <ul class="todo-list">
+   <li class='todo'>
+   <div class='todo-display'>
+     <input class='todo-checkbox'>
+     <span class='todo-content'></span>
+     <button class='button button-delete-todo'>X</button>
+   </div>
+   </li>
+ </ul>
+ *
+ */
+function todoListRender() {
+  data.todoList.forEach(function (todo) {
+    const $li = createNewElementNode('li', 'todo');
+    const $div = createNewElementNode('div', 'todo-display');
+    const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
+    const $todoContent =  createNewElementNode('span', 'todo-content', todo.text, 'data-is-done', todo.isDone, 'data-id', todo.id);
+    const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
+
+    if (todo.isDone) {
+      // 为todo-content添加class 'todo-is-done'
+      $todoContent.classList.toggle('todo-is-done');
+      // 由于todo为已完成状态，需要将checkbox设置为已勾选状态
+      $checkbox.setAttribute('checked', 'checked');
+    }
+
+    domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
+
+    $li.appendChild($div);
+
+    $todoList.appendChild($li);
+  });
+}
+
+// todo 有没有需要将全部todo移除，重新渲染todoList的需要
+function removeAllChildren(parent) {
+  if(parent.children.length !== 0) {
+
+  }
+}
 
 /**
  * clickOnTodo()
@@ -486,13 +484,21 @@ function clickOnTodo(event) {
   if (domOperationModule.hasClass($el, 'todo-checkbox')) {
     todoStatusToggle(event.target);
   }
-  // 判断点击元素的是不是todo-content，是的话，开启edit in place
+  // 判断点击元素的是不是todo-content，是的话，开启edit in place功能
   if (domOperationModule.hasClass($el, 'todo-content')) {
     todoEditInPlaceModule.activatedTodoEditInPlace(event.target);
   }
   // 判断点击的元素是不是删除按钮
   if (domOperationModule.hasClass($el, 'button-delete-todo')) {
     deleteTodo(event.target);
+  }
+  // 判断点击的元素是不是save按钮
+  if (domOperationModule.hasClass($el, 'button-save-todo-edit')) {
+    todoEditInPlaceModule.todoEditSave(event.target);
+  }
+  // 判断点击的元素是不是cancel按钮
+  if (domOperationModule.hasClass($el, 'button-cancel-todo-edit')) {
+    todoEditInPlaceModule.todoEditCancel(event.target);
   }
 }
 
@@ -504,7 +510,8 @@ function clickOnTodo(event) {
  */
 function todoStatusToggle($el) {
   // 每一个todo的todo-content是checkbox的下一个同级元素
-  const $todoContent = $el.parentElement.nextElementSibling.children[0];
+  const $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
+  const $todoContent = domOperationModule.query($todoDisplay, '.todo-content');
   if ($todoContent.dataset.isDone === 'false') {
     $todoContent.classList.toggle('todo-is-done');
     $todoContent.dataset.isDone = 'true';

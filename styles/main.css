@@ -47,19 +47,17 @@ ul > li {
 .todo-display-hide {
   display: none;
 }
-/**
-  todo 但todo-content内多于一行时，checkbox下方会显示内容
- */
+
 .todo-checkbox {
-  align-self: center;
+  align-self: baseline;
   margin: 0;
 }
 
 .todo-content {
-  /*display: block;*/
   flex: 1;
   width: 345px;
   padding: 0 5px;
+  align-self: baseline;
   cursor: text;
 }
 
@@ -97,7 +95,7 @@ ul > li {
   opacity: 0;
   color: #fff;
   background-color: salmon;
-  align-self: center;
+  align-self: baseline;
   margin: 0;
 }
 
@@ -105,12 +103,12 @@ ul > li {
   opacity: 1;
 }
 
-.button-edit-save {
+.button-save-todo-edit {
   color: #fff;
   background-color: #1DA1F2;
 }
 
-.button-edit-cancel {
+.button-cancel-todo-edit {
   background-color: lightgray;
 }
 
