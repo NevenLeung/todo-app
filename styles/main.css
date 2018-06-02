@@ -70,12 +70,13 @@ ul > li {
 }
 
 .todo-edit-show {
-  display: block;
+  display: flex;
+  height: 30px;
 }
 
 .todo-edit-bar {
-  display: inline-block;
-  width: 285px;
+  flex: 1;
+  align-self: center;
 }
 
 .button {
@@ -106,9 +107,11 @@ ul > li {
 .button-save-todo-edit {
   color: #fff;
   background-color: #1DA1F2;
+  align-self: center;
 }
 
 .button-cancel-todo-edit {
   background-color: lightgray;
+  align-self: center;
 }
 
