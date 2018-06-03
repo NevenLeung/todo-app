@@ -44,7 +44,7 @@ ul > li {
   display: flex;
 }
 
-.todo-display-hide {
+.todo-display-hidden {
   display: none;
 }
 

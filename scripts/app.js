@@ -38,8 +38,7 @@ const data = {
 (function () {
   //closest- https://developer.mozilla.org/zh-CN/docs/Web/API/Element/closest
   if (!Element.prototype.matches)
-    Element.prototype.matches = Element.prototype.msMatchesSelector ||
-      Element.prototype.webkitMatchesSelector;
+    Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
 
   if (!Element.prototype.closest)
     Element.prototype.closest = function (s) {
@@ -309,7 +308,7 @@ const todoEditInPlaceModule = (function (domWrapper) {
    *
    * 响应todo-content被点击时的一系列操作，比如重置todo显示内容，todo-display与todo-edit的display属性的toggle
    *
-   * @param $el 点击的元素
+   * @param $el todo-content节点
    *
    * DOM 结构
    *
@@ -342,22 +341,22 @@ const todoEditInPlaceModule = (function (domWrapper) {
 
       // 判断是否已经有下一个兄弟元素，即todo-edit，防止重复添加todo-edit
       if(domWrapper.query($todo, '.todo-edit') === null) {
-        $todoDisplay.classList.toggle('todo-display-hide');
+        $todoDisplay.classList.add('todo-display-hidden');
 
         const $div = createNewElementNode('div', 'todo-edit todo-edit-show');
         const $editBar = createNewElementNode('input', 'todo-edit-bar', '',  'value', $el.textContent);
         const $saveButton =  createNewElementNode('button', 'button button-save-todo-edit', 'save');
         const $cancelButton =  createNewElementNode('button', 'button button-cancel-todo-edit', 'cancel');
 
-        domWrapper.appendMultiChild($div,$editBar, $saveButton, $cancelButton);
+        domWrapper.appendMultiChild($div, $editBar, $saveButton, $cancelButton);
 
         $todo.appendChild($div);
       } else {
         // 由于已经有了todo-edit，只需要改变display属性即可，无需重复创建，提高性能
         const $todoEdit = domWrapper.query($todo, '.todo-edit');
         const $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
-        $todoDisplay.classList.toggle('todo-display-hide');
-        $todoEdit.classList.toggle('todo-edit-show');
+        $todoDisplay.classList.add('todo-display-hidden');
+        $todoEdit.classList.add('todo-edit-show');
 
         // 确保input中的value与todo的content相同
         $todoEditBar.value = $el.textContent;
@@ -373,26 +372,29 @@ const todoEditInPlaceModule = (function (domWrapper) {
    *
    * 作为todo-edit中save button的事件处理方法，用于保存content的修改，修改todo-content的内容，
    * 以及将修改更新到data，以及改变todo-display和todo-edit的display属性
+   *
+   * @param $el button-save-todo-edit节点
    */
   function todoEditSave($el) {
-    const $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
-    const $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
-    const $todo = domWrapper.findClosestAncestor($todoEdit, '.todo');
-    const $todoDisplay = domWrapper.query($todo, '.todo-display');
-    const $todoContent = domWrapper.query($todoDisplay, '.todo-content');
+    if ($el.matches('.button-save-todo-edit')) {
+      const $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
+      const $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
+      const $todoDisplay = domWrapper.findSibling($todoEdit, '.todo-display', 'forward');
+      const $todoContent = domWrapper.query($todoDisplay, '.todo-content');
 
-    // 不允许修改后，todo的内容为空，或者为纯空白字符
-    if ($todoEditBar.value.trim().length === 0) {
-      alert('The content of todo should not be empty. Please write something you need to do.');
-    } else {
-      $todoContent.textContent = $todoEditBar.value;
-      data.todoList[$todoContent.dataset.id].text = $todoEditBar.value;
+      // 不允许修改后，todo的内容为空，或者为纯空白字符
+      if ($todoEditBar.value.trim().length === 0) {
+        alert('The content of todo should not be empty. Please write something you need to do.');
+      } else {
+        $todoContent.textContent = $todoEditBar.value;
+        data.todoList[$todoContent.dataset.id].text = $todoEditBar.value;
 
-      $todoDisplay.classList.toggle('todo-display-hide');
-      $todoEdit.classList.toggle('todo-edit-show');
+        $todoDisplay.classList.remove('todo-display-hidden');
+        $todoEdit.classList.remove('todo-edit-show');
 
-      $lastEditedTodoContent = undefined;
-      lastEditedTodoData = undefined;
+        $lastEditedTodoContent = undefined;
+        lastEditedTodoData = undefined;
+      }
     }
   }
 
@@ -401,19 +403,22 @@ const todoEditInPlaceModule = (function (domWrapper) {
    * todoEditCancel()
    *
    * 作为todo-edit中cancel button的事件处理方法，用于抛弃修改结果后，改变todo-display和todo-edit的display属性
+   *
+   * @param $el button-cancel-todo-edit节点
    */
   function todoEditCancel($el) {
-    // 如何保存一个todo未修改之前的值，用于取消操作的回滚，
-    // 不需要做回滚操作，input上的值，不影响span的textContent
-    const $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
-    const $todo = domWrapper.findClosestAncestor($todoEdit, '.todo');
-    const $todoDisplay = domWrapper.query($todo, '.todo-display');
+    if ($el.matches('.button-cancel-todo-edit')) {
+      // 如何保存一个todo未修改之前的值，用于取消操作的回滚，
+      // 不需要做回滚操作，input上的值，不影响span的textContent
+      const $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
+      const $todoDisplay = domWrapper.findSibling($todoEdit, '.todo-display', 'forward');
 
-    $todoDisplay.classList.toggle('todo-display-hide');
-    $todoEdit.classList.toggle('todo-edit-show');
+      $todoDisplay.classList.remove('todo-display-hidden');
+      $todoEdit.classList.remove('todo-edit-show');
 
-    $lastEditedTodoContent = undefined;
-    lastEditedTodoData = undefined;
+      $lastEditedTodoContent = undefined;
+      lastEditedTodoData = undefined;
+    }
   }
 
   /**
@@ -428,11 +433,10 @@ const todoEditInPlaceModule = (function (domWrapper) {
   function saveUnsavedEdition() {
     if (typeof $lastEditedTodoContent !== 'undefined' && typeof lastEditedTodoData !== 'undefined') {
       const $lastTodoDisplay = domWrapper.findClosestAncestor($lastEditedTodoContent, '.todo-display');
-      const $lastTodo = domWrapper.findClosestAncestor($lastTodoDisplay, '.todo');
-      const $lastTodoEdit = domWrapper.query($lastTodo, '.todo-edit');
+      const $lastTodoEdit = domWrapper.findSibling($lastTodoDisplay, '.todo-edit');
 
       // 待保存的content应该是input中的value，而不是$todoContent中的textContent，那应该如何保存value呢？
-      // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以这时input中value就是被修改后的值
+      // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以此时input中value仍然是被修改后的值
       const lastTodoContentAfterEdited = domWrapper.query($lastTodoEdit, '.todo-edit-bar').value;
       const index = data.todoList.findIndex((todo) => {
         return todo.id === parseInt(lastEditedTodoData.id);
@@ -443,7 +447,7 @@ const todoEditInPlaceModule = (function (domWrapper) {
       data.todoList[index].text = lastTodoContentAfterEdited;
 
       // 让前一个未保存的todo恢复正常的显示
-      $lastTodoDisplay.classList.remove('todo-display-hide');
+      $lastTodoDisplay.classList.remove('todo-display-hidden');
       $lastTodoEdit.classList.remove('todo-edit-show');
     }
   }
@@ -561,7 +565,7 @@ function todoListRender() {
 
     if (todo.isDone) {
       // 为todo-content添加class 'todo-is-done'
-      $todoContent.classList.toggle('todo-is-done');
+      $todoContent.classList.add('todo-is-done');
       // 由于todo为已完成状态，需要将checkbox设置为已勾选状态
       $checkbox.setAttribute('checked', 'checked');
     }
@@ -615,18 +619,20 @@ function clickOnTodo(event) {
  * todoStatusToggle()
  *
  * 切换todo的完成状态，更改显示样式，更改data中的数据，用作事件处理函数
+ *
+ * $el为todo-checkbox节点
  */
 function todoStatusToggle($el) {
   // 每一个todo的todo-content是checkbox的下一个同级元素
   const $todo = domOperationModule.findClosestAncestor($el, '.todo');
   const $todoContent = domOperationModule.query($todo, '.todo-content');
   if ($todo.dataset.isDone === 'false') {
-    $todoContent.classList.toggle('todo-is-done');
+    $todoContent.classList.add('todo-is-done');
     $todo.dataset.isDone = 'true';
 
     data.todoList[$todoContent.dataset.id].isDone = true;
   } else {
-    $todoContent.classList.toggle('todo-is-done');
+    $todoContent.classList.remove('todo-is-done');
     $todo.dataset.isDone = 'false';
 
     data.todoList[$todoContent.dataset.id].isDone = false;
@@ -637,11 +643,13 @@ function todoStatusToggle($el) {
  * deleteTodo()
  *
  * 删除todo，从DOM上移除相应的$todo与相应的数据
+ *
+ * $el为button-delete-todo节点
  */
 function deleteTodo($el) {
-  const $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
-  const $todo = domOperationModule.findClosestAncestor($todoDisplay, '.todo');
-  const $todoContent = domOperationModule.query($todoDisplay, '.todo-content');
+  const $todo = domOperationModule.findClosestAncestor($el, '.todo');
+  const $todoContent = domOperationModule.findSibling($el, '.todo-content', 'forward');
+
   const id = parseInt($todoContent.dataset.id);
   const index = data.todoList.findIndex((todo) => {
     return todo.id === id;
@@ -659,7 +667,7 @@ function deleteTodo($el) {
  */
 function deleteButtonDisplay(event) {
   const $el = event.target;
-  if (domOperationModule.findClosestAncestor($el, '.todo-display')) {
+  if (domOperationModule.findClosestAncestor($el, '.todo-display') instanceof Element) {
     const $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
     const $deleteButton = domOperationModule.query($todoDisplay, '.button-delete-todo');
 
@@ -675,7 +683,7 @@ function deleteButtonDisplay(event) {
  */
 function deleteButtonHidden(event) {
   const $el = event.target;
-  if (domOperationModule.findClosestAncestor($el, '.todo-display')) {
+  if (domOperationModule.findClosestAncestor($el, '.todo-display') instanceof Element) {
     const $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
     const $deleteButton = domOperationModule.query($todoDisplay, '.button-delete-todo');
 

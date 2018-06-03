@@ -2,6 +2,17 @@
 
 // get the DOM elements
 
+function _toConsumableArray(arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
+      arr2[i] = arr[i];
+    }
+    return arr2;
+  } else {
+    return Array.from(arr);
+  }
+}
+
 var $todoList = document.querySelector('.todo-list');
 var $inputForm = document.querySelector('.input-form');
 
@@ -29,10 +40,26 @@ var data = {
 
 // ------------------------- modules --------------------------------
 
+// polyfills
+(function () {
+  //closest- https://developer.mozilla.org/zh-CN/docs/Web/API/Element/closest
+  if (!Element.prototype.matches) Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+
+  if (!Element.prototype.closest) Element.prototype.closest = function (s) {
+    var el = this;
+    if (!document.documentElement.contains(el)) return null;
+    do {
+      if (el.matches(s)) return el;
+      el = el.parentElement;
+    } while (el !== null);
+    return null;
+  };
+})();
+
 /**
  * domOperationModule  将常用的DOM操作进行封装
  *
- * @return {object} {appendMultiChild, hasClass, query, queryAll, findClosestAncestor, findSiblingForward, findSiblingBackward}
+ * @return {object} {appendMultiChild, query, queryAll, findClosestAncestor, findSibling, findSiblings}
  *
  ******************************************************************************************
  * appendMultiChild()  将多个节点按顺序添加到parentNode，作为其子节点
@@ -40,154 +67,245 @@ var data = {
  * @param parentNode  父节点
  * @param childrenNodes  一个或多个待添加的子节点，多个节点用','隔开
  ******************************************************************************************
- * hasClass()  判断某个元素是否含有相应的className
- *
- * @param $el  需要判断的元素
- * @param {string} className  单个class名称
- ******************************************************************************************
  * query()  基于$el去查找第一个符合selector的元素
  *
  * @param $el  基准元素
- * @param {string} selector  合法的css选择器字符串
+ * @param selector {string} 合法的css选择器字符串
  ******************************************************************************************
  * queryAll()  基于$el去查找符合selector的元素集合
  *
  * @param $el  基准元素
- * @param {string} selector  合法的css选择器字符串
+ * @param selector {string} 合法的css选择器字符串
  ******************************************************************************************
- * findClosestAncestor()  寻找第一个拥有相应className的祖先节点
+ * findClosestAncestor()  寻找第一个符合selector的祖先节点
  *
  * @param $el  开始寻找的基准元素
- * @param {string} selector  单个class名称
+ * @param selector {string} 合法的css选择器字符串
  ******************************************************************************************
- * findSiblingForward()  向前寻找第一个拥有相应className的兄弟元素
+ * findSibling()  寻找第一个符合selector的兄弟元素
  *
  * @param $el  开始寻找的基准元素
- * @param {string} className  单个class名称
+ * @param selector {string} 合法的css选择器字符串
+ * @param option {string}  查找选项 forward(default)|backward
  ******************************************************************************************
- * findSiblingBackward()  向后寻找第一个拥有相应className的兄弟元素
+ * findSiblings()  寻找符合selector的兄弟元素集合(排除$el本身)
  *
  * @param $el  开始寻找的基准元素
- * @param {string} className  单个class名称
+ * @param selector {string} 合法的css选择器字符串
+ * @param option {string}  查找选项 all(default)|forward|backward
  ******************************************************************************************
  */
 
 var domOperationModule = function () {
+  // 将多个节点按顺序添加到parentNode，作为其子节点
   function appendMultiChild(parentNode) {
-    for (var _len = arguments.length, childrenNodes = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      childrenNodes[_key - 1] = arguments[_key];
-    }
+    try {
+      for (var _len = arguments.length, childrenNodes = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        childrenNodes[_key - 1] = arguments[_key];
+      }
 
-    if (typeof parentNode !== 'undefined' && typeof childrenNodes !== 'undefined') {
-      childrenNodes.forEach(function (childNode) {
-        parentNode.appendChild(childNode);
-      });
-    } else {
-      console.log('ParentNode or childrenNodes is not defined.');
+      if (parentNode instanceof Node && childrenNodes.length !== 0) {
+        childrenNodes.forEach(function (childNode) {
+          if (childNode instanceof Node) {
+            parentNode.appendChild(childNode);
+          } else {
+            throw new Error(childNode + ' is not of type \'Node\'');
+          }
+        });
+      } else {
+        console.log('ParentNode or childrenNodes is not defined.');
+      }
+    } catch (ex) {
+      console.error(ex);
     }
   }
 
-  function hasClass($el, className) {
-    if ('classList' in $el) {
-      return $el.classList.contains(className);
-    }
-  }
-
+  // 基于$el去查找第一个符合selector的元素
   // 将document.querySelector与element.querySelector区分开，对后者作了一些改进，基于element向子代元素查找，使得查找的结果符合预期
   function query($el, selector) {
-    if (typeof $el !== 'undefined' && typeof selector !== 'undefined') {
-      if ($el === document) {
-        return $el.querySelector(selector);
-      } else {
-        var originID = $el.getAttribute('id');
-        var newID = originID || 'temp';
+    try {
+      if ($el instanceof Node && typeof selector === 'string') {
+        if ($el instanceof Document) {
+          return $el.querySelector(selector);
+        } else {
+          var originID = $el.getAttribute('id');
+          var newID = originID || 'temp';
 
-        $el.setAttribute('id', newID);
-        selector = '#' + newID + ' ' + selector;
+          $el.setAttribute('id', newID);
+          selector = '#' + newID + ' ' + selector;
 
-        var result = $el.querySelector(selector);
+          var result = $el.querySelector(selector);
 
-        // 移除临时的id属性
-        if (!originID) {
-          $el.removeAttribute('id');
+          // 移除临时的id属性
+          if (!originID) {
+            $el.removeAttribute('id');
+          }
+
+          return result;
         }
-
-        return result;
       }
+    } catch (ex) {
+      console.error(ex);
     }
   }
 
+  // 基于$el去查找符合selector的元素集合
   // 将document.querySelectorAll与element.querySelectorAll区分开，对后者作了一些改进，基于element向子代元素查找，使得查找的结果符合预期
   function queryAll($el, selector) {
-    if (typeof $el !== 'undefined' && typeof selector !== 'undefined') {
-      if ($el === document) {
-        return $el.querySelectorAll(selector);
-      } else {
-        var originID = $el.getAttribute('id');
-        var newID = originID || 'temp';
+    try {
+      if ($el instanceof Node && typeof selector === 'string') {
+        if ($el instanceof Document) {
+          return $el.querySelectorAll(selector);
+        } else {
+          var originID = $el.getAttribute('id');
+          var newID = originID || 'temp';
 
-        $el.setAttribute('id', newID);
-        selector = '#' + newID + ' ' + selector;
+          $el.setAttribute('id', newID);
+          selector = '#' + newID + ' ' + selector;
 
-        var result = $el.querySelectorAll(selector);
+          var result = $el.querySelectorAll(selector);
 
-        // 移除临时的id属性
-        if (!originID) {
-          $el.removeAttribute('id');
+          // 移除临时的id属性
+          if (!originID) {
+            $el.removeAttribute('id');
+          }
+
+          return result;
         }
-
-        return result;
       }
+    } catch (ex) {
+      console.error(ex);
     }
   }
 
+  // 寻找第一个符合selector的祖先节点
   // $el.closest()会返回自身，这并不符合实际的使用需求，以下代码对这一点作了特殊处理
   function findClosestAncestor($el, selector) {
-    if (typeof $el !== 'undefined' && typeof selector !== 'undefined') {
-      if ($el.closest(selector) === $el) {
-        if ($el.parentElement && $el.parentElement !== document) {
-          return $el.parentElement.closest(selector);
+    try {
+      if ($el instanceof Element && typeof selector === 'string') {
+        if ($el.closest(selector) === $el) {
+          if ($el.parentElement instanceof Element) {
+            return $el.parentElement.closest(selector);
+          } else {
+            return null;
+          }
+        } else {
+          return $el.closest(selector);
+        }
+      } else {
+        return null;
+      }
+    } catch (ex) {
+      console.error(ex);
+    }
+  }
+
+  // 向前寻找第一个符合selector的兄弟元素
+  function findSiblingForward($el, selector) {
+    if ($el instanceof Element && typeof selector === 'string' && $el.previousElementSibling) {
+      if ($el.previousElementSibling.matches(selector)) {
+        return $el.previousElementSibling;
+      } else {
+        return findSiblingForward($el.previousElementSibling, selector);
+      }
+    } else {
+      return null;
+    }
+  }
+
+  // 向后寻找第一个符合selector的兄弟元素
+  function findSiblingBackward($el, selector) {
+    if ($el instanceof Element && typeof selector === 'string' && $el.nextElementSibling) {
+      if ($el.nextElementSibling.matches(selector)) {
+        return $el.nextElementSibling;
+      } else {
+        return findSiblingBackward($el.nextElementSibling, selector);
+      }
+    } else {
+      return null;
+    }
+  }
+
+  // 寻找第一个符合selector的兄弟元素
+  function findSibling($el, selector) {
+    var option = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'backward';
+
+    try {
+      if (option === 'backward') {
+        return findSiblingBackward($el, selector);
+      } else if (option === 'forward') {
+        return findSiblingForward($el, selector);
+      } else {
+        return null;
+      }
+    } catch (ex) {
+      console.error(ex);
+    }
+  }
+
+  // 寻找符合selector的兄弟元素集合(排除$el本身)
+  function findSiblings($el, selector) {
+    var option = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'all';
+
+    try {
+      if ($el instanceof Element && typeof selector === 'string' && $el.parentElement instanceof Element) {
+        var result = [];
+        if (option === 'all') {
+          var _result;
+
+          var index = void 0;
+          (_result = result).push.apply(_result, _toConsumableArray($el.parentElement.children));
+          console.log(result);
+          index = result.indexOf($el);
+          result.splice(index, 1); // 移除$el本身
+
+          result = result.filter(function (el) {
+            return el.matches(selector);
+          });
+
+          return result;
+        } else if (option === 'backward') {
+          var _result2;
+
+          var _index = void 0;
+          (_result2 = result).push.apply(_result2, _toConsumableArray($el.parentElement.children));
+          _index = result.indexOf($el);
+          result.splice(0, _index + 1); // 从头开始移除sibling，直到把$el也一起移除
+
+          result = result.filter(function (el) {
+            return el.matches(selector);
+          });
+
+          return result;
+        } else if (option === 'forward') {
+          var _result3;
+
+          var _index2 = void 0;
+          (_result3 = result).push.apply(_result3, _toConsumableArray($el.parentElement.children));
+          _index2 = result.indexOf($el);
+          result.splice(_index2, result.length - _index2); // 从$el开始移除，直到把$el后面的所有sibling全部移除
+
+          result = result.filter(function (el) {
+            return el.matches(selector);
+          });
+
+          return result;
         } else {
           return null;
         }
-      } else {
-        return $el.closest(selector);
       }
-    }
-  }
-
-  function findSiblingForward($el, className) {
-    if (typeof $el !== 'undefined' && typeof className !== 'undefined' && $el.previousElementSibling) {
-      if (hasClass($el.previousElementSibling, className)) {
-        return $el.previousElementSibling;
-      } else {
-        return findSiblingForward($el.previousElementSibling, className);
-      }
-    } else {
-      console.log('Such a previous sibling element node is not found');
-    }
-  }
-
-  function findSiblingBackward($el, className) {
-    if (typeof $el !== 'undefined' && typeof className !== 'undefined' && $el.nextElementSibling) {
-      if (hasClass($el.nextElementSibling, className)) {
-        return $el.nextElementSibling;
-      } else {
-        return findSiblingBackward($el.nextElementSibling, className);
-      }
-    } else {
-      console.log('Such a next sibling element node is not found');
+    } catch (ex) {
+      console.error(ex);
     }
   }
 
   return {
     appendMultiChild: appendMultiChild,
-    hasClass: hasClass,
     query: query,
     queryAll: queryAll,
     findClosestAncestor: findClosestAncestor,
-    findSiblingForward: findSiblingForward,
-    findSiblingBackward: findSiblingBackward
+    findSibling: findSibling,
+    findSiblings: findSiblings
   };
 }();
 
@@ -200,7 +318,7 @@ var todoEditInPlaceModule = function (domWrapper) {
    *
    * 响应todo-content被点击时的一系列操作，比如重置todo显示内容，todo-display与todo-edit的display属性的toggle
    *
-   * @param $el 点击的元素
+   * @param $el .todo-content节点
    *
    * DOM 结构
    *
@@ -222,7 +340,7 @@ var todoEditInPlaceModule = function (domWrapper) {
    */
   function activatedTodoEditInPlace($el) {
     // 判断点击元素的是不是todo-content
-    if (domWrapper.hasClass($el, 'todo-content') && $el.style.display !== 'none') {
+    if ($el.matches('.todo-content') && $el.style.display !== 'none') {
       // 判断是否有前一次的编辑操作
       if (typeof $lastEditedTodoContent !== 'undefined') {
         saveUnsavedEdition();
@@ -233,7 +351,7 @@ var todoEditInPlaceModule = function (domWrapper) {
 
       // 判断是否已经有下一个兄弟元素，即todo-edit，防止重复添加todo-edit
       if (domWrapper.query($todo, '.todo-edit') === null) {
-        $todoDisplay.classList.toggle('todo-display-hide');
+        $todoDisplay.classList.add('todo-display-hidden');
 
         var $div = createNewElementNode('div', 'todo-edit todo-edit-show');
         var $editBar = createNewElementNode('input', 'todo-edit-bar', '', 'value', $el.textContent);
@@ -247,8 +365,8 @@ var todoEditInPlaceModule = function (domWrapper) {
         // 由于已经有了todo-edit，只需要改变display属性即可，无需重复创建，提高性能
         var $todoEdit = domWrapper.query($todo, '.todo-edit');
         var $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
-        $todoDisplay.classList.toggle('todo-display-hide');
-        $todoEdit.classList.toggle('todo-edit-show');
+        $todoDisplay.classList.add('todo-display-hidden');
+        $todoEdit.classList.add('todo-edit-show');
 
         // 确保input中的value与todo的content相同
         $todoEditBar.value = $el.textContent;
@@ -264,26 +382,29 @@ var todoEditInPlaceModule = function (domWrapper) {
    *
    * 作为todo-edit中save button的事件处理方法，用于保存content的修改，修改todo-content的内容，
    * 以及将修改更新到data，以及改变todo-display和todo-edit的display属性
+   *
+   * @param $el button-save-todo-edit节点
    */
   function todoEditSave($el) {
-    var $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
-    var $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
-    var $todo = domWrapper.findClosestAncestor($todoEdit, '.todo');
-    var $todoDisplay = domWrapper.query($todo, '.todo-display');
-    var $todoContent = domWrapper.query($todoDisplay, '.todo-content');
+    if ($el.matches('.button-save-todo-edit')) {
+      var $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
+      var $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
+      var $todoDisplay = domWrapper.findSibling($todoEdit, '.todo-display', 'forward');
+      var $todoContent = domWrapper.query($todoDisplay, '.todo-content');
 
-    // 不允许修改后，todo的内容为空，或者为纯空白字符
-    if ($todoEditBar.value.trim().length === 0) {
-      alert('The content of todo should not be empty. Please write something you need to do.');
-    } else {
-      $todoContent.textContent = $todoEditBar.value;
-      data.todoList[$todoContent.dataset.id].text = $todoEditBar.value;
+      // 不允许修改后，todo的内容为空，或者为纯空白字符
+      if ($todoEditBar.value.trim().length === 0) {
+        alert('The content of todo should not be empty. Please write something you need to do.');
+      } else {
+        $todoContent.textContent = $todoEditBar.value;
+        data.todoList[$todoContent.dataset.id].text = $todoEditBar.value;
 
-      $todoDisplay.classList.toggle('todo-display-hide');
-      $todoEdit.classList.toggle('todo-edit-show');
+        $todoDisplay.classList.remove('todo-display-hidden');
+        $todoEdit.classList.remove('todo-edit-show');
 
-      $lastEditedTodoContent = undefined;
-      lastEditedTodoData = undefined;
+        $lastEditedTodoContent = undefined;
+        lastEditedTodoData = undefined;
+      }
     }
   }
 
@@ -291,19 +412,22 @@ var todoEditInPlaceModule = function (domWrapper) {
    * todoEditCancel()
    *
    * 作为todo-edit中cancel button的事件处理方法，用于抛弃修改结果后，改变todo-display和todo-edit的display属性
+   *
+   * @param $el button-cancel-todo-edit节点
    */
   function todoEditCancel($el) {
-    // 如何保存一个todo未修改之前的值，用于取消操作的回滚，
-    // 不需要做回滚操作，input上的值，不影响span的textContent
-    var $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
-    var $todo = domWrapper.findClosestAncestor($todoEdit, '.todo');
-    var $todoDisplay = domWrapper.query($todo, '.todo-display');
+    if ($el.matches('.button-cancel-todo-edit')) {
+      // 如何保存一个todo未修改之前的值，用于取消操作的回滚，
+      // 不需要做回滚操作，input上的值，不影响span的textContent
+      var $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
+      var $todoDisplay = domWrapper.findSibling($todoEdit, '.todo-display', 'forward');
 
-    $todoDisplay.classList.toggle('todo-display-hide');
-    $todoEdit.classList.toggle('todo-edit-show');
+      $todoDisplay.classList.remove('todo-display-hidden');
+      $todoEdit.classList.remove('todo-edit-show');
 
-    $lastEditedTodoContent = undefined;
-    lastEditedTodoData = undefined;
+      $lastEditedTodoContent = undefined;
+      lastEditedTodoData = undefined;
+    }
   }
 
   /**
@@ -318,11 +442,10 @@ var todoEditInPlaceModule = function (domWrapper) {
   function saveUnsavedEdition() {
     if (typeof $lastEditedTodoContent !== 'undefined' && typeof lastEditedTodoData !== 'undefined') {
       var $lastTodoDisplay = domWrapper.findClosestAncestor($lastEditedTodoContent, '.todo-display');
-      var $lastTodo = domWrapper.findClosestAncestor($lastTodoDisplay, '.todo');
-      var $lastTodoEdit = domWrapper.query($lastTodo, '.todo-edit');
+      var $lastTodoEdit = domWrapper.findSibling($lastTodoDisplay, '.todo-edit');
 
       // 待保存的content应该是input中的value，而不是$todoContent中的textContent，那应该如何保存value呢？
-      // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以这时input中value就是被修改后的值
+      // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以此时input中value仍然是被修改后的值
       var lastTodoContentAfterEdited = domWrapper.query($lastTodoEdit, '.todo-edit-bar').value;
       var index = data.todoList.findIndex(function (todo) {
         return todo.id === parseInt(lastEditedTodoData.id);
@@ -333,7 +456,7 @@ var todoEditInPlaceModule = function (domWrapper) {
       data.todoList[index].text = lastTodoContentAfterEdited;
 
       // 让前一个未保存的todo恢复正常的显示
-      $lastTodoDisplay.classList.remove('todo-display-hide');
+      $lastTodoDisplay.classList.remove('todo-display-hidden');
       $lastTodoEdit.classList.remove('todo-edit-show');
     }
   }
@@ -406,10 +529,10 @@ function createNewElementNode(tagName) {
  * @param text todo的文本内容
  */
 function addTodo(text) {
-  var $li = createNewElementNode('li', 'todo');
+  var $li = createNewElementNode('li', 'todo', '', 'data-is-done', 'false');
   var $div = createNewElementNode('div', 'todo-display');
   var $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
-  var $todoContent = createNewElementNode('span', 'todo-content', text, 'data-is-done', 'false', 'data-id', data.todoList.length);
+  var $todoContent = createNewElementNode('span', 'todo-content', text, 'data-id', data.todoList.length);
   var $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
 
   // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
@@ -449,15 +572,15 @@ function addTodo(text) {
  */
 function todoListRender() {
   data.todoList.forEach(function (todo) {
-    var $li = createNewElementNode('li', 'todo');
+    var $li = createNewElementNode('li', 'todo', '', 'data-is-done', todo.isDone);
     var $div = createNewElementNode('div', 'todo-display');
     var $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
-    var $todoContent = createNewElementNode('span', 'todo-content', todo.text, 'data-is-done', todo.isDone, 'data-id', todo.id);
+    var $todoContent = createNewElementNode('span', 'todo-content', todo.text, 'data-id', todo.id);
     var $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
 
     if (todo.isDone) {
       // 为todo-content添加class 'todo-is-done'
-      $todoContent.classList.toggle('todo-is-done');
+      $todoContent.classList.add('todo-is-done');
       // 由于todo为已完成状态，需要将checkbox设置为已勾选状态
       $checkbox.setAttribute('checked', 'checked');
     }
@@ -483,23 +606,23 @@ function removeAllChildren(parent) {
 function clickOnTodo(event) {
   var $el = event.target;
   // 判断点击的元素是不是todo-checkbox
-  if (domOperationModule.hasClass($el, 'todo-checkbox')) {
+  if ($el.matches('.todo-checkbox')) {
     todoStatusToggle(event.target);
   }
   // 判断点击元素的是不是todo-content，是的话，开启edit in place功能
-  if (domOperationModule.hasClass($el, 'todo-content')) {
+  if ($el.matches('.todo-content')) {
     todoEditInPlaceModule.activatedTodoEditInPlace(event.target);
   }
   // 判断点击的元素是不是删除按钮
-  if (domOperationModule.hasClass($el, 'button-delete-todo')) {
+  if ($el.matches('.button-delete-todo')) {
     deleteTodo(event.target);
   }
   // 判断点击的元素是不是save按钮
-  if (domOperationModule.hasClass($el, 'button-save-todo-edit')) {
+  if ($el.matches('.button-save-todo-edit')) {
     todoEditInPlaceModule.todoEditSave(event.target);
   }
   // 判断点击的元素是不是cancel按钮
-  if (domOperationModule.hasClass($el, 'button-cancel-todo-edit')) {
+  if ($el.matches('.button-cancel-todo-edit')) {
     todoEditInPlaceModule.todoEditCancel(event.target);
   }
 }
@@ -508,19 +631,21 @@ function clickOnTodo(event) {
  * todoStatusToggle()
  *
  * 切换todo的完成状态，更改显示样式，更改data中的数据，用作事件处理函数
+ *
+ * $el为todo-checkbox节点
  */
 function todoStatusToggle($el) {
   // 每一个todo的todo-content是checkbox的下一个同级元素
-  var $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
-  var $todoContent = domOperationModule.query($todoDisplay, '.todo-content');
-  if ($todoContent.dataset.isDone === 'false') {
-    $todoContent.classList.toggle('todo-is-done');
-    $todoContent.dataset.isDone = 'true';
+  var $todo = domOperationModule.findClosestAncestor($el, '.todo');
+  var $todoContent = domOperationModule.query($todo, '.todo-content');
+  if ($todo.dataset.isDone === 'false') {
+    $todoContent.classList.add('todo-is-done');
+    $todo.dataset.isDone = 'true';
 
     data.todoList[$todoContent.dataset.id].isDone = true;
   } else {
-    $todoContent.classList.toggle('todo-is-done');
-    $todoContent.dataset.isDone = 'false';
+    $todoContent.classList.remove('todo-is-done');
+    $todo.dataset.isDone = 'false';
 
     data.todoList[$todoContent.dataset.id].isDone = false;
   }
@@ -530,11 +655,13 @@ function todoStatusToggle($el) {
  * deleteTodo()
  *
  * 删除todo，从DOM上移除相应的$todo与相应的数据
+ *
+ * $el为button-delete-todo节点
  */
 function deleteTodo($el) {
-  var $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
-  var $todo = domOperationModule.findClosestAncestor($todoDisplay, '.todo');
-  var $todoContent = domOperationModule.query($todoDisplay, '.todo-content');
+  var $todo = domOperationModule.findClosestAncestor($el, '.todo');
+  var $todoContent = domOperationModule.findSibling($el, '.todo-content', 'forward');
+
   var id = parseInt($todoContent.dataset.id);
   var index = data.todoList.findIndex(function (todo) {
     return todo.id === id;
@@ -551,7 +678,7 @@ function deleteTodo($el) {
  */
 function deleteButtonDisplay(event) {
   var $el = event.target;
-  if (domOperationModule.findClosestAncestor($el, '.todo-display')) {
+  if (domOperationModule.findClosestAncestor($el, '.todo-display') instanceof Element) {
     var $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
     var $deleteButton = domOperationModule.query($todoDisplay, '.button-delete-todo');
 
@@ -567,7 +694,7 @@ function deleteButtonDisplay(event) {
  */
 function deleteButtonHidden(event) {
   var $el = event.target;
-  if (domOperationModule.findClosestAncestor($el, '.todo-display')) {
+  if (domOperationModule.findClosestAncestor($el, '.todo-display') instanceof Element) {
     var $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
     var $deleteButton = domOperationModule.query($todoDisplay, '.button-delete-todo');
 
