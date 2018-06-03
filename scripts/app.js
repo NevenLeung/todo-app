@@ -34,7 +34,7 @@ const data = {
 
 // ------------------------- modules --------------------------------
 
-// polyfill
+// polyfills
 (function () {
   //closest- https://developer.mozilla.org/zh-CN/docs/Web/API/Element/closest
   if (!Element.prototype.matches)
@@ -56,18 +56,13 @@ const data = {
 /**
  * domOperationModule  将常用的DOM操作进行封装
  *
- * @return {object} {appendMultiChild, hasClass, query, queryAll, findClosestAncestor, findSibling, findSiblings}
+ * @return {object} {appendMultiChild, query, queryAll, findClosestAncestor, findSibling, findSiblings}
  *
  ******************************************************************************************
  * appendMultiChild()  将多个节点按顺序添加到parentNode，作为其子节点
  *
  * @param parentNode  父节点
  * @param childrenNodes  一个或多个待添加的子节点，多个节点用','隔开
- ******************************************************************************************
- * hasClass()  判断某个元素是否含有相应的className
- *
- * @param $el  需要判断的元素
- * @param className {string} 单个class名称
  ******************************************************************************************
  * query()  基于$el去查找第一个符合selector的元素
  *
@@ -116,13 +111,6 @@ const domOperationModule = (function () {
     }
     catch (ex) {
       console.error(ex);
-    }
-  }
-
-  // 判断某个元素是否含有相应的className
-  function hasClass($el, className) {
-    if ('classList' in $el) {
-      return $el.classList.contains(className);
     }
   }
 
@@ -304,7 +292,6 @@ const domOperationModule = (function () {
 
   return {
     appendMultiChild,
-    hasClass,
     query,
     queryAll,
     findClosestAncestor,
@@ -344,7 +331,7 @@ const todoEditInPlaceModule = (function (domWrapper) {
    */
   function activatedTodoEditInPlace($el) {
     // 判断点击元素的是不是todo-content
-    if (domWrapper.hasClass($el,'todo-content') && $el.style.display !== 'none') {
+    if ($el.matches('.todo-content') && $el.style.display !== 'none') {
       // 判断是否有前一次的编辑操作
       if (typeof $lastEditedTodoContent !== 'undefined') {
         saveUnsavedEdition();
@@ -602,23 +589,23 @@ function removeAllChildren(parent) {
 function clickOnTodo(event) {
   const $el = event.target;
   // 判断点击的元素是不是todo-checkbox
-  if (domOperationModule.hasClass($el, 'todo-checkbox')) {
+  if ($el.matches('.todo-checkbox')) {
     todoStatusToggle(event.target);
   }
   // 判断点击元素的是不是todo-content，是的话，开启edit in place功能
-  if (domOperationModule.hasClass($el, 'todo-content')) {
+  if ($el.matches('.todo-content')) {
     todoEditInPlaceModule.activatedTodoEditInPlace(event.target);
   }
   // 判断点击的元素是不是删除按钮
-  if (domOperationModule.hasClass($el, 'button-delete-todo')) {
+  if ($el.matches('.button-delete-todo')) {
     deleteTodo(event.target);
   }
   // 判断点击的元素是不是save按钮
-  if (domOperationModule.hasClass($el, 'button-save-todo-edit')) {
+  if ($el.matches('.button-save-todo-edit')) {
     todoEditInPlaceModule.todoEditSave(event.target);
   }
   // 判断点击的元素是不是cancel按钮
-  if (domOperationModule.hasClass($el, 'button-cancel-todo-edit')) {
+  if ($el.matches('.button-cancel-todo-edit')) {
     todoEditInPlaceModule.todoEditCancel(event.target);
   }
 }
