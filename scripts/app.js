@@ -510,10 +510,10 @@ function createNewElementNode(tagName, className='', content='', ...attributeDat
  * @param text todo的文本内容
  */
 function addTodo(text) {
-  const $li = createNewElementNode('li', 'todo');
+  const $li = createNewElementNode('li', 'todo', '', 'data-is-done', 'false',);
   const $div = createNewElementNode('div', 'todo-display');
   const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
-  const $todoContent = createNewElementNode('span', 'todo-content', text, 'data-is-done', 'false', 'data-id', data.todoList.length);
+  const $todoContent = createNewElementNode('span', 'todo-content', text, 'data-id', data.todoList.length);
   const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
 
   // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
@@ -553,10 +553,10 @@ function addTodo(text) {
  */
 function todoListRender() {
   data.todoList.forEach(function (todo) {
-    const $li = createNewElementNode('li', 'todo');
+    const $li = createNewElementNode('li', 'todo', '', 'data-is-done', todo.isDone);
     const $div = createNewElementNode('div', 'todo-display');
     const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
-    const $todoContent =  createNewElementNode('span', 'todo-content', todo.text, 'data-is-done', todo.isDone, 'data-id', todo.id);
+    const $todoContent = createNewElementNode('span', 'todo-content', todo.text, 'data-id', todo.id);
     const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
 
     if (todo.isDone) {
@@ -618,16 +618,16 @@ function clickOnTodo(event) {
  */
 function todoStatusToggle($el) {
   // 每一个todo的todo-content是checkbox的下一个同级元素
-  const $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
-  const $todoContent = domOperationModule.query($todoDisplay, '.todo-content');
-  if ($todoContent.dataset.isDone === 'false') {
+  const $todo = domOperationModule.findClosestAncestor($el, '.todo');
+  const $todoContent = domOperationModule.query($todo, '.todo-content');
+  if ($todo.dataset.isDone === 'false') {
     $todoContent.classList.toggle('todo-is-done');
-    $todoContent.dataset.isDone = 'true';
+    $todo.dataset.isDone = 'true';
 
     data.todoList[$todoContent.dataset.id].isDone = true;
   } else {
     $todoContent.classList.toggle('todo-is-done');
-    $todoContent.dataset.isDone = 'false';
+    $todo.dataset.isDone = 'false';
 
     data.todoList[$todoContent.dataset.id].isDone = false;
   }
