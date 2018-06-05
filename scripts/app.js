@@ -2,8 +2,9 @@
 
 // get the DOM elements
 
-const $todoList = document.querySelector('.todo-list');
 const $inputForm = document.querySelector('.input-form');
+const $displayCtrl = document.querySelector('.display-ctrl');
+const $todoList = document.querySelector('.todo-list');
 
 // data source
 
@@ -247,7 +248,6 @@ const domOperationModule = (function () {
         if (option === 'all') {
           let index;
           result.push(...$el.parentElement.children);
-          console.log(result);
           index = result.indexOf($el);
           result.splice(index, 1);  // 移除$el本身
 
@@ -486,7 +486,7 @@ const todoEditInPlaceModule = (function (domWrapper) {
  * @param className 样式名称
  * @param content 文本内容
  * @param attributeData 设置节点的属性，属性值应为成对出现，前者为属性名称，后者为属性值
- * @returns 返回创建的元素节点
+ * @returns Element 返回创建的元素节点
  */
 function createNewElementNode(tagName, className='', content='', ...attributeData) {
   const newElement = document.createElement(tagName);
@@ -692,8 +692,81 @@ function deleteButtonHidden(event) {
 }
 
 
+function displayTabsRender() {
+  const $displayOption1 = createNewElementNode('li', 'display-option');
+  const $displayOption2 = createNewElementNode('li', 'display-option');
+  const $displayOption3 = createNewElementNode('li', 'display-option');
+  const $buttonDisplayAll = createNewElementNode('button', 'button display-all', 'All');
+  const $buttonDisplayDone = createNewElementNode('button', 'button display-done', 'Done');
+  const $buttonDisplayNotDone = createNewElementNode('button', 'button display-not-done', 'Not Done');
+
+  $displayOption1.appendChild($buttonDisplayAll);
+  $displayOption2.appendChild($buttonDisplayNotDone);
+  $displayOption3.appendChild($buttonDisplayDone);
+
+  domOperationModule.appendMultiChild($displayCtrl, $displayOption1, $displayOption2, $displayOption3);
+}
+
+function clickOnDisplayCtrl(event) {
+  const $el = event.target;
+  if ($el.matches('.display-all')) {
+    displayTodoAll($el);
+  }
+
+  if ($el.matches('.display-done')) {
+    displayTodoIsDone($el);
+  }
+
+  if ($el.matches('.display-not-done')) {
+    displayTodoIsNotDone($el);
+  }
+}
+
+
+function displayTodoAll($el) {
+  if ($el.matches('.display-all')) {
+    const $todoNodes = [];
+    $todoNodes.push(...$todoList.children);
+
+    $todoNodes.forEach(($todo) => {
+      $todo.classList.remove('todo-hidden');
+    })
+  }
+}
+
+function displayTodoIsDone($el) {
+  if ($el.matches('.display-done')) {
+    const $todoNodes = [];
+    $todoNodes.push(...$todoList.children);
+
+    $todoNodes.forEach(($todo) => {
+      if ($todo.dataset.isDone === 'true') {
+        $todo.classList.remove('todo-hidden');
+      } else {
+        $todo.classList.add('todo-hidden');
+      }
+    })
+  }
+}
+
+function displayTodoIsNotDone($el) {
+  if ($el.matches('.display-not-done')) {
+    const $todoNodes = [];
+    $todoNodes.push(...$todoList.children);
+
+    $todoNodes.forEach(($todo) => {
+      if ($todo.dataset.isDone === 'true') {
+        $todo.classList.add('todo-hidden');
+      } else {
+        $todo.classList.remove('todo-hidden');
+      }
+    })
+  }
+}
+
 // ----------------------------------- logic ---------------------------------------
 
+displayTabsRender();
 todoListRender();
 
 // 使用表单提交input的内容
@@ -713,6 +786,9 @@ $inputForm.addEventListener('submit', function(event) {
   // 重置表单数据
   $inputForm.reset();
 });
+
+// 使用事件委托，将三种显示状态切换的点击绑定到display-ctrl节点上
+$displayCtrl.addEventListener('click', clickOnDisplayCtrl);
 
 // 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
 $todoList.addEventListener('click', clickOnTodo);

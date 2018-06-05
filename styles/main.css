@@ -26,19 +26,60 @@ input[name=todo-input] {
   width: 250px;
 }
 
-.todo-list {
+ul {
   padding-left: 0;
-  width: 400px;
+  margin-bottom: 0;
 }
 
 ul > li {
   list-style: none;
 }
 
+.todo-list {
+  width: 400px;
+}
+
+.button {
+  border: 1px solid transparent;
+  padding: 4px 8px;
+  margin: 0;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 .todo {
   line-height: 30px;
   margin: 1px 0;
 }
+
+/**
+ control todo display option
+ */
+
+.todo-hidden {
+  display: none;
+}
+
+.display-ctrl {
+  display: flex;
+  width: 50%;
+  border: 2px solid salmon;
+  border-radius: 5px;
+}
+
+.display-option {
+  flex: 1;
+  text-align: center;
+}
+
+.display-option:nth-child(2) {
+  border-left: 2px solid salmon;
+  border-right: 2px solid salmon;
+}
+
+/*
+ display todo
+*/
 
 .todo-display {
   display: flex;
@@ -61,12 +102,29 @@ ul > li {
   cursor: text;
 }
 
+.button-delete-todo {
+  opacity: 0;
+  color: #fff;
+  background-color: salmon;
+  align-self: baseline;
+  margin: 0;
+}
+
 .todo-is-done {
+  color: #bbb;
   text-decoration: line-through;
 }
 
+/**
+ edit todo
+ */
+
 .todo-edit {
   display: none;
+}
+
+.todo-edit .button {
+  margin: 0 2px;
 }
 
 .todo-edit-show {
@@ -79,25 +137,9 @@ ul > li {
   align-self: center;
 }
 
-.button {
-  border: 1px solid transparent;
-  padding: 4px 8px;
-  margin: 0 2px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
 .button-add-todo {
   color: #fff;
   background-color: #51e898;
-}
-
-.button-delete-todo {
-  opacity: 0;
-  color: #fff;
-  background-color: salmon;
-  align-self: baseline;
-  margin: 0;
 }
 
 .button-delete-todo-show {
