@@ -43,7 +43,7 @@ ul > li {
   border: 1px solid transparent;
   padding: 4px 8px;
   margin: 0;
-  border-radius: 5px;
+  border-radius: .25rem;
   cursor: pointer;
 }
 
@@ -64,7 +64,7 @@ ul > li {
   display: flex;
   width: 50%;
   border: 2px solid salmon;
-  border-radius: 5px;
+  border-radius: .375rem;
 }
 
 .display-option {
@@ -72,8 +72,41 @@ ul > li {
   text-align: center;
 }
 
-.display-option:nth-child(2) {
-  border-left: 2px solid salmon;
+.display-option .button {
+  height: 100%;
+  width: 100%;
+  padding: 10px;
+  background-color: #fff;
+  transition: background-color .15s;
+}
+
+.display-option .button:hover {
+  background-color: lightsalmon;
+}
+
+.display-option .button:active {
+  background-color: darksalmon;
+}
+
+.display-option .button:focus {
+  outline: none;
+}
+
+.display-option .selected {
+  background-color: salmon;
+}
+
+.display-option:not(:first-child) > .button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.display-option:not(:last-child) > .button {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.display-option:not(:last-child) {
   border-right: 2px solid salmon;
 }
 

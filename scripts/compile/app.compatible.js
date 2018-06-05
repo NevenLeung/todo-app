@@ -58,45 +58,44 @@ var data = {
 })();
 
 /**
- * domOperationModule  将常用的DOM操作进行封装
+ * @module domOperationModule  将常用的DOM操作进行封装
  *
  * @return {object} {appendMultiChild, query, queryAll, findClosestAncestor, findSibling, findSiblings}
  *
  ******************************************************************************************
- * appendMultiChild()  将多个节点按顺序添加到parentNode，作为其子节点
+ * @method appendMultiChild()  将多个节点按顺序添加到parentNode，作为其子节点
  *
  * @param parentNode  父节点
  * @param childrenNodes  一个或多个待添加的子节点，多个节点用','隔开
  ******************************************************************************************
- * query()  基于$el去查找第一个符合selector的元素
+ * @method query()  基于$el去查找第一个符合selector的元素
  *
  * @param $el  基准元素
  * @param selector {string} 合法的css选择器字符串
  ******************************************************************************************
- * queryAll()  基于$el去查找符合selector的元素集合
+ * @method queryAll()  基于$el去查找符合selector的元素集合
  *
  * @param $el  基准元素
  * @param selector {string} 合法的css选择器字符串
  ******************************************************************************************
- * findClosestAncestor()  寻找第一个符合selector的祖先节点
+ * @method findClosestAncestor()  寻找第一个符合selector的祖先节点
  *
  * @param $el  开始寻找的基准元素
  * @param selector {string} 合法的css选择器字符串
  ******************************************************************************************
- * findSibling()  寻找第一个符合selector的兄弟元素
+ * @method findSibling()  寻找第一个符合selector的兄弟元素
  *
  * @param $el  开始寻找的基准元素
  * @param selector {string} 合法的css选择器字符串
  * @param option {string}  查找选项 forward(default)|backward
  ******************************************************************************************
- * findSiblings()  寻找符合selector的兄弟元素集合(排除$el本身)
+ * @method findSiblings()  寻找符合selector的兄弟元素集合(排除$el本身)
  *
  * @param $el  开始寻找的基准元素
  * @param selector {string} 合法的css选择器字符串
  * @param option {string}  查找选项 all(default)|forward|backward
  ******************************************************************************************
  */
-
 var domOperationModule = function () {
   // 将多个节点按顺序添加到parentNode，作为其子节点
   function appendMultiChild(parentNode) {
@@ -309,12 +308,30 @@ var domOperationModule = function () {
   };
 }();
 
+/**
+ * @module todoEditInPlaceModule 就地编辑(edit in place)的相关功能
+ *
+ * @return {Object} {activatedTodoEditInPlace, todoEditSave, todoEditCancel}
+ *
+ * *****************************************************************************
+ * @method activatedTodoEditInPlace() 开启edit in place功能
+ *
+ * @param $el 传入todo-content节点
+ * *****************************************************************************
+ * @method todoEditSave() 保存修改，并关闭edit in place功能
+ *
+ * @param $el 传入button-save-todo-edit节点
+ * *****************************************************************************
+ * @method todoEditCancel() 放弃修改，并关闭edit in place功能
+ *
+ * @param $el 传入button-cancel-todo-edit节点
+ */
 var todoEditInPlaceModule = function (domWrapper) {
   var $lastEditedTodoContent = void 0;
   var lastEditedTodoData = void 0;
 
   /**
-   * editTodoInPlace()
+   * activatedTodoEditInPlace()
    *
    * 响应todo-content被点击时的一系列操作，比如重置todo显示内容，todo-display与todo-edit的display属性的toggle
    *
@@ -323,18 +340,18 @@ var todoEditInPlaceModule = function (domWrapper) {
    * DOM 结构
    *
    <ul class='todo-list'>
-     <li class="todo">
-       <div class='todo-display'>
-         <input class='todo-checkbox'>
-         <span class='todo-content'></span>
-         <button class='button button-delete-todo'>X</button>
-       </div>
-       <div class='todo-edit'>
-         <input class='todo-edit-bar'>
-         <button class='button button-edit-save'>save</button>
-         <button class='button button-edit-cancel'>cancel</button>
-       </div>
-     </li>
+   <li class="todo">
+   <div class='todo-display'>
+   <input class='todo-checkbox'>
+   <span class='todo-content'></span>
+   <button class='button button-delete-todo'>X</button>
+   </div>
+   <div class='todo-edit'>
+   <input class='todo-edit-bar'>
+   <button class='button button-edit-save'>save</button>
+   <button class='button button-edit-cancel'>cancel</button>
+   </div>
+   </li>
    </ul>
    *
    */
@@ -483,6 +500,112 @@ var todoEditInPlaceModule = function (domWrapper) {
   };
 }(domOperationModule);
 
+/**
+ * @module displayCtrlModule todo的显示选项控制
+ *
+ * @return {Object} {getDisplayOption, selectAnOption, displayTodoAll, displayTodoIsDone, displayTodoIsNotDone}
+ *
+ * *****************************************************************************
+ * @method getDisplayOption() 获取当前的display option
+ *
+ * *****************************************************************************
+ * @method selectAnOption() 选中一个display option，对option tab的样式进行更改
+ *
+ * @param $el 传入一个tab的button节点
+ * *****************************************************************************
+ * @method displayTodoAll() 显示全部todo
+ *
+ * @param $el 传入display-all节点
+ * *****************************************************************************
+ * @method displayTodoIsDone() 显示已完成的todo
+ *
+ * @param $el 传入display-done节点
+ * *****************************************************************************
+ * @method displayTodoIsNotDone() 显示未完成的todo
+ *
+ * @param $el 传入display-not-done节点
+ *
+ */
+var displayCtrlModule = function (domWrapper) {
+  var $lastOption = void 0;
+
+  // 获取当前的display option
+  function getDisplayOption() {
+    return $lastOption;
+  }
+
+  // 选中一个display option，对option tab的样式进行更改
+  function selectAnOption($el) {
+    if (typeof $lastOption === 'undefined') {
+      $lastOption = domWrapper.query($displayCtrl, '.display-all');
+      $lastOption.classList.add('selected');
+    } else {
+      $lastOption.classList.remove('selected');
+      $el.classList.add('selected');
+
+      $lastOption = $el;
+    }
+  }
+
+  // 显示全部todo
+  function displayTodoAll($el) {
+    if ($el.matches('.display-all')) {
+      var $todoNodes = [];
+      $todoNodes.push.apply($todoNodes, _toConsumableArray($todoList.children));
+
+      $todoNodes.forEach(function ($todo) {
+        $todo.classList.remove('todo-hidden');
+      });
+
+      selectAnOption($el);
+    }
+  }
+
+  // 显示完成的todo
+  function displayTodoIsDone($el) {
+    if ($el.matches('.display-done')) {
+      var $todoNodes = [];
+      $todoNodes.push.apply($todoNodes, _toConsumableArray($todoList.children));
+
+      $todoNodes.forEach(function ($todo) {
+        if ($todo.dataset.isDone === 'true') {
+          $todo.classList.remove('todo-hidden');
+        } else {
+          $todo.classList.add('todo-hidden');
+        }
+      });
+
+      selectAnOption($el);
+    }
+  }
+
+  // 显示为完成的todo
+  function displayTodoIsNotDone($el) {
+    if ($el.matches('.display-not-done')) {
+      var $todoNodes = [];
+      $todoNodes.push.apply($todoNodes, _toConsumableArray($todoList.children));
+
+      $todoNodes.forEach(function ($todo) {
+        if ($todo.dataset.isDone === 'true') {
+          $todo.classList.add('todo-hidden');
+        } else {
+          $todo.classList.remove('todo-hidden');
+        }
+      });
+
+      selectAnOption($el);
+    }
+  }
+
+  return {
+    getDisplayOption: getDisplayOption,
+    selectAnOption: selectAnOption,
+    displayTodoAll: displayTodoAll,
+    displayTodoIsDone: displayTodoIsDone,
+    displayTodoIsNotDone: displayTodoIsNotDone
+  };
+}(domOperationModule);
+
 // ---------------------------- methods ----------------------------------
 
 /**
@@ -593,11 +716,6 @@ function todoListRender() {
   });
 }
 
-// todo 有没有需要将全部todo移除，重新渲染todoList的需要
-function removeAllChildren(parent) {
-  if (parent.children.length !== 0) {}
-}
-
 /**
  * clickOnTodo()
  *
@@ -638,14 +756,25 @@ function todoStatusToggle($el) {
   // 每一个todo的todo-content是checkbox的下一个同级元素
   var $todo = domOperationModule.findClosestAncestor($el, '.todo');
   var $todoContent = domOperationModule.query($todo, '.todo-content');
+  var $displayOptionSelected = displayCtrlModule.getDisplayOption();
   if ($todo.dataset.isDone === 'false') {
     $todoContent.classList.add('todo-is-done');
     $todo.dataset.isDone = 'true';
+
+    // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
+    if (!$displayOptionSelected.matches('.display-all')) {
+      $todo.classList.add('todo-hidden');
+    }
 
     data.todoList[$todoContent.dataset.id].isDone = true;
   } else {
     $todoContent.classList.remove('todo-is-done');
     $todo.dataset.isDone = 'false';
+
+    // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
+    if (!$displayOptionSelected.matches('.display-all')) {
+      $todo.classList.add('todo-hidden');
+    }
 
     data.todoList[$todoContent.dataset.id].isDone = false;
   }
@@ -715,61 +844,22 @@ function displayTabsRender() {
   $displayOption3.appendChild($buttonDisplayDone);
 
   domOperationModule.appendMultiChild($displayCtrl, $displayOption1, $displayOption2, $displayOption3);
+
+  displayCtrlModule.selectAnOption($buttonDisplayAll);
 }
 
 function clickOnDisplayCtrl(event) {
   var $el = event.target;
   if ($el.matches('.display-all')) {
-    displayTodoAll($el);
+    displayCtrlModule.displayTodoAll($el);
   }
 
   if ($el.matches('.display-done')) {
-    displayTodoIsDone($el);
+    displayCtrlModule.displayTodoIsDone($el);
   }
 
   if ($el.matches('.display-not-done')) {
-    displayTodoIsNotDone($el);
-  }
-}
-
-function displayTodoAll($el) {
-  if ($el.matches('.display-all')) {
-    var $todoNodes = [];
-    $todoNodes.push.apply($todoNodes, _toConsumableArray($todoList.children));
-
-    $todoNodes.forEach(function ($todo) {
-      $todo.classList.remove('todo-hidden');
-    });
-  }
-}
-
-function displayTodoIsDone($el) {
-  if ($el.matches('.display-done')) {
-    var $todoNodes = [];
-    $todoNodes.push.apply($todoNodes, _toConsumableArray($todoList.children));
-
-    $todoNodes.forEach(function ($todo) {
-      if ($todo.dataset.isDone === 'true') {
-        $todo.classList.remove('todo-hidden');
-      } else {
-        $todo.classList.add('todo-hidden');
-      }
-    });
-  }
-}
-
-function displayTodoIsNotDone($el) {
-  if ($el.matches('.display-not-done')) {
-    var $todoNodes = [];
-    $todoNodes.push.apply($todoNodes, _toConsumableArray($todoList.children));
-
-    $todoNodes.forEach(function ($todo) {
-      if ($todo.dataset.isDone === 'true') {
-        $todo.classList.add('todo-hidden');
-      } else {
-        $todo.classList.remove('todo-hidden');
-      }
-    });
+    displayCtrlModule.displayTodoIsNotDone($el);
   }
 }
 
