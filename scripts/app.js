@@ -417,8 +417,12 @@ const todoEditInPlaceModule = (function (domWrapper) {
       if ($todoEditBar.value.trim().length === 0) {
         alert('The content of todo should not be empty. Please write something you need to do.');
       } else {
+        const index = data.todoList.findIndex((todo) => {
+          return todo.id === parseInt($todoContent.dataset.id);
+        });
+
         $todoContent.textContent = $todoEditBar.value;
-        data.todoList[$todoContent.dataset.id].text = $todoEditBar.value;
+        data.todoList[index].text = $todoEditBar.value;
 
         $todoDisplay.classList.remove('todo-display-hidden');
         $todoEdit.classList.remove('todo-edit-show');
@@ -759,6 +763,10 @@ function toggleTodoStatus($el) {
   const $todo = domOperationModule.findClosestAncestor($el, '.todo');
   const $todoContent = domOperationModule.query($todo, '.todo-content');
   const $displayOptionSelected = displayCtrlModule.getDisplayOption();
+  const index = data.todoList.findIndex((todo) => {
+    return todo.id === parseInt($todoContent.dataset.id);
+  });
+
   if ($todo.dataset.isDone === 'false') {
     $todoContent.classList.add('todo-is-done');
     $todo.dataset.isDone = 'true';
@@ -768,7 +776,7 @@ function toggleTodoStatus($el) {
       $todo.classList.add('todo-hidden');
     }
 
-    data.todoList[$todoContent.dataset.id].isDone = true;
+    data.todoList[index].isDone = true;
   } else {
     $todoContent.classList.remove('todo-is-done');
     $todo.dataset.isDone = 'false';
@@ -778,7 +786,7 @@ function toggleTodoStatus($el) {
       $todo.classList.add('todo-hidden');
     }
 
-    data.todoList[$todoContent.dataset.id].isDone = false;
+    data.todoList[index].isDone = false;
   }
 }
 
