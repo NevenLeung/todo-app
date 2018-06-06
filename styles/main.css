@@ -52,9 +52,8 @@ ul > li {
   margin: 1px 0;
 }
 
-/**
- control todo display option
- */
+/****** control todo display option ******/
+
 
 .todo-hidden {
   display: none;
@@ -110,9 +109,8 @@ ul > li {
   border-right: 2px solid salmon;
 }
 
-/*
- display todo
-*/
+/****** display todo ******/
+
 
 .todo-display {
   display: flex;
@@ -135,12 +133,16 @@ ul > li {
   cursor: text;
 }
 
-.button-delete-todo {
-  opacity: 0;
+.todo .button-delete-todo {
+  display: none;
   color: #fff;
   background-color: salmon;
   align-self: baseline;
   margin: 0;
+}
+
+.todo:hover .button-delete-todo {
+  display: block;
 }
 
 .todo-is-done {
@@ -148,9 +150,8 @@ ul > li {
   text-decoration: line-through;
 }
 
-/**
- edit todo
- */
+/****** edit todo ******/
+
 
 .todo-edit {
   display: none;
@@ -173,10 +174,6 @@ ul > li {
 .button-add-todo {
   color: #fff;
   background-color: #51e898;
-}
-
-.button-delete-todo-show {
-  opacity: 1;
 }
 
 .button-save-todo-edit {

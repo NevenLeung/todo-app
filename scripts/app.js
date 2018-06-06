@@ -802,38 +802,6 @@ function deleteTodo($el) {
   $todoList.removeChild($todo);
 }
 
-
-/**
- * showDeleteButton()
- *
- * 作为mouseover的事件处理函数，当鼠标hover在todo上时，显示删除按钮
- */
-function showDeleteButton(event) {
-  const $el = event.target;
-  if (domOperationModule.findClosestAncestor($el, '.todo-display') instanceof Element) {
-    const $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
-    const $deleteButton = domOperationModule.query($todoDisplay, '.button-delete-todo');
-
-    // 由于display: none和visibility: hidden时不能触发鼠标的mouseover事件，所以使用opacity实现隐藏效果
-    $deleteButton.classList.add('button-delete-todo-show');
-  }
-}
-
-/**
- * hideDeleteButton()
- *
- * 作为mouseout的事件处理函数，当鼠标离开todo时，隐藏删除按钮
- */
-function hideDeleteButton(event) {
-  const $el = event.target;
-  if (domOperationModule.findClosestAncestor($el, '.todo-display') instanceof Element) {
-    const $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
-    const $deleteButton = domOperationModule.query($todoDisplay, '.button-delete-todo');
-
-    $deleteButton.classList.remove('button-delete-todo-show');
-  }
-}
-
 /**
  * renderDisplayTabs()
  *
@@ -905,6 +873,3 @@ $displayCtrl.addEventListener('click', clickOnDisplayTabs);
 // 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
 $todoList.addEventListener('click', clickOnTodo);
 
-// 使用事件委托，将mouseover与mouseout事件绑定到todo-list，实现当鼠标悬浮以及离开todo时，显示或隐藏删除按钮的效果。在处理函数对event.target作判断
-$todoList.addEventListener('mouseover', showDeleteButton);
-$todoList.addEventListener('mouseout', hideDeleteButton);
