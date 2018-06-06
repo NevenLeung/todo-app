@@ -315,18 +315,18 @@ const domOperationModule = (function () {
 /**
  * @module todoEditInPlaceModule 就地编辑(edit in place)的相关功能
  *
- * @return {Object} {activatedTodoEditInPlace, todoEditSave, todoEditCancel}
+ * @return {Object} {activatedTodoEditInPlace, saveTodoEdit, cancelTodoEdit}
  *
  * *****************************************************************************
  * @method activatedTodoEditInPlace() 开启edit in place功能
  *
  * @param $el 传入todo-content节点
  * *****************************************************************************
- * @method todoEditSave() 保存修改，并关闭edit in place功能
+ * @method saveTodoEdit() 保存修改，并关闭edit in place功能
  *
  * @param $el 传入button-save-todo-edit节点
  * *****************************************************************************
- * @method todoEditCancel() 放弃修改，并关闭edit in place功能
+ * @method cancelTodoEdit() 放弃修改，并关闭edit in place功能
  *
  * @param $el 传入button-cancel-todo-edit节点
  */
@@ -399,14 +399,14 @@ const todoEditInPlaceModule = (function (domWrapper) {
   }
 
   /**
-   * todoEditSave()
+   * saveTodoEdit()
    *
    * 作为todo-edit中save button的事件处理方法，用于保存content的修改，修改todo-content的内容，
    * 以及将修改更新到data，以及改变todo-display和todo-edit的display属性
    *
    * @param $el button-save-todo-edit节点
    */
-  function todoEditSave($el) {
+  function saveTodoEdit($el) {
     if ($el.matches('.button-save-todo-edit')) {
       const $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
       const $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
@@ -431,13 +431,13 @@ const todoEditInPlaceModule = (function (domWrapper) {
 
 
   /**
-   * todoEditCancel()
+   * cancelTodoEdit()
    *
    * 作为todo-edit中cancel button的事件处理方法，用于抛弃修改结果后，改变todo-display和todo-edit的display属性
    *
    * @param $el button-cancel-todo-edit节点
    */
-  function todoEditCancel($el) {
+  function cancelTodoEdit($el) {
     if ($el.matches('.button-cancel-todo-edit')) {
       // 如何保存一个todo未修改之前的值，用于取消操作的回滚，
       // 不需要做回滚操作，input上的值，不影响span的textContent
@@ -500,8 +500,8 @@ const todoEditInPlaceModule = (function (domWrapper) {
 
   return {
     activatedTodoEditInPlace,
-    todoEditSave,
-    todoEditCancel
+    saveTodoEdit,
+    cancelTodoEdit
   };
 
 }(domOperationModule));
@@ -677,7 +677,7 @@ function addTodo(text) {
 }
 
 /**
- * todoListRender()
+ * renderTodoList()
  *
  * 渲染todoList，并给相应的节点加上合适的属性
  *
@@ -694,7 +694,7 @@ function addTodo(text) {
  </ul>
  *
  */
-function todoListRender() {
+function renderTodoList() {
   data.todoList.forEach(function (todo) {
     const $li = createNewElementNode('li', 'todo', '', 'data-is-done', todo.isDone);
     const $div = createNewElementNode('div', 'todo-display');
@@ -726,7 +726,7 @@ function clickOnTodo(event) {
   const $el = event.target;
   // 判断点击的元素是不是todo-checkbox
   if ($el.matches('.todo-checkbox')) {
-    todoStatusToggle(event.target);
+    toggleTodoStatus(event.target);
   }
   // 判断点击元素的是不是todo-content，是的话，开启edit in place功能
   if ($el.matches('.todo-content')) {
@@ -738,23 +738,23 @@ function clickOnTodo(event) {
   }
   // 判断点击的元素是不是save按钮
   if ($el.matches('.button-save-todo-edit')) {
-    todoEditInPlaceModule.todoEditSave(event.target);
+    todoEditInPlaceModule.saveTodoEdit(event.target);
   }
   // 判断点击的元素是不是cancel按钮
   if ($el.matches('.button-cancel-todo-edit')) {
-    todoEditInPlaceModule.todoEditCancel(event.target);
+    todoEditInPlaceModule.cancelTodoEdit(event.target);
   }
 }
 
 
 /**
- * todoStatusToggle()
+ * toggleTodoStatus()
  *
  * 切换todo的完成状态，更改显示样式，更改data中的数据，用作事件处理函数
  *
  * $el为todo-checkbox节点
  */
-function todoStatusToggle($el) {
+function toggleTodoStatus($el) {
   // 每一个todo的todo-content是checkbox的下一个同级元素
   const $todo = domOperationModule.findClosestAncestor($el, '.todo');
   const $todoContent = domOperationModule.query($todo, '.todo-content');
@@ -804,11 +804,11 @@ function deleteTodo($el) {
 
 
 /**
- * deleteButtonDisplay()
+ * showDeleteButton()
  *
  * 作为mouseover的事件处理函数，当鼠标hover在todo上时，显示删除按钮
  */
-function deleteButtonDisplay(event) {
+function showDeleteButton(event) {
   const $el = event.target;
   if (domOperationModule.findClosestAncestor($el, '.todo-display') instanceof Element) {
     const $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
@@ -820,11 +820,11 @@ function deleteButtonDisplay(event) {
 }
 
 /**
- * deleteButtonHidden()
+ * hideDeleteButton()
  *
  * 作为mouseout的事件处理函数，当鼠标离开todo时，隐藏删除按钮
  */
-function deleteButtonHidden(event) {
+function hideDeleteButton(event) {
   const $el = event.target;
   if (domOperationModule.findClosestAncestor($el, '.todo-display') instanceof Element) {
     const $todoDisplay = domOperationModule.findClosestAncestor($el, '.todo-display');
@@ -834,8 +834,12 @@ function deleteButtonHidden(event) {
   }
 }
 
-
-function displayTabsRender() {
+/**
+ * renderDisplayTabs()
+ *
+ * 渲染display tab，用于控制todo状态的显示
+ */
+function renderDisplayTabs() {
   const $displayOption1 = createNewElementNode('li', 'display-option');
   const $displayOption2 = createNewElementNode('li', 'display-option');
   const $displayOption3 = createNewElementNode('li', 'display-option');
@@ -852,7 +856,12 @@ function displayTabsRender() {
   displayCtrlModule.selectAnOption($buttonDisplayAll);
 }
 
-function clickOnDisplayCtrl(event) {
+/**
+ * clickOnDisplayTabs()
+ *
+ * 作为display tab中button的点击事件处理函数，绑定到display-ctrl节点
+ */
+function clickOnDisplayTabs(event) {
   const $el = event.target;
   if ($el.matches('.display-all')) {
     displayCtrlModule.displayTodoAll($el);
@@ -869,8 +878,8 @@ function clickOnDisplayCtrl(event) {
 
 // ----------------------------------- logic ---------------------------------------
 
-displayTabsRender();
-todoListRender();
+renderDisplayTabs();
+renderTodoList();
 
 // 使用表单提交input的内容
 $inputForm.addEventListener('submit', function(event) {
@@ -891,11 +900,11 @@ $inputForm.addEventListener('submit', function(event) {
 });
 
 // 使用事件委托，将三种显示状态切换的点击绑定到display-ctrl节点上
-$displayCtrl.addEventListener('click', clickOnDisplayCtrl);
+$displayCtrl.addEventListener('click', clickOnDisplayTabs);
 
 // 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
 $todoList.addEventListener('click', clickOnTodo);
 
 // 使用事件委托，将mouseover与mouseout事件绑定到todo-list，实现当鼠标悬浮以及离开todo时，显示或隐藏删除按钮的效果。在处理函数对event.target作判断
-$todoList.addEventListener('mouseover', deleteButtonDisplay);
-$todoList.addEventListener('mouseout', deleteButtonHidden);
+$todoList.addEventListener('mouseover', showDeleteButton);
+$todoList.addEventListener('mouseout', hideDeleteButton);
