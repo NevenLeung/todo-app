@@ -134,7 +134,7 @@ ul > li {
 }
 
 .todo .button-delete-todo {
-  display: none;
+  visibility: hidden;
   color: #fff;
   background-color: salmon;
   align-self: baseline;
@@ -142,7 +142,7 @@ ul > li {
 }
 
 .todo:hover .button-delete-todo {
-  display: block;
+  visibility: visible;
 }
 
 .todo-is-done {
