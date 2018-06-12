@@ -68,6 +68,138 @@ const data = {
 
 // ------------------------- modules --------------------------------
 
+/**
+ * @module todoStore 使用indexedDB对数据进行处理
+ *
+ * @type {Object} {getAll, get, add, update, delete, removeAll}
+ */
+const todoStore = (function (dbName = 'TodoApp', version = 1, objectStorage = 'todo') {
+  function useIndexedDB(action, dataParam) {
+    return new Promise(function (resolve, reject) {
+      const dbOpenRequest = window.indexedDB.open(dbName, version);
+
+      dbOpenRequest.onerror = function (event) {
+        console.log('Something bad happened while trying to open: ' + event.target.errorCode);
+        reject(event.target);
+      };
+
+      dbOpenRequest.onupgradeneeded = function () {
+        const db = dbOpenRequest.result;
+        // 创建存储空间，使用自增的主值
+        const store = db.createObjectStore(objectStorage, {
+          keyPath: '_id',
+          autoIncrement: true
+        });
+      };
+
+      dbOpenRequest.onsuccess = function () {
+        const db = dbOpenRequest.result;
+
+        // 创建事务
+        const transaction = db.transaction(objectStorage, 'readwrite');
+        // 在事务上得到相应的存储空间，用于数据的读取与修改
+        const objectStore = transaction.objectStore(objectStorage);
+
+        transaction.onabort = function (event) {
+          console.log('tx has been aborted.');
+          console.log(event.target);
+        };
+
+        let txOperationRequest;
+
+        switch (action) {
+          case 'getAll':
+            txOperationRequest = objectStore.getAll();
+            break;
+          case 'get':
+            txOperationRequest = objectStore.get(dataParam);
+            break;
+          case 'post':
+            txOperationRequest = objectStore.add(dataParam);
+            break;
+          case 'put':
+            txOperationRequest = objectStore.put(dataParam);
+            break;
+          case 'delete':
+            txOperationRequest = objectStore.delete(dataParam);
+            break;
+          case 'removeAll':
+            txOperationRequest = objectStore.clear();
+        }
+
+        txOperationRequest.onerror = function (event) {
+          console.log(event.target);
+          reject(event.target);
+        };
+
+        txOperationRequest.onsuccess = function (event) {
+          switch (action) {
+            case 'getAll':
+              resolve(txOperationRequest.result);
+              break;
+            case 'get':
+              resolve(txOperationRequest.result);
+              break;
+            case 'post':
+              console.log(`Item with _id ${txOperationRequest.result} has been added.`);
+              resolve({_id: txOperationRequest.result});
+              break;
+            case 'put':
+              console.log(`Item with _id ${txOperationRequest.result} has been updated.`);
+              resolve({_id: txOperationRequest.result});
+              break;
+            case 'delete':
+              console.log('Item has been removed.');
+              resolve('Item has been removed.');
+              break;
+            case 'removeAll':
+              console.log('All items have been removed.');
+              resolve('All items have been removed.');
+          }
+        };
+
+        transaction.oncomplete = function () {
+          db.close();
+        };
+      };
+    });
+  }
+
+  return {
+    getAll: function () {
+      return useIndexedDB('getAll', '');
+    },
+    get: function (queryString) {
+      return useIndexedDB('get', queryString);
+    },
+    add: function (data) {
+      return useIndexedDB('post', data);
+    },
+    update: function (queryString, data) {
+      return useIndexedDB('get', queryString)
+        .then(function (result) {
+          if (typeof result !== 'undefined') {
+            const newData = Object.assign(result, data);
+            return useIndexedDB('put', newData);
+          } else {
+            console.log('Can not find the data according to the queryString');
+          }
+        }).catch(function (err) {
+          console.error(err);
+        })
+    },
+    // put: function (data) {
+    //   return useIndexedDB('put', data);
+    // },
+    delete: function (queryString) {
+      return useIndexedDB('delete', queryString);
+    },
+    removeAll: function () {
+      return useIndexedDB('removeAll', '');
+    },
+  }
+}());
+
 
 /**
  * @module domOperationModule  将常用的DOM操作进行封装
@@ -422,17 +554,25 @@ const todoEditInPlaceModule = (function (domWrapper) {
       if ($todoEditBar.value.trim().length === 0) {
         alert('The content of todo should not be empty. Please write something you need to do.');
       } else {
-        const index = data.todoList.findIndex((todo) => {
-          return todo.id === parseInt($todo.dataset.id);
-        });
+        const id = parseInt($todo.dataset.id);
+        const data = {
+          text: $todoEditBar.value
+        };
 
-        $todoContent.textContent = $todoEditBar.value;
-        data.todoList[index].text = $todoEditBar.value;
+        todoStore.update(id, data)
+          .then((result) => {
+            if (result) {
+              $todoContent.textContent = $todoEditBar.value;
 
-        $todoDisplay.classList.remove('todo-display-hidden');
-        $todoEdit.classList.remove('todo-edit-show');
+              $todoDisplay.classList.remove('todo-display-hidden');
+              $todoEdit.classList.remove('todo-edit-show');
 
-        $lastEditedTodo = undefined;
+              $lastEditedTodo = undefined;
+            }
+          })
+          .catch(function (err) {
+            console.error(err);
+          })
       }
     }
   }
@@ -477,30 +617,27 @@ const todoEditInPlaceModule = (function (domWrapper) {
       // 待保存的content应该是input中的value，而不是$todoContent中的textContent，那应该如何保存value呢？
       // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以此时input中value仍然是被修改后的值
       const todoContentAfterEdited = domWrapper.query($todoEdit, '.todo-edit-bar').value;
-      const index = data.todoList.findIndex((todo) => {
-        // 读取todo节点的id值
-        return todo.id === parseInt($lastEditedTodo.dataset.id);
-      });
+      const id = parseInt($lastEditedTodo.dataset.id);
+      const data = {
+        text: todoContentAfterEdited
+      };
 
-      // 保存修改
-      $todoContent.textContent = todoContentAfterEdited;
-      data.todoList[index].text = todoContentAfterEdited;
+      todoStore.update(id, data)
+        .then(function (result) {
+          if (result) {
 
-      // 让前一个未保存的todo恢复正常的显示
-      $todoDisplay.classList.remove('todo-display-hidden');
-      $todoEdit.classList.remove('todo-edit-show');
+            // 保存修改
+            $todoContent.textContent = todoContentAfterEdited;
+
+            // 让前一个未保存的todo恢复正常的显示
+            $todoDisplay.classList.remove('todo-display-hidden');
+            $todoEdit.classList.remove('todo-edit-show');
+          }
+        })
+        .catch(function (err) {
+          console.error(err);
+        });
     }
-  }
-
-  /**
-   * saveTodoEditForTemporaryBackup()
-   *
-   * 当一个todo被点击进入可编辑状态时，调用该函数，记录当前被点击的todo-content节点，以及todo的id值
-   *
-   * @param $todo 被点击的todo节点
-   */
-  function saveTodoEditForTemporaryBackup($todo) {
-    $lastEditedTodo = $todo;
   }
 
   return {
@@ -651,6 +788,18 @@ function createNewElementNode(tagName, className='', content='', ...attributeDat
 }
 
 /**
+ * stringToBoolean()  用于将作为DOM节点属性时被转换为字符串的true与false值，转换为相应的布尔值
+ *
+ * @param str 'true' | 'false' boolean like string
+ * @return {boolean}
+ */
+function stringToBoolean(str) {
+  if (typeof str === 'string') {
+    return str === 'true';
+  }
+}
+
+/**
  * addTodo()
  *
  * 添加一条新的todo，同时将一个新的todo对象的加入data.todoList数组中
@@ -658,33 +807,52 @@ function createNewElementNode(tagName, className='', content='', ...attributeDat
  * @param text todo的文本内容
  */
 function addTodo(text) {
-  const $li = createNewElementNode('li', 'todo', '', 'data-is-done', 'false', 'data-id', data.todoList.length);
-  const $div = createNewElementNode('div', 'todo-display');
-  const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
-  const $todoContent = createNewElementNode('span', 'todo-content', text);
-  const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
+  const data = {
+    text: text,
+    isDone: false
+  };
 
-  // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
+  todoStore.add(data)
+    .then(function (result) {
+      if (result) {
+        const $li = createNewElementNode('li', 'todo', '', 'data-is-done', 'false', 'data-id', result._id);
+        const $div = createNewElementNode('div', 'todo-display');
+        const $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
+        const $todoContent = createNewElementNode('span', 'todo-content', text);
+        const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
 
-  domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
+        // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
 
-  $li.appendChild($div);
+        domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
 
-  // 把li添加到todo-list上
-  $todoList.appendChild($li);
+        $li.appendChild($div);
 
-  data.todoList.push({
-    // todo的id从0开始，新的todo的id刚好可以等于之前的todoList.length
-    "id": data.todoList.length,
-    "text": text,
-    "isDone": false
-  });
+        // 把li添加到todo-list上
+        $todoList.appendChild($li);
+      } else {
+        console.log('Data creation is failed');
+      }
+    })
+    .catch(function (err) {
+      console.error(err);
+    });
+
+
+  //
+  // data.todoList.push({
+  //   // todo的id从0开始，新的todo的id刚好可以等于之前的todoList.length
+  //   "id": data.todoList.length,
+  //   "text": text,
+  //   "isDone": false
+  // });
 }
 
 /**
  * renderTodoList()
  *
  * 渲染todoList，并给相应的节点加上合适的属性
+ *
+ * @param {Array} data  一个包含todo数据的数组
  *
  * DOM 结构
  *
@@ -699,9 +867,9 @@ function addTodo(text) {
  </ul>
  *
  */
-function renderTodoList() {
-  data.todoList.forEach(function (todo) {
-    const $li = createNewElementNode('li', 'todo', '', 'data-is-done', todo.isDone, 'data-id', todo.id);
+function renderTodoList(data) {
+  data.forEach(function (todo) {
+    const $li = createNewElementNode('li', 'todo', '', 'data-is-done', todo.isDone, 'data-id', todo._id);
     const $div = createNewElementNode('div', 'todo-display');
     const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
     const $todoContent = createNewElementNode('span', 'todo-content', todo.text);
@@ -720,6 +888,52 @@ function renderTodoList() {
 
     $todoList.appendChild($li);
   });
+}
+
+
+/**
+ * addMockData()  如果数据库没有数据，写入用作演示的数据
+ */
+function addMockData() {
+  const mockData = [
+    {
+      text: "Finish the assignment of geometry",
+      isDone: false
+    },
+    {
+      text: "Call sam to discuss supper ",
+      isDone: true
+    }
+  ];
+
+  // 添加模拟的数据
+  mockData.forEach(item => {
+    todoStore.add(item);
+  });
+
+  todoStore.getAll()
+    .then(function (result) {
+      if (Array.isArray(result) && result.length !== 0) {
+        renderTodoList(result);
+      }
+    });
+}
+
+/**
+ * initRenderTodoList() 初始化渲染todo list
+ */
+function initRenderTodoList() {
+  todoStore.getAll()
+    .then(function (result) {
+      if (Array.isArray(result) && result.length !== 0) {
+        renderTodoList(result);
+      } else {
+        addMockData();
+      }
+    })
+    .catch(function (err) {
+      console.error(err);
+    });
 }
 
 /**
@@ -764,31 +978,40 @@ function toggleTodoStatus($el) {
   const $todo = domOperationModule.findClosestAncestor($el, '.todo');
   const $todoContent = domOperationModule.query($todo, '.todo-content');
   const $displayOptionSelected = displayCtrlModule.getDisplayOption();
-  const index = data.todoList.findIndex((todo) => {
-    return todo.id === parseInt($todo.dataset.id);
-  });
 
-  if ($todo.dataset.isDone === 'false') {
-    $todoContent.classList.add('todo-is-done');
-    $todo.dataset.isDone = 'true';
+  const id = parseInt($todo.dataset.id);
+  const data = {
+    isDone: !stringToBoolean($todo.dataset.isDone)
+  };
 
-    // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
-    if (!$displayOptionSelected.matches('.display-all')) {
-      $todo.classList.add('todo-hidden');
-    }
+  todoStore.update(id, data)
+    .then(function (result) {
+      if (result) {
+        if ($todo.dataset.isDone === 'false') {
+          $todoContent.classList.add('todo-is-done');
+          $todo.dataset.isDone = 'true';
 
-    data.todoList[index].isDone = true;
-  } else {
-    $todoContent.classList.remove('todo-is-done');
-    $todo.dataset.isDone = 'false';
+          // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
+          if (!$displayOptionSelected.matches('.display-all')) {
+            $todo.classList.add('todo-hidden');
+          }
 
-    // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
-    if (!$displayOptionSelected.matches('.display-all')) {
-      $todo.classList.add('todo-hidden');
-    }
+        } else {
+          $todoContent.classList.remove('todo-is-done');
+          $todo.dataset.isDone = 'false';
 
-    data.todoList[index].isDone = false;
-  }
+          // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
+          if (!$displayOptionSelected.matches('.display-all')) {
+            $todo.classList.add('todo-hidden');
+          }
+
+        }
+      }
+    })
+    .catch(function (err) {
+      console.error(err);
+    })
+
 }
 
 /**
@@ -800,14 +1023,17 @@ function toggleTodoStatus($el) {
  */
 function deleteTodo($el) {
   const $todo = domOperationModule.findClosestAncestor($el, '.todo');
-
   const id = parseInt($todo.dataset.id);
-  const index = data.todoList.findIndex((todo) => {
-    return todo.id === id;
-  });
 
-  data.todoList.splice(index, 1);
-  $todoList.removeChild($todo);
+  todoStore.delete(id)
+    .then(function (result) {
+      if (result) {
+        $todoList.removeChild($todo);
+      }
+    })
+    .catch(function (err) {
+      console.error(err);
+    });
 }
 
 /**
@@ -855,7 +1081,7 @@ function clickOnDisplayTabs(event) {
 // ----------------------------------- logic ---------------------------------------
 
 renderDisplayTabs();
-renderTodoList();
+initRenderTodoList();
 
 // 使用表单提交input的内容
 $inputForm.addEventListener('submit', function(event) {
