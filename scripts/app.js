@@ -71,134 +71,159 @@ const data = {
 /**
  * @module todoStore 使用indexedDB对数据进行处理
  *
- * @type {Object} {getAll, get, add, update, delete, removeAll}
+ * @type {Object} {getAll, get, create, update, delete, removeAll}
  */
 const todoStore = (function (dbName = 'TodoApp', version = 1, objectStorage = 'todo') {
-  function useIndexedDB(action, dataParam) {
-    return new Promise(function (resolve, reject) {
-      const dbOpenRequest = window.indexedDB.open(dbName, version);
+  // IIFE中的全局变量，用于存储连接成功的数据库连接
+  let db;
 
-      dbOpenRequest.onerror = function (event) {
-        console.log('Something bad happened while trying to open: ' + event.target.errorCode);
-        reject(event.target);
-      };
+  const dbOpenRequest = window.indexedDB.open(dbName, version);
 
-      dbOpenRequest.onupgradeneeded = function () {
-        const db = dbOpenRequest.result;
-        // 创建存储空间，使用自增的主值
-        const store = db.createObjectStore(objectStorage, {
-          keyPath: '_id',
-          autoIncrement: true
-        });
-      };
+  dbOpenRequest.onerror = function (event) {
+    console.log('Something bad happened while trying to open: ' + event.target.errorCode);
+  };
 
-      dbOpenRequest.onsuccess = function () {
-        const db = dbOpenRequest.result;
-
-        // 创建事务
-        const transaction = db.transaction(objectStorage, 'readwrite');
-        // 在事务上得到相应的存储空间，用于数据的读取与修改
-        const objectStore = transaction.objectStore(objectStorage);
-
-        transaction.onabort = function (event) {
-          console.log('tx has been aborted.');
-          console.log(event.target);
-        };
-
-        let txOperationRequest;
-
-        switch (action) {
-          case 'getAll':
-            txOperationRequest = objectStore.getAll();
-            break;
-          case 'get':
-            txOperationRequest = objectStore.get(dataParam);
-            break;
-          case 'post':
-            txOperationRequest = objectStore.add(dataParam);
-            break;
-          case 'put':
-            txOperationRequest = objectStore.put(dataParam);
-            break;
-          case 'delete':
-            txOperationRequest = objectStore.delete(dataParam);
-            break;
-          case 'removeAll':
-            txOperationRequest = objectStore.clear();
-        }
-
-        txOperationRequest.onerror = function (event) {
-          console.log(event.target);
-          reject(event.target);
-        };
-
-        txOperationRequest.onsuccess = function (event) {
-          switch (action) {
-            case 'getAll':
-              resolve(txOperationRequest.result);
-              break;
-            case 'get':
-              resolve(txOperationRequest.result);
-              break;
-            case 'post':
-              console.log(`Item with _id ${txOperationRequest.result} has been added.`);
-              resolve({_id: txOperationRequest.result});
-              break;
-            case 'put':
-              console.log(`Item with _id ${txOperationRequest.result} has been updated.`);
-              resolve({_id: txOperationRequest.result});
-              break;
-            case 'delete':
-              console.log('Item has been removed.');
-              resolve('Item has been removed.');
-              break;
-            case 'removeAll':
-              console.log('All items have been removed.');
-              resolve('All items have been removed.');
-          }
-        };
-
-        transaction.oncomplete = function () {
-          db.close();
-        };
-      };
+  dbOpenRequest.onupgradeneeded = function () {
+    db = dbOpenRequest.result;
+    // 创建存储空间，使用自增的主值
+    const store = db.createObjectStore(objectStorage, {
+      keyPath: '_id',
+      autoIncrement: true
     });
-  }
+  };
+
+  dbOpenRequest.onsuccess = function () {
+    db = dbOpenRequest.result;
+
+    afterDataBaseConnected();
+  };
 
   return {
     getAll: function () {
-      return useIndexedDB('getAll', '');
+      return new Promise(function (resolve, reject) {
+        const transaction = db.transaction(objectStorage, 'readwrite');
+        const objectStore = transaction.objectStore(objectStorage);
+
+        const txOperationRequest = objectStore.getAll();
+
+        txOperationRequest.onsuccess = function (event) {
+          resolve(txOperationRequest.result);
+        };
+
+        txOperationRequest.onerror = function (event) {
+          console.log(txOperationRequest);
+          reject(txOperationRequest);
+        }
+      })
     },
-    get: function (queryString) {
-      return useIndexedDB('get', queryString);
+    get: function (query) {
+      return new Promise(function (resolve, reject) {
+        const transaction = db.transaction(objectStorage, 'readwrite');
+        const objectStore = transaction.objectStore(objectStorage);
+
+        const txOperationRequest = objectStore.get(query);
+
+        txOperationRequest.onsuccess = function (event) {
+          resolve(txOperationRequest.result);
+        };
+
+        txOperationRequest.onerror = function (event) {
+          console.log(txOperationRequest);
+          reject(txOperationRequest);
+        }
+      })
     },
-    add: function (data) {
-      return useIndexedDB('post', data);
+    create: function (data) {
+      return new Promise(function (resolve, reject) {
+        const transaction = db.transaction(objectStorage, 'readwrite');
+        const objectStore = transaction.objectStore(objectStorage);
+
+        const txOperationRequest = objectStore.add(data);
+
+        txOperationRequest.onsuccess = function (event) {
+          console.log(`Item with _id ${txOperationRequest.result} has been added.`);
+          resolve({_id: txOperationRequest.result});
+        };
+
+        txOperationRequest.onerror = function (event) {
+          console.log(txOperationRequest);
+          reject(txOperationRequest);
+        }
+      })
     },
-    update: function (queryString, data) {
-      return useIndexedDB('get', queryString)
-        .then(function (result) {
+    update: function (query, data) {
+      return new Promise(function (resolve, reject) {
+        const transaction = db.transaction(objectStorage, 'readwrite');
+        const objectStore = transaction.objectStore(objectStorage);
+
+        // 先利用id值，去数据库找到相应的旧数据
+        const txOperationRequest = objectStore.get(query);
+
+        txOperationRequest.onsuccess = function (event) {
+          const result = txOperationRequest.result;
+
+          // 找到相应的数据后，将找到的result与需要更新的data，组成newData。用newData覆盖原来的result
           if (typeof result !== 'undefined') {
             const newData = Object.assign(result, data);
-            return useIndexedDB('put', newData);
-          } else {
-            console.log('Can not find the data according to the queryString');
+            const putRequest = objectStore.put(newData);
+
+            putRequest.onsuccess = function () {
+              console.log(`Item with _id ${putRequest.result} has been updated.`);
+              resolve({_id: putRequest.result});
+            };
+
+            putRequest.onerror = function () {
+              console.log(putRequest);
+              reject(putRequest);
+            }
           }
-        }).catch(function (err) {
-          console.error(err);
-        })
+        };
+
+        txOperationRequest.onerror = function (event) {
+          console.log(txOperationRequest);
+          reject(txOperationRequest);
+        }
+      })
     },
-    // put: function (data) {
-    //   return useIndexedDB('put', data);
-    // },
-    delete: function (queryString) {
-      return useIndexedDB('delete', queryString);
+    delete: function (query) {
+      return new Promise(function (resolve, reject) {
+        const transaction = db.transaction(objectStorage, 'readwrite');
+        const objectStore = transaction.objectStore(objectStorage);
+
+        const txOperationRequest = objectStore.delete(query);
+
+        txOperationRequest.onsuccess = function (event) {
+          console.log('Item has been removed.');
+          resolve('Item has been removed.');
+        };
+
+        txOperationRequest.onerror = function (event) {
+          console.log(txOperationRequest);
+          reject(txOperationRequest);
+        }
+      })
     },
     removeAll: function () {
-      return useIndexedDB('removeAll', '');
+      return new Promise(function (resolve, reject) {
+        const transaction = db.transaction(objectStorage, 'readwrite');
+        const objectStore = transaction.objectStore(objectStorage);
+
+        const txOperationRequest = objectStore.clear();
+
+        txOperationRequest.onsuccess = function (event) {
+          console.log('All items have been removed.');
+          resolve('All items have been removed.');
+        };
+
+        txOperationRequest.onerror = function (event) {
+          console.log(txOperationRequest);
+          reject(txOperationRequest);
+        }
+      })
     },
   }
 }());
+
 
 
 /**
@@ -812,7 +837,7 @@ function addTodo(text) {
     isDone: false
   };
 
-  todoStore.add(data)
+  todoStore.create(data)
     .then(function (result) {
       if (result) {
         const $li = createNewElementNode('li', 'todo', '', 'data-is-done', 'false', 'data-id', result._id);
@@ -908,7 +933,7 @@ function addMockData() {
 
   // 添加模拟的数据
   mockData.forEach(item => {
-    todoStore.add(item);
+    todoStore.create(item);
   });
 
   todoStore.getAll()
@@ -1078,10 +1103,16 @@ function clickOnDisplayTabs(event) {
   }
 }
 
+/**
+ * afterDataBaseConnected()   包含需要在数据库初始化（连接）成功后，才能进行的操作。此函数在todoStore内部，当数据库连接成功后才会被调用
+ */
+function afterDataBaseConnected() {
+  initRenderTodoList();
+}
+
 // ----------------------------------- logic ---------------------------------------
 
 renderDisplayTabs();
-initRenderTodoList();
 
 // 使用表单提交input的内容
 $inputForm.addEventListener('submit', function(event) {
