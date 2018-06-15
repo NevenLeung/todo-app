@@ -69,7 +69,11 @@ const data = {
 // ------------------------- modules --------------------------------
 
 /**
- * @module todoStore  使用indexedDB管理数据
+ * @module indexedDBModule  使用indexedDB管理数据
+ *
+ * @param {String} dbName  数据库名称
+ * @param {Number} version  数据库版本
+ * @param {String} objectStorage  对象存储空间（相当于table name）
  *
  * @return {Object} {getAll, get, create, update, delete, removeAll}
  *
@@ -129,7 +133,7 @@ const data = {
  * @resolve {String}  成功删除所有数据记录的消息
  * @reject {Object}  删除数据记录过程中的异常信息
  */
-const todoStore = (function (dbName = 'TodoApp', version = 1, objectStorage = 'todo') {
+const indexedDBModule = function (dbName, version, objectStorage) {
   // IIFE中的全局变量，用于存储连接成功的数据库连接
   let db;
 
@@ -278,9 +282,10 @@ const todoStore = (function (dbName = 'TodoApp', version = 1, objectStorage = 't
       })
     },
   }
-}());
+};
 
-
+// 创建TodoApp的数据库管理实例
+const todoStore = indexedDBModule('TodoApp', 1, 'todo');
 
 /**
  * @module domOperationModule  将常用的DOM操作进行封装
