@@ -292,39 +292,43 @@ const todoStore = indexedDBModule('TodoApp', 1, 'todo');
  *
  * @return {object} {appendMultiChild, query, queryAll, findClosestAncestor, findSibling, findSiblings}
  *
- ******************************************************************************************
- * @method appendMultiChild()  将多个节点按顺序添加到parentNode，作为其子节点
+ ---------------------------------------------------------------------------------------
+ * @method appendMultiChild(parentNode, ...childrenNodes)  将多个节点按顺序添加到parentNode，作为其子节点
  *
  * @param parentNode  父节点
  * @param childrenNodes  一个或多个待添加的子节点，多个节点用','隔开
- ******************************************************************************************
- * @method query()  基于$el去查找第一个符合selector的元素
+ *
+ ---------------------------------------------------------------------------------------
+ * @method query($el, selector)  基于$el去查找第一个符合selector的元素
  *
  * @param $el  基准元素
  * @param selector {string} 合法的css选择器字符串
- ******************************************************************************************
- * @method queryAll()  基于$el去查找符合selector的元素集合
+ *
+ ---------------------------------------------------------------------------------------
+ * @method queryAll($el, selector)  基于$el去查找符合selector的元素集合
  *
  * @param $el  基准元素
  * @param selector {string} 合法的css选择器字符串
- ******************************************************************************************
- * @method findClosestAncestor()  寻找第一个符合selector的祖先节点
+ *
+ ---------------------------------------------------------------------------------------
+ * @method findClosestAncestor($el, selector)  寻找第一个符合selector的祖先节点
  *
  * @param $el  开始寻找的基准元素
  * @param selector {string} 合法的css选择器字符串
- ******************************************************************************************
- * @method findSibling()  寻找第一个符合selector的兄弟元素
+ *
+ ---------------------------------------------------------------------------------------
+ * @method findSibling($el, selector, option = 'backward')  寻找第一个符合selector的兄弟元素
  *
  * @param $el  开始寻找的基准元素
  * @param selector {string} 合法的css选择器字符串
  * @param option {string}  查找选项 forward(default)|backward
- ******************************************************************************************
- * @method findSiblings()  寻找符合selector的兄弟元素集合(排除$el本身)
+ *
+ ---------------------------------------------------------------------------------------
+ * @method findSiblings($el, selector, option = 'all')  寻找符合selector的兄弟元素集合(排除$el本身)
  *
  * @param $el  开始寻找的基准元素
  * @param selector {string} 合法的css选择器字符串
  * @param option {string}  查找选项 all(default)|forward|backward
- ******************************************************************************************
  */
 const domOperationModule = (function () {
   // 将多个节点按顺序添加到parentNode，作为其子节点
@@ -540,16 +544,18 @@ const domOperationModule = (function () {
  *
  * @return {Object} {activatedTodoEditInPlace, saveTodoEdit, cancelTodoEdit}
  *
- * *****************************************************************************
- * @method activatedTodoEditInPlace() 开启edit in place功能
+ ---------------------------------------------------------------------------------------
+ * @method activatedTodoEditInPlace($el) 开启edit in place功能
  *
  * @param $el 传入todo-content节点
- * *****************************************************************************
- * @method saveTodoEdit() 保存修改，并关闭edit in place功能
+ *
+ ---------------------------------------------------------------------------------------
+ * @method saveTodoEdit($el) 保存修改，并关闭edit in place功能
  *
  * @param $el 传入button-save-todo-edit节点
- * *****************************************************************************
- * @method cancelTodoEdit() 放弃修改，并关闭edit in place功能
+ *
+ ---------------------------------------------------------------------------------------
+ * @method cancelTodoEdit($el) 放弃修改，并关闭edit in place功能
  *
  * @param $el 传入button-cancel-todo-edit节点
  */
