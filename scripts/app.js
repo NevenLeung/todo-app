@@ -6,33 +6,32 @@ const $inputForm = document.querySelector('.input-form');
 const $displayCtrl = document.querySelector('.display-ctrl');
 const $todoList = document.querySelector('.todo-list');
 
-// data source
+// data example
 
-const data = {
-  "todoList": [
-    {
-      "id": 0,
-      "text": "Buy some fruit after school",
-      "isDone": false
-    },
-    {
-      "id": 1,
-      "text": "Read the CLRS book to the page of 178",
-      "isDone": false
-    },
-    {
-      "id": 2,
-      "text": "Discuss the Network problem with Bill",
-      "isDone": true
-    },
-    {
-      "id": 3,
-      "text": "Finish the assignment of Database course",
-      "isDone": false
-    }
-  ]
-};
-
+// const data = {
+//   "todoList": [
+//     {
+//       "_id": 0,
+//       "text": "Buy some fruit after school",
+//       "isDone": false
+//     },
+//     {
+//       "_id": 1,
+//       "text": "Read the CLRS book to the page of 178",
+//       "isDone": false
+//     },
+//     {
+//       "_id": 2,
+//       "text": "Discuss the Network problem with Bill",
+//       "isDone": true
+//     },
+//     {
+//       "_id": 3,
+//       "text": "Finish the assignment of Database course",
+//       "isDone": false
+//     }
+//   ]
+// };
 
 // polyfills
 (function () {
@@ -64,7 +63,7 @@ const data = {
       } while (el !== null);
       return null;
     };
-}());
+})();
 
 // ------------------------- modules --------------------------------
 
@@ -738,7 +737,7 @@ const todoEditInPlaceModule = (function (domWrapper) {
     cancelTodoEdit
   };
 
-}(domOperationModule));
+})(domOperationModule);
 
 /**
  * @module displayCtrlModule todo的显示选项控制
