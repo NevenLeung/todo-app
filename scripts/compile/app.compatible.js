@@ -2,6 +2,356 @@
 
 // get the DOM elements
 
+/**
+ * addTodo()
+ *
+ * 添加一条新的todo，同时将一个新的todo对象的加入data.todoList数组中
+ *
+ * @param text todo的文本内容
+ */
+var addTodo = function () {
+  var _ref4 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee4(text) {
+    var data, result, $li, $div, $checkbox, $todoContent, $deleteButton;
+    return regeneratorRuntime.wrap(function _callee4$(_context4) {
+      while (1) {
+        switch (_context4.prev = _context4.next) {
+          case 0:
+            data = {
+              text: text,
+              isDone: false
+            };
+            _context4.prev = 1;
+            _context4.next = 4;
+            return todoStore.create(data);
+
+          case 4:
+            result = _context4.sent;
+
+            if (result) {
+              $li = createNewElementNode('li', 'todo', '', 'data-is-done', 'false', 'data-id', result._id);
+              $div = createNewElementNode('div', 'todo-display');
+              $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
+              $todoContent = createNewElementNode('span', 'todo-content', text);
+              $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
+
+              // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
+
+              domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
+
+              $li.appendChild($div);
+
+              // 把li添加到todo-list上
+              $todoList.appendChild($li);
+            } else {
+              console.log('Data creation is failed');
+            }
+            _context4.next = 11;
+            break;
+
+          case 8:
+            _context4.prev = 8;
+            _context4.t0 = _context4['catch'](1);
+
+            console.error(_context4.t0);
+
+          case 11:
+          case 'end':
+            return _context4.stop();
+        }
+      }
+    }, _callee4, this, [[1, 8]]);
+  }));
+
+  return function addTodo(_x8) {
+    return _ref4.apply(this, arguments);
+  };
+}();
+
+/**
+ * renderTodoList()
+ *
+ * 渲染todoList，并给相应的节点加上合适的属性
+ *
+ * @param {Array} data  一个包含todo数据的数组
+ *
+ * DOM 结构
+ *
+ <ul class="todo-list">
+ <li class='todo'>
+ <div class='todo-display'>
+ <input class='todo-checkbox'>
+ <span class='todo-content'></span>
+ <button class='button button-delete-todo'>X</button>
+ </div>
+ </li>
+ </ul>
+ *
+ */
+
+
+/**
+ * addMockData()  如果数据库没有数据，写入用作演示的数据
+ */
+var addMockData = function () {
+  var _ref5 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee5() {
+    var mockData, createPromises, queryResult;
+    return regeneratorRuntime.wrap(function _callee5$(_context5) {
+      while (1) {
+        switch (_context5.prev = _context5.next) {
+          case 0:
+            mockData = [{
+              text: "Finish the assignment of geometry",
+              isDone: false
+            }, {
+              text: "Call sam to discuss supper ",
+              isDone: true
+            }];
+
+            // 添加模拟的数据
+
+            createPromises = mockData.map(function (item) {
+              return todoStore.create(item);
+            });
+            _context5.next = 4;
+            return Promise.all(createPromises);
+
+          case 4:
+            _context5.next = 6;
+            return todoStore.getAll();
+
+          case 6:
+            queryResult = _context5.sent;
+
+            if (Array.isArray(queryResult) && queryResult.length !== 0) {
+              renderTodoList(queryResult);
+            }
+
+          case 8:
+          case 'end':
+            return _context5.stop();
+        }
+      }
+    }, _callee5, this);
+  }));
+
+  return function addMockData() {
+    return _ref5.apply(this, arguments);
+  };
+}();
+
+/**
+ * initRenderTodoList() 初始化渲染todo list
+ */
+
+
+var initRenderTodoList = function () {
+  var _ref6 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee6() {
+    var queryResult;
+    return regeneratorRuntime.wrap(function _callee6$(_context6) {
+      while (1) {
+        switch (_context6.prev = _context6.next) {
+          case 0:
+            _context6.prev = 0;
+            _context6.next = 3;
+            return todoStore.getAll();
+
+          case 3:
+            queryResult = _context6.sent;
+
+            if (!(Array.isArray(queryResult) && queryResult.length !== 0)) {
+              _context6.next = 8;
+              break;
+            }
+
+            renderTodoList(queryResult);
+            _context6.next = 10;
+            break;
+
+          case 8:
+            _context6.next = 10;
+            return addMockData();
+
+          case 10:
+            _context6.next = 15;
+            break;
+
+          case 12:
+            _context6.prev = 12;
+            _context6.t0 = _context6['catch'](0);
+
+            console.error(_context6.t0);
+
+          case 15:
+          case 'end':
+            return _context6.stop();
+        }
+      }
+    }, _callee6, this, [[0, 12]]);
+  }));
+
+  return function initRenderTodoList() {
+    return _ref6.apply(this, arguments);
+  };
+}();
+
+/**
+ * clickOnTodo()
+ *
+ * 作为在todo上点击事件的事件处理函数，不同的点击元素会触发不同的处理事件
+ */
+
+
+/**
+ * toggleTodoStatus()
+ *
+ * 切换todo的完成状态，更改显示样式，更改data中的数据，用作事件处理函数
+ *
+ * $el为todo-checkbox节点
+ */
+var toggleTodoStatus = function () {
+  var _ref7 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee7($el) {
+    var $todo, $todoContent, $displayOptionSelected, id, data, result;
+    return regeneratorRuntime.wrap(function _callee7$(_context7) {
+      while (1) {
+        switch (_context7.prev = _context7.next) {
+          case 0:
+            // 每一个todo的todo-content是checkbox的下一个同级元素
+            $todo = domOperationModule.findClosestAncestor($el, '.todo');
+            $todoContent = domOperationModule.query($todo, '.todo-content');
+            $displayOptionSelected = displayCtrlModule.getDisplayOption();
+            id = parseInt($todo.dataset.id);
+            data = {
+              isDone: !stringToBoolean($todo.dataset.isDone)
+            };
+            _context7.prev = 5;
+            _context7.next = 8;
+            return todoStore.update(id, data);
+
+          case 8:
+            result = _context7.sent;
+
+            if (result) {
+              if ($todo.dataset.isDone === 'false') {
+                $todoContent.classList.add('todo-is-done');
+                $todo.dataset.isDone = 'true';
+
+                // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
+                if (!$displayOptionSelected.matches('.display-all')) {
+                  $todo.classList.add('todo-hidden');
+                }
+              } else {
+                $todoContent.classList.remove('todo-is-done');
+                $todo.dataset.isDone = 'false';
+
+                // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
+                if (!$displayOptionSelected.matches('.display-all')) {
+                  $todo.classList.add('todo-hidden');
+                }
+              }
+            }
+            _context7.next = 15;
+            break;
+
+          case 12:
+            _context7.prev = 12;
+            _context7.t0 = _context7['catch'](5);
+
+            console.error(_context7.t0);
+
+          case 15:
+          case 'end':
+            return _context7.stop();
+        }
+      }
+    }, _callee7, this, [[5, 12]]);
+  }));
+
+  return function toggleTodoStatus(_x9) {
+    return _ref7.apply(this, arguments);
+  };
+}();
+
+/**
+ * deleteTodo()
+ *
+ * 删除todo，从DOM上移除相应的$todo与相应的数据
+ *
+ * $el为button-delete-todo节点
+ */
+
+
+var deleteTodo = function () {
+  var _ref8 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee8($el) {
+    var $todo, id;
+    return regeneratorRuntime.wrap(function _callee8$(_context8) {
+      while (1) {
+        switch (_context8.prev = _context8.next) {
+          case 0:
+            $todo = domOperationModule.findClosestAncestor($el, '.todo');
+            id = parseInt($todo.dataset.id);
+            _context8.prev = 2;
+            _context8.next = 5;
+            return todoStore.delete(id);
+
+          case 5:
+            $todoList.removeChild($todo);
+            _context8.next = 11;
+            break;
+
+          case 8:
+            _context8.prev = 8;
+            _context8.t0 = _context8['catch'](2);
+
+            console.error(_context8.t0);
+
+          case 11:
+          case 'end':
+            return _context8.stop();
+        }
+      }
+    }, _callee8, this, [[2, 8]]);
+  }));
+
+  return function deleteTodo(_x10) {
+    return _ref8.apply(this, arguments);
+  };
+}();
+
+/**
+ * renderDisplayTabs()
+ *
+ * 渲染display tab，用于控制todo状态的显示
+ */
+
+
+/**
+ * afterDataBaseConnected()  包含需要在数据库初始化（连接）成功后，才能进行的操作。此函数在todoStore内部，当数据库连接成功后才会被调用
+ */
+var afterDataBaseConnected = function () {
+  var _ref9 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee9() {
+    return regeneratorRuntime.wrap(function _callee9$(_context9) {
+      while (1) {
+        switch (_context9.prev = _context9.next) {
+          case 0:
+            _context9.next = 2;
+            return initRenderTodoList();
+
+          case 2:
+            appInit();
+
+          case 3:
+          case 'end':
+            return _context9.stop();
+        }
+      }
+    }, _callee9, this);
+  }));
+
+  return function afterDataBaseConnected() {
+    return _ref9.apply(this, arguments);
+  };
+}();
+
 function _toConsumableArray(arr) {
   if (Array.isArray(arr)) {
     for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
@@ -13,31 +363,64 @@ function _toConsumableArray(arr) {
   }
 }
 
+function _asyncToGenerator(fn) {
+  return function () {
+    var gen = fn.apply(this, arguments);
+    return new Promise(function (resolve, reject) {
+      function step(key, arg) {
+        try {
+          var info = gen[key](arg);
+          var value = info.value;
+        } catch (error) {
+          reject(error);
+          return;
+        }
+        if (info.done) {
+          resolve(value);
+        } else {
+          return Promise.resolve(value).then(function (value) {
+            step("next", value);
+          }, function (err) {
+            step("throw", err);
+          });
+        }
+      }
+
+      return step("next");
+    });
+  };
+}
+
 var $inputForm = document.querySelector('.input-form');
 var $displayCtrl = document.querySelector('.display-ctrl');
 var $todoList = document.querySelector('.todo-list');
 
-// data source
+// data example
 
-var data = {
-  "todoList": [{
-    "id": 0,
-    "text": "Buy some fruit after school",
-    "isDone": false
-  }, {
-    "id": 1,
-    "text": "Read the CLRS book to the page of 178",
-    "isDone": false
-  }, {
-    "id": 2,
-    "text": "Discuss the Network problem with Bill",
-    "isDone": true
-  }, {
-    "id": 3,
-    "text": "Finish the assignment of Database course",
-    "isDone": false
-  }]
-};
+// const data = {
+//   "todoList": [
+//     {
+//       "_id": 0,
+//       "text": "Buy some fruit after school",
+//       "isDone": false
+//     },
+//     {
+//       "_id": 1,
+//       "text": "Read the CLRS book to the page of 178",
+//       "isDone": false
+//     },
+//     {
+//       "_id": 2,
+//       "text": "Discuss the Network problem with Bill",
+//       "isDone": true
+//     },
+//     {
+//       "_id": 3,
+//       "text": "Finish the assignment of Database course",
+//       "isDone": false
+//     }
+//   ]
+// };
 
 // polyfills
 (function () {
@@ -72,6 +455,7 @@ var data = {
  * @param {String} dbName  数据库名称
  * @param {Number} version  数据库版本
  * @param {String} objectStorage  对象存储空间（相当于table name）
+ * @param {Function} afterDataBaseConnected  需要在数据库初始化完成后执行的函数，一般为应用的初始化函数
  *
  * @return {Object} {getAll, get, create, update, delete, removeAll}
  *
@@ -131,18 +515,19 @@ var data = {
  * @resolve {String}  成功删除所有数据记录的消息
  * @reject {Object}  删除数据记录过程中的异常信息
  */
-var indexedDBModule = function indexedDBModule(dbName, version, objectStorage) {
-  // IIFE中的全局变量，用于存储连接成功的数据库连接
-  var db = void 0;
-
+var indexedDBModule = function indexedDBModule(dbName, version, objectStorage, afterDataBaseConnected) {
   var dbOpenRequest = window.indexedDB.open(dbName, version);
+
+  // 模块中的局部变量，用于存储连接成功的数据库连接
+  var db = void 0;
 
   dbOpenRequest.onerror = function (event) {
     console.log('Something bad happened while trying to open: ' + event.target.errorCode);
+    reject(event.target);
   };
 
   dbOpenRequest.onupgradeneeded = function () {
-    db = dbOpenRequest.result;
+    var db = dbOpenRequest.result;
     // 创建存储空间，使用自增的主值
     var store = db.createObjectStore(objectStorage, {
       keyPath: '_id',
@@ -152,138 +537,149 @@ var indexedDBModule = function indexedDBModule(dbName, version, objectStorage) {
 
   dbOpenRequest.onsuccess = function () {
     db = dbOpenRequest.result;
-
     afterDataBaseConnected();
   };
 
+  function useIndexedDB(action, dataParam) {
+    return new Promise(function (resolve, reject) {
+      // 创建事务
+      var transaction = db.transaction(objectStorage, 'readwrite');
+      // 在事务上得到相应的存储空间，用于数据的读取与修改
+      var objectStore = transaction.objectStore(objectStorage);
+
+      transaction.onabort = function (event) {
+        console.log('tx has been aborted.');
+        console.log(event.target);
+      };
+
+      var txOperationRequest = void 0;
+
+      switch (action) {
+        case 'getAll':
+          txOperationRequest = objectStore.getAll();
+          break;
+        case 'get':
+          txOperationRequest = objectStore.get(dataParam);
+          break;
+        case 'post':
+          txOperationRequest = objectStore.add(dataParam);
+          break;
+        case 'put':
+          txOperationRequest = objectStore.put(dataParam);
+          break;
+        case 'delete':
+          txOperationRequest = objectStore.delete(dataParam);
+          break;
+        case 'removeAll':
+          txOperationRequest = objectStore.clear();
+      }
+
+      txOperationRequest.onerror = function (event) {
+        console.log(event.target);
+        reject(event.target);
+      };
+
+      txOperationRequest.onsuccess = function (event) {
+        switch (action) {
+          case 'getAll':
+            resolve(txOperationRequest.result);
+            break;
+          case 'get':
+            resolve(txOperationRequest.result);
+            break;
+          case 'post':
+            console.log('Item with _id ' + txOperationRequest.result + ' has been added.');
+            resolve({_id: txOperationRequest.result});
+            break;
+          case 'put':
+            console.log('Item with _id ' + txOperationRequest.result + ' has been updated.');
+            resolve({_id: txOperationRequest.result});
+            break;
+          case 'delete':
+            console.log('Item has been removed.');
+            resolve('Item has been removed.');
+            break;
+          case 'removeAll':
+            console.log('All items have been removed.');
+            resolve('All items have been removed.');
+        }
+      };
+    });
+  }
+
   return {
     getAll: function getAll() {
-      return new Promise(function (resolve, reject) {
-        var transaction = db.transaction(objectStorage, 'readwrite');
-        var objectStore = transaction.objectStore(objectStorage);
-
-        var txOperationRequest = objectStore.getAll();
-
-        txOperationRequest.onsuccess = function (event) {
-          resolve(txOperationRequest.result);
-        };
-
-        txOperationRequest.onerror = function (event) {
-          console.log(txOperationRequest);
-          reject(txOperationRequest);
-        };
-      });
+      return useIndexedDB('getAll', '');
     },
     get: function get(query) {
-      return new Promise(function (resolve, reject) {
-        var transaction = db.transaction(objectStorage, 'readwrite');
-        var objectStore = transaction.objectStore(objectStorage);
-
-        var txOperationRequest = objectStore.get(query);
-
-        txOperationRequest.onsuccess = function (event) {
-          resolve(txOperationRequest.result);
-        };
-
-        txOperationRequest.onerror = function (event) {
-          console.log(txOperationRequest);
-          reject(txOperationRequest);
-        };
-      });
+      return useIndexedDB('get', query);
     },
     create: function create(data) {
-      return new Promise(function (resolve, reject) {
-        var transaction = db.transaction(objectStorage, 'readwrite');
-        var objectStore = transaction.objectStore(objectStorage);
-
-        var txOperationRequest = objectStore.add(data);
-
-        txOperationRequest.onsuccess = function (event) {
-          console.log('Item with _id ' + txOperationRequest.result + ' has been added.');
-          resolve({_id: txOperationRequest.result});
-        };
-
-        txOperationRequest.onerror = function (event) {
-          console.log(txOperationRequest);
-          reject(txOperationRequest);
-        };
-      });
+      return useIndexedDB('post', data);
     },
-    update: function update(query, data) {
-      return new Promise(function (resolve, reject) {
-        var transaction = db.transaction(objectStorage, 'readwrite');
-        var objectStore = transaction.objectStore(objectStorage);
+    update: function () {
+      var _ref = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee(query, data) {
+        var queryResult, newData;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                _context.prev = 0;
+                _context.next = 3;
+                return useIndexedDB('get', query);
 
-        // 先利用id值，去数据库找到相应的旧数据
-        var txOperationRequest = objectStore.get(query);
+              case 3:
+                queryResult = _context.sent;
 
-        txOperationRequest.onsuccess = function (event) {
-          var result = txOperationRequest.result;
+                if (!(typeof queryResult !== 'undefined')) {
+                  _context.next = 9;
+                  break;
+                }
 
-          // 找到相应的数据后，将找到的result与需要更新的data，组成newData。用newData覆盖原来的result
-          if (typeof result !== 'undefined') {
-            var newData = Object.assign(result, data);
-            var putRequest = objectStore.put(newData);
+                newData = Object.assign(queryResult, data);
+                return _context.abrupt('return', useIndexedDB('put', newData));
 
-            putRequest.onsuccess = function () {
-              console.log('Item with _id ' + putRequest.result + ' has been updated.');
-              resolve({_id: putRequest.result});
-            };
+              case 9:
+                console.log('Can not find the data according to the query');
 
-            putRequest.onerror = function () {
-              console.log(putRequest);
-              reject(putRequest);
-            };
+              case 10:
+                _context.next = 15;
+                break;
+
+              case 12:
+                _context.prev = 12;
+                _context.t0 = _context['catch'](0);
+
+                console.error(_context.t0);
+
+              case 15:
+              case 'end':
+                return _context.stop();
+            }
           }
-        };
+        }, _callee, this, [[0, 12]]);
+      }));
 
-        txOperationRequest.onerror = function (event) {
-          console.log(txOperationRequest);
-          reject(txOperationRequest);
-        };
-      });
-    },
+      function update(_x, _x2) {
+        return _ref.apply(this, arguments);
+      }
+
+      return update;
+    }(),
+    // put: function (data) {
+    //   return useIndexedDB('put', data);
+    // },
     delete: function _delete(query) {
-      return new Promise(function (resolve, reject) {
-        var transaction = db.transaction(objectStorage, 'readwrite');
-        var objectStore = transaction.objectStore(objectStorage);
-
-        var txOperationRequest = objectStore.delete(query);
-
-        txOperationRequest.onsuccess = function (event) {
-          console.log('Item has been removed.');
-          resolve('Item has been removed.');
-        };
-
-        txOperationRequest.onerror = function (event) {
-          console.log(txOperationRequest);
-          reject(txOperationRequest);
-        };
-      });
+      return useIndexedDB('delete', query);
     },
     removeAll: function removeAll() {
-      return new Promise(function (resolve, reject) {
-        var transaction = db.transaction(objectStorage, 'readwrite');
-        var objectStore = transaction.objectStore(objectStorage);
-
-        var txOperationRequest = objectStore.clear();
-
-        txOperationRequest.onsuccess = function (event) {
-          console.log('All items have been removed.');
-          resolve('All items have been removed.');
-        };
-
-        txOperationRequest.onerror = function (event) {
-          console.log(txOperationRequest);
-          reject(txOperationRequest);
-        };
-      });
+      return useIndexedDB('removeAll', '');
     }
   };
 };
 
 // 创建TodoApp的数据库管理实例
-var todoStore = indexedDBModule('TodoApp', 1, 'todo');
+var todoStore = indexedDBModule('TodoApp', 1, 'todo', afterDataBaseConnected);
 
 /**
  * @module domOperationModule  将常用的DOM操作进行封装
@@ -564,6 +960,166 @@ var domOperationModule = function () {
  * @param $el 传入button-cancel-todo-edit节点
  */
 var todoEditInPlaceModule = function (domWrapper) {
+
+  /**
+   * saveTodoEdit()
+   *
+   * 作为todo-edit中save button的事件处理方法，用于保存content的修改，修改todo-content的内容，
+   * 以及将修改更新到data，以及改变todo-display和todo-edit的display属性
+   *
+   * @param $el button-save-todo-edit节点
+   */
+  var saveTodoEdit = function () {
+    var _ref2 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee2($el) {
+      var $todo, $todoEdit, $todoEditBar, $todoDisplay, $todoContent, id, data, result;
+      return regeneratorRuntime.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              if (!$el.matches('.button-save-todo-edit')) {
+                _context2.next = 22;
+                break;
+              }
+
+              $todo = domWrapper.findClosestAncestor($el, '.todo');
+              $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
+              $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
+              $todoDisplay = domWrapper.query($todo, '.todo-display');
+              $todoContent = domWrapper.query($todoDisplay, '.todo-content');
+
+              // 不允许修改后，todo的内容为空，或者为纯空白字符
+
+              if (!($todoEditBar.value.trim().length === 0)) {
+                _context2.next = 10;
+                break;
+              }
+
+              alert('The content of todo should not be empty. Please write something you need to do.');
+              _context2.next = 22;
+              break;
+
+            case 10:
+              id = parseInt($todo.dataset.id);
+              data = {
+                text: $todoEditBar.value
+              };
+              _context2.prev = 12;
+              _context2.next = 15;
+              return todoStore.update(id, data);
+
+            case 15:
+              result = _context2.sent;
+
+              if (result) {
+                $todoContent.textContent = $todoEditBar.value;
+
+                $todoDisplay.classList.remove('todo-display-hidden');
+                $todoEdit.classList.remove('todo-edit-show');
+
+                $lastEditedTodo = undefined;
+              }
+              _context2.next = 22;
+              break;
+
+            case 19:
+              _context2.prev = 19;
+              _context2.t0 = _context2['catch'](12);
+
+              console.error(_context2.t0);
+
+            case 22:
+            case 'end':
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this, [[12, 19]]);
+    }));
+
+    return function saveTodoEdit(_x5) {
+      return _ref2.apply(this, arguments);
+    };
+  }();
+
+  /**
+   * cancelTodoEdit()
+   *
+   * 作为todo-edit中cancel button的事件处理方法，用于抛弃修改结果后，改变todo-display和todo-edit的display属性
+   *
+   * @param $el button-cancel-todo-edit节点
+   */
+
+
+  /**
+   * saveUnsavedEdition()
+   *
+   * 每次开启edit in place，先尝试执行该函数
+   *
+   * 作用：
+   * - 当已经有一个todo处于可编辑状态，此时点击另一个todo，需要保存前一个todo的数据，还需要将数据修改进行保存，同时进行class toggle
+   * - 简单来说是，为了编辑todo时的操作互斥，同时会对未点击save按钮的修改进行保存
+   */
+  var saveUnsavedEdition = function () {
+    var _ref3 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
+      var $todoDisplay, $todoContent, $todoEdit, todoContentAfterEdited, id, data, result;
+      return regeneratorRuntime.wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              if (!(typeof $lastEditedTodo !== 'undefined')) {
+                _context3.next = 17;
+                break;
+              }
+
+              $todoDisplay = domWrapper.query($lastEditedTodo, '.todo-display');
+              $todoContent = domWrapper.query($todoDisplay, '.todo-content');
+              $todoEdit = domWrapper.query($lastEditedTodo, '.todo-edit');
+
+              // 待保存的content应该是input中的value，而不是$todoContent中的textContent，那应该如何保存value呢？
+              // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以此时input中value仍然是被修改后的值
+
+              todoContentAfterEdited = domWrapper.query($todoEdit, '.todo-edit-bar').value;
+              id = parseInt($lastEditedTodo.dataset.id);
+              data = {
+                text: todoContentAfterEdited
+              };
+              _context3.prev = 7;
+              _context3.next = 10;
+              return todoStore.update(id, data);
+
+            case 10:
+              result = _context3.sent;
+
+              if (result) {
+                // 保存修改
+                $todoContent.textContent = todoContentAfterEdited;
+
+                // 让前一个未保存的todo恢复正常的显示
+                $todoDisplay.classList.remove('todo-display-hidden');
+                $todoEdit.classList.remove('todo-edit-show');
+              }
+
+              _context3.next = 17;
+              break;
+
+            case 14:
+              _context3.prev = 14;
+              _context3.t0 = _context3['catch'](7);
+
+              console.error(_context3.t0);
+
+            case 17:
+            case 'end':
+              return _context3.stop();
+          }
+        }
+      }, _callee3, this, [[7, 14]]);
+    }));
+
+    return function saveUnsavedEdition() {
+      return _ref3.apply(this, arguments);
+    };
+  }();
+
   var $lastEditedTodo = void 0;
 
   /**
@@ -630,54 +1186,6 @@ var todoEditInPlaceModule = function (domWrapper) {
     }
   }
 
-  /**
-   * saveTodoEdit()
-   *
-   * 作为todo-edit中save button的事件处理方法，用于保存content的修改，修改todo-content的内容，
-   * 以及将修改更新到data，以及改变todo-display和todo-edit的display属性
-   *
-   * @param $el button-save-todo-edit节点
-   */
-  function saveTodoEdit($el) {
-    if ($el.matches('.button-save-todo-edit')) {
-      var $todo = domWrapper.findClosestAncestor($el, '.todo');
-      var $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
-      var $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
-      var $todoDisplay = domWrapper.query($todo, '.todo-display');
-      var $todoContent = domWrapper.query($todoDisplay, '.todo-content');
-
-      // 不允许修改后，todo的内容为空，或者为纯空白字符
-      if ($todoEditBar.value.trim().length === 0) {
-        alert('The content of todo should not be empty. Please write something you need to do.');
-      } else {
-        var id = parseInt($todo.dataset.id);
-        var _data = {
-          text: $todoEditBar.value
-        };
-
-        todoStore.update(id, _data).then(function (result) {
-          if (result) {
-            $todoContent.textContent = $todoEditBar.value;
-
-            $todoDisplay.classList.remove('todo-display-hidden');
-            $todoEdit.classList.remove('todo-edit-show');
-
-            $lastEditedTodo = undefined;
-          }
-        }).catch(function (err) {
-          console.error(err);
-        });
-      }
-    }
-  }
-
-  /**
-   * cancelTodoEdit()
-   *
-   * 作为todo-edit中cancel button的事件处理方法，用于抛弃修改结果后，改变todo-display和todo-edit的display属性
-   *
-   * @param $el button-cancel-todo-edit节点
-   */
   function cancelTodoEdit($el) {
     if ($el.matches('.button-cancel-todo-edit')) {
       // 如何保存一个todo未修改之前的值，用于取消操作的回滚，
@@ -689,45 +1197,6 @@ var todoEditInPlaceModule = function (domWrapper) {
       $todoEdit.classList.remove('todo-edit-show');
 
       $lastEditedTodo = undefined;
-    }
-  }
-
-  /**
-   * saveUnsavedEdition()
-   *
-   * 每次开启edit in place，先尝试执行该函数
-   *
-   * 作用：
-   * - 当已经有一个todo处于可编辑状态，此时点击另一个todo，需要保存前一个todo的数据，还需要将数据修改进行保存，同时进行class toggle
-   * - 简单来说是为了，编辑todo的操作互斥，同时会对未点击save按钮的修改进行保存
-   */
-  function saveUnsavedEdition() {
-    if (typeof $lastEditedTodo !== 'undefined') {
-      var $todoDisplay = domWrapper.query($lastEditedTodo, '.todo-display');
-      var $todoContent = domWrapper.query($todoDisplay, '.todo-content');
-      var $todoEdit = domWrapper.query($lastEditedTodo, '.todo-edit');
-
-      // 待保存的content应该是input中的value，而不是$todoContent中的textContent，那应该如何保存value呢？
-      // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以此时input中value仍然是被修改后的值
-      var todoContentAfterEdited = domWrapper.query($todoEdit, '.todo-edit-bar').value;
-      var id = parseInt($lastEditedTodo.dataset.id);
-      var _data2 = {
-        text: todoContentAfterEdited
-      };
-
-      todoStore.update(id, _data2).then(function (result) {
-        if (result) {
-
-          // 保存修改
-          $todoContent.textContent = todoContentAfterEdited;
-
-          // 让前一个未保存的todo恢复正常的显示
-          $todoDisplay.classList.remove('todo-display-hidden');
-          $todoEdit.classList.remove('todo-edit-show');
-        }
-      }).catch(function (err) {
-        console.error(err);
-      });
     }
   }
 
@@ -894,71 +1363,6 @@ function stringToBoolean(str) {
   }
 }
 
-/**
- * addTodo()
- *
- * 添加一条新的todo，同时将一个新的todo对象的加入data.todoList数组中
- *
- * @param text todo的文本内容
- */
-function addTodo(text) {
-  var data = {
-    text: text,
-    isDone: false
-  };
-
-  todoStore.create(data).then(function (result) {
-    if (result) {
-      var $li = createNewElementNode('li', 'todo', '', 'data-is-done', 'false', 'data-id', result._id);
-      var $div = createNewElementNode('div', 'todo-display');
-      var $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
-      var $todoContent = createNewElementNode('span', 'todo-content', text);
-      var $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
-
-      // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
-
-      domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
-
-      $li.appendChild($div);
-
-      // 把li添加到todo-list上
-      $todoList.appendChild($li);
-    } else {
-      console.log('Data creation is failed');
-    }
-  }).catch(function (err) {
-    console.error(err);
-  });
-
-  //
-  // data.todoList.push({
-  //   // todo的id从0开始，新的todo的id刚好可以等于之前的todoList.length
-  //   "id": data.todoList.length,
-  //   "text": text,
-  //   "isDone": false
-  // });
-}
-
-/**
- * renderTodoList()
- *
- * 渲染todoList，并给相应的节点加上合适的属性
- *
- * @param {Array} data  一个包含todo数据的数组
- *
- * DOM 结构
- *
- <ul class="todo-list">
-   <li class='todo'>
-   <div class='todo-display'>
-     <input class='todo-checkbox'>
-     <span class='todo-content'></span>
-     <button class='button button-delete-todo'>X</button>
-   </div>
-   </li>
- </ul>
- *
- */
 function renderTodoList(data) {
   data.forEach(function (todo) {
     var $li = createNewElementNode('li', 'todo', '', 'data-is-done', todo.isDone, 'data-id', todo._id);
@@ -982,50 +1386,6 @@ function renderTodoList(data) {
   });
 }
 
-/**
- * addMockData()  如果数据库没有数据，写入用作演示的数据
- */
-function addMockData() {
-  var mockData = [{
-    text: "Finish the assignment of geometry",
-    isDone: false
-  }, {
-    text: "Call sam to discuss supper ",
-    isDone: true
-  }];
-
-  // 添加模拟的数据
-  mockData.forEach(function (item) {
-    todoStore.create(item);
-  });
-
-  todoStore.getAll().then(function (result) {
-    if (Array.isArray(result) && result.length !== 0) {
-      renderTodoList(result);
-    }
-  });
-}
-
-/**
- * initRenderTodoList() 初始化渲染todo list
- */
-function initRenderTodoList() {
-  todoStore.getAll().then(function (result) {
-    if (Array.isArray(result) && result.length !== 0) {
-      renderTodoList(result);
-    } else {
-      addMockData();
-    }
-  }).catch(function (err) {
-    console.error(err);
-  });
-}
-
-/**
- * clickOnTodo()
- *
- * 作为在todo上点击事件的事件处理函数，不同的点击元素会触发不同的处理事件
- */
 function clickOnTodo(event) {
   var $el = event.target;
   // 判断点击的元素是不是todo-checkbox
@@ -1050,74 +1410,6 @@ function clickOnTodo(event) {
   }
 }
 
-/**
- * toggleTodoStatus()
- *
- * 切换todo的完成状态，更改显示样式，更改data中的数据，用作事件处理函数
- *
- * $el为todo-checkbox节点
- */
-function toggleTodoStatus($el) {
-  // 每一个todo的todo-content是checkbox的下一个同级元素
-  var $todo = domOperationModule.findClosestAncestor($el, '.todo');
-  var $todoContent = domOperationModule.query($todo, '.todo-content');
-  var $displayOptionSelected = displayCtrlModule.getDisplayOption();
-
-  var id = parseInt($todo.dataset.id);
-  var data = {
-    isDone: !stringToBoolean($todo.dataset.isDone)
-  };
-
-  todoStore.update(id, data).then(function (result) {
-    if (result) {
-      if ($todo.dataset.isDone === 'false') {
-        $todoContent.classList.add('todo-is-done');
-        $todo.dataset.isDone = 'true';
-
-        // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
-        if (!$displayOptionSelected.matches('.display-all')) {
-          $todo.classList.add('todo-hidden');
-        }
-      } else {
-        $todoContent.classList.remove('todo-is-done');
-        $todo.dataset.isDone = 'false';
-
-        // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
-        if (!$displayOptionSelected.matches('.display-all')) {
-          $todo.classList.add('todo-hidden');
-        }
-      }
-    }
-  }).catch(function (err) {
-    console.error(err);
-  });
-}
-
-/**
- * deleteTodo()
- *
- * 删除todo，从DOM上移除相应的$todo与相应的数据
- *
- * $el为button-delete-todo节点
- */
-function deleteTodo($el) {
-  var $todo = domOperationModule.findClosestAncestor($el, '.todo');
-  var id = parseInt($todo.dataset.id);
-
-  todoStore.delete(id).then(function (result) {
-    if (result) {
-      $todoList.removeChild($todo);
-    }
-  }).catch(function (err) {
-    console.error(err);
-  });
-}
-
-/**
- * renderDisplayTabs()
- *
- * 渲染display tab，用于控制todo状态的显示
- */
 function renderDisplayTabs() {
   var $displayOption1 = createNewElementNode('li', 'display-option');
   var $displayOption2 = createNewElementNode('li', 'display-option');
@@ -1156,36 +1448,32 @@ function clickOnDisplayTabs(event) {
 }
 
 /**
- * afterDataBaseConnected()   包含需要在数据库初始化（连接）成功后，才能进行的操作。此函数在todoStore内部，当数据库连接成功后才会被调用
+ * appInit()  应用的初始化函数，包括各种事件处理函数绑定，控制元素的渲染
  */
-function afterDataBaseConnected() {
-  initRenderTodoList();
+function appInit() {
+  renderDisplayTabs();
+
+  // 使用表单提交input的内容
+  $inputForm.addEventListener('submit', function (event) {
+    // 防止表单的提交
+    event.preventDefault();
+
+    var inputData = $inputForm.elements['todo-input'].value;
+
+    // 不允许修改后，todo的内容为空，或者为纯空白字符
+    if (inputData.trim().length === 0) {
+      alert('You should type something in the input bar.');
+    } else {
+      addTodo(inputData);
+    }
+
+    // 重置表单数据
+    $inputForm.reset();
+  });
+
+  // 使用事件委托，将三种显示状态切换的点击绑定到display-ctrl节点上
+  $displayCtrl.addEventListener('click', clickOnDisplayTabs);
+
+  // 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
+  $todoList.addEventListener('click', clickOnTodo);
 }
-
-// ----------------------------------- logic ---------------------------------------
-
-renderDisplayTabs();
-
-// 使用表单提交input的内容
-$inputForm.addEventListener('submit', function (event) {
-  // 防止表单的提交
-  event.preventDefault();
-
-  var inputData = $inputForm.elements['todo-input'].value;
-
-  // 不允许修改后，todo的内容为空，或者为纯空白字符
-  if (inputData.trim().length === 0) {
-    alert('You should type something in the input bar.');
-  } else {
-    addTodo(inputData);
-  }
-
-  // 重置表单数据
-  $inputForm.reset();
-});
-
-// 使用事件委托，将三种显示状态切换的点击绑定到display-ctrl节点上
-$displayCtrl.addEventListener('click', clickOnDisplayTabs);
-
-// 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
-$todoList.addEventListener('click', clickOnTodo);

@@ -73,6 +73,7 @@ const $todoList = document.querySelector('.todo-list');
  * @param {String} dbName  数据库名称
  * @param {Number} version  数据库版本
  * @param {String} objectStorage  对象存储空间（相当于table name）
+ * @param {Function} afterDataBaseConnected  需要在数据库初始化完成后执行的函数，一般为应用的初始化函数
  *
  * @return {Object} {getAll, get, create, update, delete, removeAll}
  *
@@ -132,7 +133,7 @@ const $todoList = document.querySelector('.todo-list');
  * @resolve {String}  成功删除所有数据记录的消息
  * @reject {Object}  删除数据记录过程中的异常信息
  */
-const indexedDBModule = function (dbName, version, objectStorage) {
+const indexedDBModule = function (dbName, version, objectStorage, afterDataBaseConnected) {
   const dbOpenRequest = window.indexedDB.open(dbName, version);
 
   // 模块中的局部变量，用于存储连接成功的数据库连接
@@ -154,7 +155,8 @@ const indexedDBModule = function (dbName, version, objectStorage) {
 
   dbOpenRequest.onsuccess = function () {
     db = dbOpenRequest.result;
-  }
+    afterDataBaseConnected();
+  };
 
   function useIndexedDB(action, dataParam) {
     return new Promise(function (resolve, reject) {
@@ -221,7 +223,7 @@ const indexedDBModule = function (dbName, version, objectStorage) {
         }
       };
     });
-  };
+  }
 
   return {
     getAll: function () {
@@ -260,7 +262,7 @@ const indexedDBModule = function (dbName, version, objectStorage) {
 };
 
 // 创建TodoApp的数据库管理实例
-const todoStore = indexedDBModule('TodoApp', 1, 'todo');
+const todoStore = indexedDBModule('TodoApp', 1, 'todo', afterDataBaseConnected);
 
 /**
  * @module domOperationModule  将常用的DOM操作进行封装
@@ -609,7 +611,7 @@ const todoEditInPlaceModule = (function (domWrapper) {
    *
    * @param $el button-save-todo-edit节点
    */
-  function saveTodoEdit($el) {
+  async function saveTodoEdit($el) {
     if ($el.matches('.button-save-todo-edit')) {
       const $todo = domWrapper.findClosestAncestor($el, '.todo');
       const $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
@@ -626,20 +628,20 @@ const todoEditInPlaceModule = (function (domWrapper) {
           text: $todoEditBar.value
         };
 
-        todoStore.update(id, data)
-          .then((result) => {
-            if (result) {
-              $todoContent.textContent = $todoEditBar.value;
+        try {
+          const result = await todoStore.update(id, data);
+          if (result) {
+            $todoContent.textContent = $todoEditBar.value;
 
-              $todoDisplay.classList.remove('todo-display-hidden');
-              $todoEdit.classList.remove('todo-edit-show');
+            $todoDisplay.classList.remove('todo-display-hidden');
+            $todoEdit.classList.remove('todo-edit-show');
 
-              $lastEditedTodo = undefined;
-            }
-          })
-          .catch(function (err) {
-            console.error(err);
-          })
+            $lastEditedTodo = undefined;
+          }
+        }
+        catch (err) {
+          console.error(err);
+        }
       }
     }
   }
@@ -673,9 +675,9 @@ const todoEditInPlaceModule = (function (domWrapper) {
    *
    * 作用：
    * - 当已经有一个todo处于可编辑状态，此时点击另一个todo，需要保存前一个todo的数据，还需要将数据修改进行保存，同时进行class toggle
-   * - 简单来说是为了，编辑todo的操作互斥，同时会对未点击save按钮的修改进行保存
+   * - 简单来说是，为了编辑todo时的操作互斥，同时会对未点击save按钮的修改进行保存
    */
-  function saveUnsavedEdition() {
+  async function saveUnsavedEdition() {
     if (typeof $lastEditedTodo !== 'undefined') {
       const $todoDisplay = domWrapper.query($lastEditedTodo, '.todo-display');
       const $todoContent = domWrapper.query($todoDisplay, '.todo-content');
@@ -689,21 +691,21 @@ const todoEditInPlaceModule = (function (domWrapper) {
         text: todoContentAfterEdited
       };
 
-      todoStore.update(id, data)
-        .then(function (result) {
-          if (result) {
+      try {
+        const result = await todoStore.update(id, data);
+        if (result) {
+          // 保存修改
+          $todoContent.textContent = todoContentAfterEdited;
 
-            // 保存修改
-            $todoContent.textContent = todoContentAfterEdited;
+          // 让前一个未保存的todo恢复正常的显示
+          $todoDisplay.classList.remove('todo-display-hidden');
+          $todoEdit.classList.remove('todo-edit-show');
+        }
 
-            // 让前一个未保存的todo恢复正常的显示
-            $todoDisplay.classList.remove('todo-display-hidden');
-            $todoEdit.classList.remove('todo-edit-show');
-          }
-        })
-        .catch(function (err) {
-          console.error(err);
-        });
+      }
+      catch (err) {
+        console.error(err);
+      }
     }
   }
 
@@ -873,45 +875,36 @@ function stringToBoolean(str) {
  *
  * @param text todo的文本内容
  */
-function addTodo(text) {
+async function addTodo(text) {
   const data = {
     text: text,
     isDone: false
   };
 
-  todoStore.create(data)
-    .then(function (result) {
-      if (result) {
-        const $li = createNewElementNode('li', 'todo', '', 'data-is-done', 'false', 'data-id', result._id);
-        const $div = createNewElementNode('div', 'todo-display');
-        const $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
-        const $todoContent = createNewElementNode('span', 'todo-content', text);
-        const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
+  try {
+    const result = await todoStore.create(data);
+    if (result) {
+      const $li = createNewElementNode('li', 'todo', '', 'data-is-done', 'false', 'data-id', result._id);
+      const $div = createNewElementNode('div', 'todo-display');
+      const $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
+      const $todoContent = createNewElementNode('span', 'todo-content', text);
+      const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
 
-        // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
+      // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
+      domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
 
-        domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
+      $li.appendChild($div);
 
-        $li.appendChild($div);
+      // 把li添加到todo-list上
+      $todoList.appendChild($li);
+    } else {
+      console.log('Data creation is failed');
+    }
+  }
+  catch (err) {
+    console.error(err);
+  }
 
-        // 把li添加到todo-list上
-        $todoList.appendChild($li);
-      } else {
-        console.log('Data creation is failed');
-      }
-    })
-    .catch(function (err) {
-      console.error(err);
-    });
-
-
-  //
-  // data.todoList.push({
-  //   // todo的id从0开始，新的todo的id刚好可以等于之前的todoList.length
-  //   "id": data.todoList.length,
-  //   "text": text,
-  //   "isDone": false
-  // });
 }
 
 /**
@@ -961,7 +954,7 @@ function renderTodoList(data) {
 /**
  * addMockData()  如果数据库没有数据，写入用作演示的数据
  */
-function addMockData() {
+async function addMockData() {
   const mockData = [
     {
       text: "Finish the assignment of geometry",
@@ -974,33 +967,33 @@ function addMockData() {
   ];
 
   // 添加模拟的数据
-  mockData.forEach(item => {
-    todoStore.create(item);
+  const createPromises = mockData.map(item => {
+    return todoStore.create(item);
   });
+  await Promise.all(createPromises);
 
-  todoStore.getAll()
-    .then(function (result) {
-      if (Array.isArray(result) && result.length !== 0) {
-        renderTodoList(result);
-      }
-    });
+  // 在数据添加的完成后，再进行getAll操作
+  const queryResult = await todoStore.getAll();
+  if (Array.isArray(queryResult) && queryResult.length !== 0) {
+    renderTodoList(queryResult);
+  }
 }
 
 /**
  * initRenderTodoList() 初始化渲染todo list
  */
-function initRenderTodoList() {
-  todoStore.getAll()
-    .then(function (result) {
-      if (Array.isArray(result) && result.length !== 0) {
-        renderTodoList(result);
-      } else {
-        addMockData();
-      }
-    })
-    .catch(function (err) {
-      console.error(err);
-    });
+async function initRenderTodoList() {
+  try {
+    const queryResult = await todoStore.getAll();
+    if (Array.isArray(queryResult) && queryResult.length !== 0) {
+      renderTodoList(queryResult);
+    } else {
+      await addMockData();
+    }
+  }
+  catch (err) {
+    console.error(err);
+  }
 }
 
 /**
@@ -1040,7 +1033,7 @@ function clickOnTodo(event) {
  *
  * $el为todo-checkbox节点
  */
-function toggleTodoStatus($el) {
+async function toggleTodoStatus($el) {
   // 每一个todo的todo-content是checkbox的下一个同级元素
   const $todo = domOperationModule.findClosestAncestor($el, '.todo');
   const $todoContent = domOperationModule.query($todo, '.todo-content');
@@ -1051,33 +1044,34 @@ function toggleTodoStatus($el) {
     isDone: !stringToBoolean($todo.dataset.isDone)
   };
 
-  todoStore.update(id, data)
-    .then(function (result) {
-      if (result) {
-        if ($todo.dataset.isDone === 'false') {
-          $todoContent.classList.add('todo-is-done');
-          $todo.dataset.isDone = 'true';
 
-          // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
-          if (!$displayOptionSelected.matches('.display-all')) {
-            $todo.classList.add('todo-hidden');
-          }
+  try {
+    const result = await todoStore.update(id, data);
+    if (result) {
+      if ($todo.dataset.isDone === 'false') {
+        $todoContent.classList.add('todo-is-done');
+        $todo.dataset.isDone = 'true';
 
-        } else {
-          $todoContent.classList.remove('todo-is-done');
-          $todo.dataset.isDone = 'false';
-
-          // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
-          if (!$displayOptionSelected.matches('.display-all')) {
-            $todo.classList.add('todo-hidden');
-          }
-
+        // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
+        if (!$displayOptionSelected.matches('.display-all')) {
+          $todo.classList.add('todo-hidden');
         }
+
+      } else {
+        $todoContent.classList.remove('todo-is-done');
+        $todo.dataset.isDone = 'false';
+
+        // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
+        if (!$displayOptionSelected.matches('.display-all')) {
+          $todo.classList.add('todo-hidden');
+        }
+
       }
-    })
-    .catch(function (err) {
-      console.error(err);
-    })
+    }
+  }
+  catch (err) {
+    console.error(err);
+  }
 
 }
 
@@ -1088,19 +1082,17 @@ function toggleTodoStatus($el) {
  *
  * $el为button-delete-todo节点
  */
-function deleteTodo($el) {
+async function deleteTodo($el) {
   const $todo = domOperationModule.findClosestAncestor($el, '.todo');
   const id = parseInt($todo.dataset.id);
 
-  todoStore.delete(id)
-    .then(function (result) {
-      if (result) {
-        $todoList.removeChild($todo);
-      }
-    })
-    .catch(function (err) {
-      console.error(err);
-    });
+  try {
+    await todoStore.delete(id);
+    $todoList.removeChild($todo);
+  }
+  catch (err) {
+    console.error(err);
+  }
 }
 
 /**
@@ -1146,37 +1138,41 @@ function clickOnDisplayTabs(event) {
 }
 
 /**
- * afterDataBaseConnected()   包含需要在数据库初始化（连接）成功后，才能进行的操作。此函数在todoStore内部，当数据库连接成功后才会被调用
+ * appInit()  应用的初始化函数，包括各种事件处理函数绑定，控制元素的渲染
  */
-function afterDataBaseConnected() {
-  initRenderTodoList();
-}
-
-// ----------------------------------- logic ---------------------------------------
-
-renderDisplayTabs();
+function appInit() {
+  renderDisplayTabs();
 
 // 使用表单提交input的内容
-$inputForm.addEventListener('submit', function(event) {
-  // 防止表单的提交
-  event.preventDefault();
+  $inputForm.addEventListener('submit', function (event) {
+    // 防止表单的提交
+    event.preventDefault();
 
-  const inputData = $inputForm.elements['todo-input'].value;
+    const inputData = $inputForm.elements['todo-input'].value;
 
-  // 不允许修改后，todo的内容为空，或者为纯空白字符
-  if (inputData.trim().length === 0) {
-    alert('You should type something in the input bar.');
-  } else {
-    addTodo(inputData);
-  }
+    // 不允许修改后，todo的内容为空，或者为纯空白字符
+    if (inputData.trim().length === 0) {
+      alert('You should type something in the input bar.');
+    } else {
+      addTodo(inputData);
+    }
 
-  // 重置表单数据
-  $inputForm.reset();
-});
+    // 重置表单数据
+    $inputForm.reset();
+  });
 
 // 使用事件委托，将三种显示状态切换的点击绑定到display-ctrl节点上
-$displayCtrl.addEventListener('click', clickOnDisplayTabs);
+  $displayCtrl.addEventListener('click', clickOnDisplayTabs);
 
 // 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
-$todoList.addEventListener('click', clickOnTodo);
+  $todoList.addEventListener('click', clickOnTodo);
+}
+
+/**
+ * afterDataBaseConnected()  包含需要在数据库初始化（连接）成功后，才能进行的操作。此函数在todoStore内部，当数据库连接成功后才会被调用
+ */
+async function afterDataBaseConnected() {
+  await initRenderTodoList();
+  appInit();
+}
 
