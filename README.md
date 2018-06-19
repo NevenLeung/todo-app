@@ -2,6 +2,10 @@
 
 一个使用原生js写的待办事项应用 :memo:
 
+## 数据管理
+
+[数据管理信息说明图](https://www.processon.com/view/link/5b1c09eee4b02e4b26ff4246)：包括，如何管理todo app中数据变化，todo list的DOM结构，DOM节点上相关数据的信息说明。
+
 ## 功能
 
 ### 基础功能
