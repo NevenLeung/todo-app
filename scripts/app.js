@@ -1096,24 +1096,14 @@ async function deleteTodo($el) {
 }
 
 /**
- * renderDisplayTabs()
+ * displayCtrlInit()
  *
- * 渲染display tab，用于控制todo状态的显示
+ * 初始化应用时，默认选中display all，显示所有的todo
  */
-function renderDisplayTabs() {
-  const $displayOption1 = createNewElementNode('li', 'display-option');
-  const $displayOption2 = createNewElementNode('li', 'display-option');
-  const $displayOption3 = createNewElementNode('li', 'display-option');
-  const $buttonDisplayAll = createNewElementNode('button', 'button display-all', 'All');
-  const $buttonDisplayDone = createNewElementNode('button', 'button display-done', 'Done');
-  const $buttonDisplayNotDone = createNewElementNode('button', 'button display-not-done', 'Not Done');
+function displayCtrlInit() {
+  const $buttonDisplayAll = domOperationModule.query($displayCtrl, 'display-all');
 
-  $displayOption1.appendChild($buttonDisplayAll);
-  $displayOption2.appendChild($buttonDisplayNotDone);
-  $displayOption3.appendChild($buttonDisplayDone);
-
-  domOperationModule.appendMultiChild($displayCtrl, $displayOption1, $displayOption2, $displayOption3);
-
+  // 应用初始化时，默认选中display all
   displayCtrlModule.selectAnOption($buttonDisplayAll);
 }
 
@@ -1141,7 +1131,7 @@ function clickOnDisplayTabs(event) {
  * appInit()  应用的初始化函数，包括各种事件处理函数绑定，控制元素的渲染
  */
 function appInit() {
-  renderDisplayTabs();
+  displayCtrlInit();
 
 // 使用表单提交input的内容
   $inputForm.addEventListener('submit', function (event) {
