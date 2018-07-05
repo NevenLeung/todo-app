@@ -195,19 +195,14 @@ var initRenderTodoList = function () {
 }();
 
 /**
- * clickOnTodo()
- *
- * 作为在todo上点击事件的事件处理函数，不同的点击元素会触发不同的处理事件
- */
-
-
-/**
  * toggleTodoStatus()
  *
  * 切换todo的完成状态，更改显示样式，更改data中的数据，用作事件处理函数
  *
  * $el为todo-checkbox节点
  */
+
+
 var toggleTodoStatus = function () {
   var _ref7 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee7($el) {
     var $todo, $todoContent, $displayOptionSelected, id, data, result;
@@ -318,9 +313,9 @@ var deleteTodo = function () {
 }();
 
 /**
- * renderDisplayTabs()
+ * displayCtrlInit()
  *
- * 渲染display tab，用于控制todo状态的显示
+ * 初始化应用时，默认选中display all，显示所有的todo
  */
 
 
@@ -393,8 +388,8 @@ function _asyncToGenerator(fn) {
 
 var $inputForm = document.querySelector('.input-form');
 var $displayCtrl = document.querySelector('.display-ctrl');
-var $todoList = document.querySelector('.todo-list');
-
+// const $todoList = document.querySelector('.todo-list');
+var $todoList = document.getElementsByClassName('todo-list')[0];
 // data example
 
 // const data = {
@@ -1386,7 +1381,39 @@ function renderTodoList(data) {
   });
 }
 
-function clickOnTodo(event) {
+function displayCtrlInit() {
+  var $buttonDisplayAll = domOperationModule.query($displayCtrl, 'display-all');
+
+  // 应用初始化时，默认选中display all
+  displayCtrlModule.selectAnOption($buttonDisplayAll);
+}
+
+/**
+ * displayTabsOnClick()
+ *
+ * 作为display tab中button的点击事件处理函数，绑定到display-ctrl节点
+ */
+function displayTabsOnClick(event) {
+  var $el = event.target;
+  if ($el.matches('.display-all')) {
+    displayCtrlModule.displayTodoAll($el);
+  }
+
+  if ($el.matches('.display-done')) {
+    displayCtrlModule.displayTodoIsDone($el);
+  }
+
+  if ($el.matches('.display-not-done')) {
+    displayCtrlModule.displayTodoIsNotDone($el);
+  }
+}
+
+/**
+ * todoOnClick()
+ *
+ * 作为在todo上点击事件的事件处理函数，不同的点击元素会触发不同的处理事件
+ */
+function todoOnClick(event) {
   var $el = event.target;
   // 判断点击的元素是不是todo-checkbox
   if ($el.matches('.todo-checkbox')) {
@@ -1410,48 +1437,11 @@ function clickOnTodo(event) {
   }
 }
 
-function renderDisplayTabs() {
-  var $displayOption1 = createNewElementNode('li', 'display-option');
-  var $displayOption2 = createNewElementNode('li', 'display-option');
-  var $displayOption3 = createNewElementNode('li', 'display-option');
-  var $buttonDisplayAll = createNewElementNode('button', 'button display-all', 'All');
-  var $buttonDisplayDone = createNewElementNode('button', 'button display-done', 'Done');
-  var $buttonDisplayNotDone = createNewElementNode('button', 'button display-not-done', 'Not Done');
-
-  $displayOption1.appendChild($buttonDisplayAll);
-  $displayOption2.appendChild($buttonDisplayNotDone);
-  $displayOption3.appendChild($buttonDisplayDone);
-
-  domOperationModule.appendMultiChild($displayCtrl, $displayOption1, $displayOption2, $displayOption3);
-
-  displayCtrlModule.selectAnOption($buttonDisplayAll);
-}
-
-/**
- * clickOnDisplayTabs()
- *
- * 作为display tab中button的点击事件处理函数，绑定到display-ctrl节点
- */
-function clickOnDisplayTabs(event) {
-  var $el = event.target;
-  if ($el.matches('.display-all')) {
-    displayCtrlModule.displayTodoAll($el);
-  }
-
-  if ($el.matches('.display-done')) {
-    displayCtrlModule.displayTodoIsDone($el);
-  }
-
-  if ($el.matches('.display-not-done')) {
-    displayCtrlModule.displayTodoIsNotDone($el);
-  }
-}
-
 /**
  * appInit()  应用的初始化函数，包括各种事件处理函数绑定，控制元素的渲染
  */
 function appInit() {
-  renderDisplayTabs();
+  displayCtrlInit();
 
   // 使用表单提交input的内容
   $inputForm.addEventListener('submit', function (event) {
@@ -1472,8 +1462,8 @@ function appInit() {
   });
 
   // 使用事件委托，将三种显示状态切换的点击绑定到display-ctrl节点上
-  $displayCtrl.addEventListener('click', clickOnDisplayTabs);
+  $displayCtrl.addEventListener('click', displayTabsOnClick);
 
   // 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
-  $todoList.addEventListener('click', clickOnTodo);
+  $todoList.addEventListener('click', todoOnClick);
 }

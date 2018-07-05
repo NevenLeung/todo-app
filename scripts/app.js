@@ -4,8 +4,8 @@
 
 const $inputForm = document.querySelector('.input-form');
 const $displayCtrl = document.querySelector('.display-ctrl');
-const $todoList = document.querySelector('.todo-list');
-
+// const $todoList = document.querySelector('.todo-list');
+const $todoList = document.getElementsByClassName('todo-list')[0];
 // data example
 
 // const data = {
@@ -825,6 +825,7 @@ const displayCtrlModule = (function (domWrapper) {
 })(domOperationModule);
 
 
+
 // ---------------------------- methods ----------------------------------
 
 /**
@@ -950,7 +951,6 @@ function renderTodoList(data) {
   });
 }
 
-
 /**
  * addMockData()  如果数据库没有数据，写入用作演示的数据
  */
@@ -995,36 +995,6 @@ async function initRenderTodoList() {
     console.error(err);
   }
 }
-
-/**
- * clickOnTodo()
- *
- * 作为在todo上点击事件的事件处理函数，不同的点击元素会触发不同的处理事件
- */
-function clickOnTodo(event) {
-  const $el = event.target;
-  // 判断点击的元素是不是todo-checkbox
-  if ($el.matches('.todo-checkbox')) {
-    toggleTodoStatus(event.target);
-  }
-  // 判断点击元素的是不是todo-content，是的话，开启edit in place功能
-  if ($el.matches('.todo-content')) {
-    todoEditInPlaceModule.activatedTodoEditInPlace(event.target);
-  }
-  // 判断点击的元素是不是删除按钮
-  if ($el.matches('.button-delete-todo')) {
-    deleteTodo(event.target);
-  }
-  // 判断点击的元素是不是save按钮
-  if ($el.matches('.button-save-todo-edit')) {
-    todoEditInPlaceModule.saveTodoEdit(event.target);
-  }
-  // 判断点击的元素是不是cancel按钮
-  if ($el.matches('.button-cancel-todo-edit')) {
-    todoEditInPlaceModule.cancelTodoEdit(event.target);
-  }
-}
-
 
 /**
  * toggleTodoStatus()
@@ -1107,12 +1077,13 @@ function displayCtrlInit() {
   displayCtrlModule.selectAnOption($buttonDisplayAll);
 }
 
+
 /**
- * clickOnDisplayTabs()
+ * displayTabsOnClick()
  *
  * 作为display tab中button的点击事件处理函数，绑定到display-ctrl节点
  */
-function clickOnDisplayTabs(event) {
+function displayTabsOnClick(event) {
   const $el = event.target;
   if ($el.matches('.display-all')) {
     displayCtrlModule.displayTodoAll($el);
@@ -1124,6 +1095,35 @@ function clickOnDisplayTabs(event) {
 
   if ($el.matches('.display-not-done')) {
     displayCtrlModule.displayTodoIsNotDone($el);
+  }
+}
+
+/**
+ * todoOnClick()
+ *
+ * 作为在todo上点击事件的事件处理函数，不同的点击元素会触发不同的处理事件
+ */
+function todoOnClick(event) {
+  const $el = event.target;
+  // 判断点击的元素是不是todo-checkbox
+  if ($el.matches('.todo-checkbox')) {
+    toggleTodoStatus(event.target);
+  }
+  // 判断点击元素的是不是todo-content，是的话，开启edit in place功能
+  if ($el.matches('.todo-content')) {
+    todoEditInPlaceModule.activatedTodoEditInPlace(event.target);
+  }
+  // 判断点击的元素是不是删除按钮
+  if ($el.matches('.button-delete-todo')) {
+    deleteTodo(event.target);
+  }
+  // 判断点击的元素是不是save按钮
+  if ($el.matches('.button-save-todo-edit')) {
+    todoEditInPlaceModule.saveTodoEdit(event.target);
+  }
+  // 判断点击的元素是不是cancel按钮
+  if ($el.matches('.button-cancel-todo-edit')) {
+    todoEditInPlaceModule.cancelTodoEdit(event.target);
   }
 }
 
@@ -1152,10 +1152,10 @@ function appInit() {
   });
 
 // 使用事件委托，将三种显示状态切换的点击绑定到display-ctrl节点上
-  $displayCtrl.addEventListener('click', clickOnDisplayTabs);
+  $displayCtrl.addEventListener('click', displayTabsOnClick);
 
 // 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
-  $todoList.addEventListener('click', clickOnTodo);
+  $todoList.addEventListener('click', todoOnClick);
 }
 
 /**
