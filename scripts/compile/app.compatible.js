@@ -11,14 +11,15 @@
  */
 var addTodo = function () {
   var _ref4 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee4(text) {
-    var data, result, $li, $div, $checkbox, $todoContent, $deleteButton;
+    var data, result, $li, $div, $checkbox, $todoContent, $deleteButton, textNode;
     return regeneratorRuntime.wrap(function _callee4$(_context4) {
       while (1) {
         switch (_context4.prev = _context4.next) {
           case 0:
             data = {
               text: text,
-              isDone: false
+              isDone: false,
+              order: $todoList.children.length
             };
             _context4.prev = 1;
             _context4.next = 4;
@@ -28,11 +29,12 @@ var addTodo = function () {
             result = _context4.sent;
 
             if (result) {
-              $li = createNewElementNode('li', 'todo', '', 'data-is-done', 'false', 'data-id', result._id);
+              $li = createNewElementNode('li', 'todo', '', 'draggable', 'true', 'data-is-done', 'false', 'data-id', result._id, 'data-order', result.order);
               $div = createNewElementNode('div', 'todo-display');
               $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
               $todoContent = createNewElementNode('span', 'todo-content', text);
               $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
+              textNode = document.createTextNode(' ');
 
               // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
 
@@ -41,7 +43,7 @@ var addTodo = function () {
               $li.appendChild($div);
 
               // 把li添加到todo-list上
-              $todoList.appendChild($li);
+              domOperationModule.appendMultiChild($todoList, $li, textNode);
             } else {
               console.log('Data creation is failed');
             }
@@ -68,29 +70,18 @@ var addTodo = function () {
 }();
 
 /**
- * renderTodoList()
+ * sortTodoInAscendingOrder()
  *
- * 渲染todoList，并给相应的节点加上合适的属性
+ * 将todoList数组中的todo根据order从小到大排列
  *
- * @param {Array} data  一个包含todo数据的数组
- *
- * DOM 结构
- *
- <ul class="todo-list">
- <li class='todo'>
- <div class='todo-display'>
- <input class='todo-checkbox'>
- <span class='todo-content'></span>
- <button class='button button-delete-todo'>X</button>
- </div>
- </li>
- </ul>
- *
+ * @param {Array} list  todo list array object
  */
 
 
 /**
- * addMockData()  如果数据库没有数据，写入用作演示的数据
+ * addMockData()
+ *
+ * 如果数据库没有数据，写入用作演示的数据
  */
 var addMockData = function () {
   var _ref5 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee5() {
@@ -101,10 +92,12 @@ var addMockData = function () {
           case 0:
             mockData = [{
               text: "Finish the assignment of geometry",
-              isDone: false
+              isDone: false,
+              order: 0
             }, {
               text: "Call sam to discuss supper ",
-              isDone: true
+              isDone: true,
+              order: 1
             }];
 
             // 添加模拟的数据
@@ -140,7 +133,9 @@ var addMockData = function () {
 }();
 
 /**
- * initRenderTodoList() 初始化渲染todo list
+ * initRenderTodoList()
+ *
+ * 初始化渲染todo list
  */
 
 
@@ -277,34 +272,36 @@ var toggleTodoStatus = function () {
 
 var deleteTodo = function () {
   var _ref8 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee8($el) {
-    var $todo, id;
+    var $todo, id, order;
     return regeneratorRuntime.wrap(function _callee8$(_context8) {
       while (1) {
         switch (_context8.prev = _context8.next) {
           case 0:
             $todo = domOperationModule.findClosestAncestor($el, '.todo');
             id = parseInt($todo.dataset.id);
-            _context8.prev = 2;
-            _context8.next = 5;
+            order = parseInt($todo.dataset.order);
+            _context8.prev = 3;
+            _context8.next = 6;
             return todoStore.delete(id);
 
-          case 5:
+          case 6:
             $todoList.removeChild($todo);
-            _context8.next = 11;
+            updatePositionChanged(undefined, undefined, order, $todoList, undefined);
+            _context8.next = 13;
             break;
 
-          case 8:
-            _context8.prev = 8;
-            _context8.t0 = _context8['catch'](2);
+          case 10:
+            _context8.prev = 10;
+            _context8.t0 = _context8['catch'](3);
 
             console.error(_context8.t0);
 
-          case 11:
+          case 13:
           case 'end':
             return _context8.stop();
         }
       }
-    }, _callee8, this, [[2, 8]]);
+    }, _callee8, this, [[3, 10]]);
   }));
 
   return function deleteTodo(_x10) {
@@ -320,15 +317,179 @@ var deleteTodo = function () {
 
 
 /**
- * afterDataBaseConnected()  包含需要在数据库初始化（连接）成功后，才能进行的操作。此函数在todoStore内部，当数据库连接成功后才会被调用
+ * updatePositionChanged()
+ *
+ * 负责更新位置发生改变的节点信息。只有dragEl移动前后位置之间的节点，以及dragEL本身的位置信息需要更新，同时包括数据库的更新
+ *
+ * @param positionBefore
+ * @param positionAfter
+ * @param deleteElPosition
+ * @param rootEl
+ * @param isMouseMoveDown
  */
-var afterDataBaseConnected = function () {
-  var _ref9 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee9() {
+var updatePositionChanged = function () {
+  var _ref9 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee9(positionBefore, positionAfter, deleteElPosition, rootEl, isMouseMoveDown) {
+    var sortingList, i, node, id, orderValue, _i, _node, _id, _orderValue, _i2, _node2, _id2, _orderValue2;
+
     return regeneratorRuntime.wrap(function _callee9$(_context9) {
       while (1) {
         switch (_context9.prev = _context9.next) {
           case 0:
-            _context9.next = 2;
+            sortingList = [];
+
+            sortingList.push.apply(sortingList, _toConsumableArray(rootEl.children));
+
+            if (!(typeof deleteElPosition !== 'undefined')) {
+              _context9.next = 21;
+              break;
+            }
+
+            i = deleteElPosition;
+
+          case 4:
+            if (!(i < rootEl.children.length)) {
+              _context9.next = 20;
+              break;
+            }
+
+            node = rootEl.children[i];
+            id = parseInt(node.dataset.id);
+            orderValue = sortingList.indexOf(node);
+
+
+            node.dataset.order = orderValue;
+
+            _context9.prev = 9;
+            _context9.next = 12;
+            return todoStore.update(id, {order: orderValue});
+
+          case 12:
+            _context9.next = 17;
+            break;
+
+          case 14:
+            _context9.prev = 14;
+            _context9.t0 = _context9['catch'](9);
+
+            console.error(_context9.t0);
+
+          case 17:
+            i++;
+            _context9.next = 4;
+            break;
+
+          case 20:
+            return _context9.abrupt('return');
+
+          case 21:
+            if (!(typeof isMouseMoveDown !== 'undefined' && isMouseMoveDown)) {
+              _context9.next = 41;
+              break;
+            }
+
+            _i = positionBefore;
+
+          case 23:
+            if (!(_i <= positionAfter)) {
+              _context9.next = 39;
+              break;
+            }
+
+            _node = rootEl.children[_i];
+            _id = parseInt(_node.dataset.id);
+            _orderValue = sortingList.indexOf(_node);
+
+
+            _node.dataset.order = _orderValue;
+
+            _context9.prev = 28;
+            _context9.next = 31;
+            return todoStore.update(_id, {order: _orderValue});
+
+          case 31:
+            _context9.next = 36;
+            break;
+
+          case 33:
+            _context9.prev = 33;
+            _context9.t1 = _context9['catch'](28);
+
+            console.error(_context9.t1);
+
+          case 36:
+            _i++;
+            _context9.next = 23;
+            break;
+
+          case 39:
+            _context9.next = 58;
+            break;
+
+          case 41:
+            _i2 = positionAfter;
+
+          case 42:
+            if (!(_i2 <= positionBefore)) {
+              _context9.next = 58;
+              break;
+            }
+
+            _node2 = rootEl.children[_i2];
+            _id2 = parseInt(_node2.dataset.id);
+            _orderValue2 = sortingList.indexOf(_node2);
+
+
+            _node2.dataset.order = _orderValue2;
+
+            _context9.prev = 47;
+            _context9.next = 50;
+            return todoStore.update(_id2, {order: _orderValue2});
+
+          case 50:
+            _context9.next = 55;
+            break;
+
+          case 52:
+            _context9.prev = 52;
+            _context9.t2 = _context9['catch'](47);
+
+            console.error(_context9.t2);
+
+          case 55:
+            _i2++;
+            _context9.next = 42;
+            break;
+
+          case 58:
+          case 'end':
+            return _context9.stop();
+        }
+      }
+    }, _callee9, this, [[9, 14], [28, 33], [47, 52]]);
+  }));
+
+  return function updatePositionChanged(_x11, _x12, _x13, _x14, _x15) {
+    return _ref9.apply(this, arguments);
+  };
+}();
+
+/**
+ * displayTabsOnClick()
+ *
+ * 作为display tab中button的点击事件处理函数，绑定到display-ctrl节点
+ */
+
+
+/**
+ * afterDataBaseConnected()  包含需要在数据库初始化（连接）成功后，才能进行的操作。此函数在todoStore内部，当数据库连接成功后才会被调用
+ */
+var afterDataBaseConnected = function () {
+  var _ref10 = _asyncToGenerator(/*#__PURE__*/regeneratorRuntime.mark(function _callee10() {
+    return regeneratorRuntime.wrap(function _callee10$(_context10) {
+      while (1) {
+        switch (_context10.prev = _context10.next) {
+          case 0:
+            _context10.next = 2;
             return initRenderTodoList();
 
           case 2:
@@ -336,14 +497,14 @@ var afterDataBaseConnected = function () {
 
           case 3:
           case 'end':
-            return _context9.stop();
+            return _context10.stop();
         }
       }
-    }, _callee9, this);
+    }, _callee10, this);
   }));
 
   return function afterDataBaseConnected() {
-    return _ref9.apply(this, arguments);
+    return _ref10.apply(this, arguments);
   };
 }();
 
@@ -1308,6 +1469,117 @@ var displayCtrlModule = function (domWrapper) {
   };
 }(domOperationModule);
 
+/**
+ * sortable  function for sortable list
+ *
+ * @param rootEl  Root element whose children will be draggable
+ * @param className  Limit the drop place which can be insert before, if it is with such a class name
+ * @param onUpdate  A callback when the drag and drop process is finished
+ */
+function sortable(rootEl, className, onUpdate) {
+  var _sortingList;
+
+  var dragEl = void 0,
+    nextEl = void 0,
+    clientYBefore = void 0,
+    isMouseMoveDown = void 0,
+    sortedFlag = void 0,
+    positionBefore = void 0,
+    positionAfter = void 0;
+
+  // make all children draggable
+  var sortingList = [];
+  (_sortingList = sortingList).push.apply(_sortingList, _toConsumableArray(rootEl.children));
+
+  sortingList.forEach(function (itemEl) {
+    itemEl.draggable = true;
+    itemEl.dataset.order = sortingList.indexOf(itemEl);
+  });
+
+  // Sorting start
+  rootEl.addEventListener('dragstart', _onDragStart, false);
+
+  function _onDragStart(evt) {
+    var _sortingList2;
+
+    // Remember the element that will move
+    dragEl = evt.target;
+    // Remember the nextSibling for judging valid movement
+    nextEl = dragEl.nextSibling;
+
+    // 使用sortingList作为判断节点位置初始位置的依据
+    sortingList = [];
+    (_sortingList2 = sortingList).push.apply(_sortingList2, _toConsumableArray(rootEl.children));
+
+    // 使用sortingList中的位置，而不使用rootEl中的位置，是因为假如鼠标移动得太快，positionBefore的值有一定几率会是错误的。
+    // 在dragover过程中如果很快的完成了节点插入，这就会影响到了positionBefore的值并不是一开始的位置值，而变成插入位置的值。
+    // 同时也就使得了后续其他节点位置不能正确的更新。
+    // 上面的这个解释不一定完全正确，但确实避免了positionBefore错误的情况。
+    positionBefore = sortingList.indexOf(dragEl);
+
+    // Limit the type of dragging
+    evt.dataTransfer.effectAllowed = 'move';
+
+    // Text未被使用
+    evt.dataTransfer.setData('Text', dragEl.textContent);
+
+    // We are writing about events with dnd
+    rootEl.addEventListener('dragover', _onDragOver, false);
+    rootEl.addEventListener('dragend', _onDragEnd, false);
+
+    dragEl.classList.add('grabbing');
+  }
+
+  // Function responsible for sorting, the dragEl is hovering above the target element
+  function _onDragOver(evt) {
+    sortedFlag = false;
+    var target = evt.target;
+
+    // use evt.preventDefault() to allow drop
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'move';
+
+    // 当item已经被移动另一个位置，但鼠标原地并未释放时，target和dragEl是同一个元素，这时不再重复触发节点插入。
+    if (target && target !== dragEl && target.matches(className)) {
+      isMouseMoveDown = evt.clientY >= clientYBefore;
+
+      // 从上到下，插入到target当前的位置
+      if (isMouseMoveDown && target.nextSibling && !sortedFlag) {
+        rootEl.insertBefore(dragEl, target.nextSibling);
+        sortedFlag = true;
+      }
+
+      // 从下到上，插入到target的前一个位置
+      if (!isMouseMoveDown && !sortedFlag) {
+        rootEl.insertBefore(dragEl, target);
+        sortedFlag = true;
+      }
+
+      // 保存当前的鼠标纵坐标，用作之后判断鼠标移动方向
+      clientYBefore = evt.clientY;
+    }
+  }
+
+  // End of Sorting
+  function _onDragEnd(evt) {
+    evt.preventDefault();
+
+    dragEl.classList.remove('grabbing');
+
+    rootEl.removeEventListener('dragover', _onDragOver, false);
+    rootEl.removeEventListener('dragend', _onDragEnd, false);
+
+    // 防止鼠标拾起之后，又原地放开，减少不必要的更新操作
+    if (nextEl !== dragEl.nextSibling) {
+      positionAfter = [].indexOf.call(rootEl.children, dragEl);
+
+      console.log('positionBefore: ' + positionBefore + ', positionAfter: ' + positionAfter);
+
+      onUpdate(positionBefore, positionAfter, undefined, rootEl, isMouseMoveDown);
+    }
+  }
+}
+
 // ---------------------------- methods ----------------------------------
 
 /**
@@ -1358,13 +1630,45 @@ function stringToBoolean(str) {
   }
 }
 
+function sortTodoInAscendingOrder(list) {
+  if (Array.isArray(list)) {
+    list.sort(function (prev, next) {
+      return prev.order - next.order;
+    });
+  }
+}
+
+/**
+ * renderTodoList()
+ *
+ * 渲染todoList，并给相应的节点加上合适的属性
+ *
+ * @param {Array} data  一个包含todo数据的数组
+ *
+ * DOM 结构
+ *
+ <ul class="todo-list">
+ <li class='todo'>
+ <div class='todo-display'>
+ <input class='todo-checkbox'>
+ <span class='todo-content'></span>
+ <button class='button button-delete-todo'>X</button>
+ </div>
+ </li>
+ </ul>
+ *
+ */
 function renderTodoList(data) {
+  // 根据order属性，对todo进行从小到大排序
+  sortTodoInAscendingOrder(data);
+
   data.forEach(function (todo) {
     var $li = createNewElementNode('li', 'todo', '', 'data-is-done', todo.isDone, 'data-id', todo._id);
     var $div = createNewElementNode('div', 'todo-display');
     var $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
     var $todoContent = createNewElementNode('span', 'todo-content', todo.text);
     var $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
+    var textNode = document.createTextNode(' ');
 
     if (todo.isDone) {
       // 为todo-content添加class 'todo-is-done'
@@ -1377,7 +1681,7 @@ function renderTodoList(data) {
 
     $li.appendChild($div);
 
-    $todoList.appendChild($li);
+    domOperationModule.appendMultiChild($todoList, $li, textNode);
   });
 }
 
@@ -1388,11 +1692,6 @@ function displayCtrlInit() {
   displayCtrlModule.selectAnOption($buttonDisplayAll);
 }
 
-/**
- * displayTabsOnClick()
- *
- * 作为display tab中button的点击事件处理函数，绑定到display-ctrl节点
- */
 function displayTabsOnClick(event) {
   var $el = event.target;
   if ($el.matches('.display-all')) {
@@ -1466,4 +1765,6 @@ function appInit() {
 
   // 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
   $todoList.addEventListener('click', todoOnClick);
+
+  sortable($todoList, '.todo', updatePositionChanged);
 }

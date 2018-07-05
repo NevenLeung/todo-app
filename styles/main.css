@@ -41,17 +41,24 @@ ul > li {
 
 .button {
   border: 1px solid transparent;
-  padding: 4px 8px;
-  margin: 0;
+  padding: .25rem .5rem;
   border-radius: .25rem;
   cursor: pointer;
 }
 
 .todo {
-  line-height: 30px;
-  margin: 1px 0;
+  /*line-height: 30px;*/
+  margin: .125rem 0;
+  padding: .25rem .5rem;;
+  border-radius: .25rem;
+  background-color: #eee;
+  transition: opacity 2000ms;
 }
 
+.grabbing {
+  opacity: .4;
+  cursor: move;
+}
 /****** control todo display option ******/
 
 
@@ -114,6 +121,7 @@ ul > li {
 
 .todo-display {
   display: flex;
+  /*user-select: none;*/
 }
 
 .todo-display-hidden {

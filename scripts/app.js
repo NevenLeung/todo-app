@@ -824,7 +824,106 @@ const displayCtrlModule = (function (domWrapper) {
 
 })(domOperationModule);
 
+/**
+ * sortable  function for sortable list
+ *
+ * @param rootEl  Root element whose children will be draggable
+ * @param className  Limit the drop place which can be insert before, if it is with such a class name
+ * @param onUpdate  A callback when the drag and drop process is finished
+ */
+function sortable(rootEl, className, onUpdate) {
+  let dragEl, nextEl, clientYBefore, isMouseMoveDown, sortedFlag, positionBefore, positionAfter;
 
+  // make all children draggable
+  let sortingList = [];
+  sortingList.push(...rootEl.children);
+
+  sortingList.forEach((itemEl) => {
+    itemEl.draggable = true;
+    itemEl.dataset.order = sortingList.indexOf(itemEl);
+  });
+
+  // Sorting start
+  rootEl.addEventListener('dragstart', _onDragStart, false);
+
+  function _onDragStart(evt) {
+    // Remember the element that will move
+    dragEl = evt.target;
+    // Remember the nextSibling for judging valid movement
+    nextEl = dragEl.nextSibling;
+
+    // 使用sortingList作为判断节点位置初始位置的依据
+    sortingList = [];
+    sortingList.push(...rootEl.children);
+
+    // 使用sortingList中的位置，而不使用rootEl中的位置，是因为假如鼠标移动得太快，positionBefore的值有一定几率会是错误的。
+    // 在dragover过程中如果很快的完成了节点插入，这就会影响到了positionBefore的值并不是一开始的位置值，而变成插入位置的值。
+    // 同时也就使得了后续其他节点位置不能正确的更新。
+    // 上面的这个解释不一定完全正确，但确实避免了positionBefore错误的情况。
+    positionBefore = sortingList.indexOf(dragEl);
+
+    // Limit the type of dragging
+    evt.dataTransfer.effectAllowed = 'move';
+
+    // Text未被使用
+    evt.dataTransfer.setData('Text', dragEl.textContent);
+
+    // We are writing about events with dnd
+    rootEl.addEventListener('dragover', _onDragOver, false);
+    rootEl.addEventListener('dragend', _onDragEnd, false);
+
+    dragEl.classList.add('grabbing');
+  }
+
+  // Function responsible for sorting, the dragEl is hovering above the target element
+  function _onDragOver(evt) {
+    sortedFlag = false;
+    const target = evt.target;
+
+    // use evt.preventDefault() to allow drop
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'move';
+
+    // 当item已经被移动另一个位置，但鼠标原地并未释放时，target和dragEl是同一个元素，这时不再重复触发节点插入。
+    if (target && target !== dragEl && target.matches(className)) {
+      isMouseMoveDown = evt.clientY >= clientYBefore;
+
+      // 从上到下，插入到target当前的位置
+      if (isMouseMoveDown && target.nextSibling && !sortedFlag) {
+        rootEl.insertBefore(dragEl, target.nextSibling);
+        sortedFlag = true;
+      }
+
+      // 从下到上，插入到target的前一个位置
+      if (!isMouseMoveDown && !sortedFlag) {
+        rootEl.insertBefore(dragEl, target);
+        sortedFlag = true;
+      }
+
+      // 保存当前的鼠标纵坐标，用作之后判断鼠标移动方向
+      clientYBefore = evt.clientY;
+    }
+  }
+
+  // End of Sorting
+  function _onDragEnd(evt) {
+    evt.preventDefault();
+
+    dragEl.classList.remove('grabbing');
+
+    rootEl.removeEventListener('dragover', _onDragOver, false);
+    rootEl.removeEventListener('dragend', _onDragEnd, false);
+
+    // 防止鼠标拾起之后，又原地放开，减少不必要的更新操作
+    if (nextEl !== dragEl.nextSibling) {
+      positionAfter = [].indexOf.call(rootEl.children, dragEl);
+
+      console.log(`positionBefore: ${positionBefore}, positionAfter: ${positionAfter}`);
+
+      onUpdate(positionBefore, positionAfter, undefined, rootEl, isMouseMoveDown);
+    }
+  }
+}
 
 // ---------------------------- methods ----------------------------------
 
@@ -879,17 +978,19 @@ function stringToBoolean(str) {
 async function addTodo(text) {
   const data = {
     text: text,
-    isDone: false
+    isDone: false,
+    order: $todoList.children.length
   };
 
   try {
     const result = await todoStore.create(data);
     if (result) {
-      const $li = createNewElementNode('li', 'todo', '', 'data-is-done', 'false', 'data-id', result._id);
+      const $li = createNewElementNode('li', 'todo', '', 'draggable', 'true', 'data-is-done', 'false', 'data-id', result._id, 'data-order', result.order);
       const $div = createNewElementNode('div', 'todo-display');
       const $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
       const $todoContent = createNewElementNode('span', 'todo-content', text);
       const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
+      const textNode = document.createTextNode(' ');
 
       // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
       domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
@@ -897,7 +998,7 @@ async function addTodo(text) {
       $li.appendChild($div);
 
       // 把li添加到todo-list上
-      $todoList.appendChild($li);
+      domOperationModule.appendMultiChild($todoList, $li, textNode);
     } else {
       console.log('Data creation is failed');
     }
@@ -906,6 +1007,21 @@ async function addTodo(text) {
     console.error(err);
   }
 
+}
+
+/**
+ * sortTodoInAscendingOrder()
+ *
+ * 将todoList数组中的todo根据order从小到大排列
+ *
+ * @param {Array} list  todo list array object
+ */
+function sortTodoInAscendingOrder(list) {
+  if (Array.isArray(list)) {
+    list.sort(function (prev, next) {
+      return prev.order - next.order;
+    })
+  }
 }
 
 /**
@@ -929,12 +1045,16 @@ async function addTodo(text) {
  *
  */
 function renderTodoList(data) {
+  // 根据order属性，对todo进行从小到大排序
+  sortTodoInAscendingOrder(data);
+
   data.forEach(function (todo) {
     const $li = createNewElementNode('li', 'todo', '', 'data-is-done', todo.isDone, 'data-id', todo._id);
     const $div = createNewElementNode('div', 'todo-display');
     const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
     const $todoContent = createNewElementNode('span', 'todo-content', todo.text);
     const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
+    const textNode = document.createTextNode(' ');
 
     if (todo.isDone) {
       // 为todo-content添加class 'todo-is-done'
@@ -947,22 +1067,26 @@ function renderTodoList(data) {
 
     $li.appendChild($div);
 
-    $todoList.appendChild($li);
+    domOperationModule.appendMultiChild($todoList, $li, textNode);
   });
 }
 
 /**
- * addMockData()  如果数据库没有数据，写入用作演示的数据
+ * addMockData()
+ *
+ * 如果数据库没有数据，写入用作演示的数据
  */
 async function addMockData() {
   const mockData = [
     {
       text: "Finish the assignment of geometry",
-      isDone: false
+      isDone: false,
+      order: 0
     },
     {
       text: "Call sam to discuss supper ",
-      isDone: true
+      isDone: true,
+      order: 1
     }
   ];
 
@@ -980,7 +1104,9 @@ async function addMockData() {
 }
 
 /**
- * initRenderTodoList() 初始化渲染todo list
+ * initRenderTodoList()
+ *
+ * 初始化渲染todo list
  */
 async function initRenderTodoList() {
   try {
@@ -1055,10 +1181,12 @@ async function toggleTodoStatus($el) {
 async function deleteTodo($el) {
   const $todo = domOperationModule.findClosestAncestor($el, '.todo');
   const id = parseInt($todo.dataset.id);
+  const order = parseInt($todo.dataset.order);
 
   try {
     await todoStore.delete(id);
     $todoList.removeChild($todo);
+    updatePositionChanged(undefined, undefined, order, $todoList, undefined);
   }
   catch (err) {
     console.error(err);
@@ -1077,6 +1205,75 @@ function displayCtrlInit() {
   displayCtrlModule.selectAnOption($buttonDisplayAll);
 }
 
+/**
+ * updatePositionChanged()
+ *
+ * 负责更新位置发生改变的节点信息。只有dragEl移动前后位置之间的节点，以及dragEL本身的位置信息需要更新，同时包括数据库的更新
+ *
+ * @param positionBefore
+ * @param positionAfter
+ * @param deleteElPosition
+ * @param rootEl
+ * @param isMouseMoveDown
+ */
+async function updatePositionChanged(positionBefore, positionAfter, deleteElPosition, rootEl, isMouseMoveDown) {
+  const sortingList = [];
+  sortingList.push(...rootEl.children);
+
+  if (typeof deleteElPosition !== 'undefined') {
+    // 从删除的元素的位置开始，遍历到rootEle的最后一个元素
+    for (let i = deleteElPosition; i < rootEl.children.length; i++) {
+      const node = rootEl.children[i];
+      const id = parseInt(node.dataset.id);
+      const orderValue = sortingList.indexOf(node);
+
+      node.dataset.order = orderValue;
+
+      try {
+        await todoStore.update(id, {order: orderValue});
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    return;
+  }
+
+  if (typeof isMouseMoveDown !== 'undefined' && isMouseMoveDown) {
+    // 从上方移动到下方，中间节点位置减1。dragEl在移动之前，位于数值较小的positionBefore
+    for (let i = positionBefore; i <= positionAfter; i++) {
+      const node = rootEl.children[i];
+      const id = parseInt(node.dataset.id);
+      const orderValue = sortingList.indexOf(node);
+
+      node.dataset.order = orderValue;
+
+      try {
+        await todoStore.update(id, {order: orderValue});
+      } catch (err) {
+        console.error(err);
+      }
+
+      // console.log(node);
+    }
+  } else {
+    // 从下方移动到上方，中间节点位置加1。dragEl在移动之前，位于数值较大的positionBefore
+    for (let i = positionAfter; i <= positionBefore; i++) {
+      const node = rootEl.children[i];
+      const id = parseInt(node.dataset.id);
+      const orderValue = sortingList.indexOf(node);
+
+      node.dataset.order = orderValue;
+
+      try {
+        await todoStore.update(id, {order: orderValue});
+      } catch (err) {
+        console.error(err);
+      }
+
+      // console.log(node);
+    }
+  }
+}
 
 /**
  * displayTabsOnClick()
@@ -1156,6 +1353,8 @@ function appInit() {
 
 // 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
   $todoList.addEventListener('click', todoOnClick);
+
+  sortable($todoList, '.todo', updatePositionChanged);
 }
 
 /**
