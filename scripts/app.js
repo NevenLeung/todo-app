@@ -580,7 +580,7 @@ const todoEditInPlaceModule = (function (domWrapper) {
         $todoDisplay.classList.add('todo-display-hidden');
 
         const $div = createNewElementNode('div', 'todo-edit todo-edit-show');
-        const $editBar = createNewElementNode('input', 'todo-edit-bar', '',  'value', $el.textContent);
+        const $editBar = createNewElementNode('input', 'todo-edit-bar', '', 'type', 'text', 'value', $el.textContent);
         const $saveButton =  createNewElementNode('button', 'button button-save-todo-edit', 'save');
         const $cancelButton =  createNewElementNode('button', 'button button-cancel-todo-edit', 'cancel');
 
@@ -645,7 +645,6 @@ const todoEditInPlaceModule = (function (domWrapper) {
       }
     }
   }
-
 
   /**
    * cancelTodoEdit()
@@ -828,10 +827,10 @@ const displayCtrlModule = (function (domWrapper) {
  * sortable  function for sortable list
  *
  * @param rootEl  Root element whose children will be draggable
- * @param className  Limit the drop place which can be insert before, if it is with such a class name
+ * @param selector  Limit the drop place which can be insert before, if it is with such a class name
  * @param onUpdate  A callback when the drag and drop process is finished
  */
-function sortable(rootEl, className, onUpdate) {
+function sortable(rootEl, selector, onUpdate) {
   let dragEl, nextEl, clientYBefore, isMouseMoveDown, sortedFlag, positionBefore, positionAfter;
 
   // make all children draggable
@@ -885,7 +884,7 @@ function sortable(rootEl, className, onUpdate) {
     evt.dataTransfer.dropEffect = 'move';
 
     // 当item已经被移动另一个位置，但鼠标原地并未释放时，target和dragEl是同一个元素，这时不再重复触发节点插入。
-    if (target && target !== dragEl && target.matches(className)) {
+    if (target && target !== dragEl && target.matches(selector)) {
       isMouseMoveDown = evt.clientY >= clientYBefore;
 
       // 从上到下，插入到target当前的位置
@@ -986,16 +985,19 @@ async function addTodo(text) {
     const result = await todoStore.create(data);
     if (result) {
       const $li = createNewElementNode('li', 'todo', '', 'draggable', 'true', 'data-is-done', 'false', 'data-id', result._id, 'data-order', result.order);
-      const $div = createNewElementNode('div', 'todo-display');
+      const $todoDisplay = createNewElementNode('div', 'todo-display');
+      const $todoMain = createNewElementNode('div', 'todo-main');
       const $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
       const $todoContent = createNewElementNode('span', 'todo-content', text);
       const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
       const textNode = document.createTextNode(' ');
 
       // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
-      domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
+      domOperationModule.appendMultiChild($todoMain, $checkbox, $todoContent, $deleteButton);
 
-      $li.appendChild($div);
+      domOperationModule.appendMultiChild($todoDisplay, $todoMain, $deleteButton);
+
+      $li.appendChild($todoDisplay);
 
       // 把li添加到todo-list上
       domOperationModule.appendMultiChild($todoList, $li, textNode);
@@ -1036,8 +1038,10 @@ function sortTodoInAscendingOrder(list) {
  <ul class="todo-list">
    <li class='todo'>
    <div class='todo-display'>
-     <input class='todo-checkbox'>
-     <span class='todo-content'></span>
+ <div class='todo-main'>
+ <input class='todo-checkbox'>
+ <span class='todo-content'></span>
+ </div>
      <button class='button button-delete-todo'>X</button>
    </div>
    </li>
@@ -1050,7 +1054,8 @@ function renderTodoList(data) {
 
   data.forEach(function (todo) {
     const $li = createNewElementNode('li', 'todo', '', 'data-is-done', todo.isDone, 'data-id', todo._id);
-    const $div = createNewElementNode('div', 'todo-display');
+    const $todoDisplay = createNewElementNode('div', 'todo-display');
+    const $todoMain = createNewElementNode('div', 'todo-main');
     const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
     const $todoContent = createNewElementNode('span', 'todo-content', todo.text);
     const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
@@ -1063,9 +1068,12 @@ function renderTodoList(data) {
       $checkbox.setAttribute('checked', 'checked');
     }
 
-    domOperationModule.appendMultiChild($div, $checkbox, $todoContent, $deleteButton);
+    domOperationModule.appendMultiChild($todoMain, $checkbox, $todoContent, $deleteButton);
 
-    $li.appendChild($div);
+    // $li.appendChild($div);
+    domOperationModule.appendMultiChild($todoDisplay, $todoMain, $deleteButton);
+
+    $li.appendChild($todoDisplay);
 
     domOperationModule.appendMultiChild($todoList, $li, textNode);
   });

@@ -1,7 +1,7 @@
 @charset "UTF-8";
 
 .container {
-  width: 800px;
+  width: 50rem;
   margin: 0 auto;
 }
 
@@ -21,9 +21,13 @@
 
 }
 
+input[type=text] {
+  margin: 0 5px 0 0;
+}
+
 input[name=todo-input] {
   display: inline-block;
-  width: 250px;
+  width: 15.625rem
 }
 
 ul {
@@ -36,7 +40,7 @@ ul > li {
 }
 
 .todo-list {
-  width: 400px;
+  width: 30rem;
 }
 
 .button {
@@ -44,15 +48,6 @@ ul > li {
   padding: .25rem .5rem;
   border-radius: .25rem;
   cursor: pointer;
-}
-
-.todo {
-  /*line-height: 30px;*/
-  margin: .125rem 0;
-  padding: .25rem .5rem;;
-  border-radius: .25rem;
-  background-color: #eee;
-  transition: opacity 2000ms;
 }
 
 .grabbing {
@@ -118,10 +113,32 @@ ul > li {
 
 /****** display todo ******/
 
+.todo {
+  /*line-height: 30px;*/
+  display: flex;
+  justify-content: center;
+  /*margin: .125rem 0;*/
+  padding: .25rem 0;
+  /*border-radius: .25rem;*/
+  /*background-color: #eee;*/
+  /*transition: opacity 2000ms;*/
+  /*user-select: text;*/
+}
+
+.todo-main {
+  display: flex;
+  width: 25rem;
+  margin: 0 .25rem;
+  padding: .25rem .5rem;
+  border-radius: .25rem;
+  background-color: #eee;
+  transition: opacity 2000ms;
+  user-select: text;
+}
 
 .todo-display {
   display: flex;
-  /*user-select: none;*/
+  justify-content: center;
 }
 
 .todo-display-hidden {
@@ -163,6 +180,7 @@ ul > li {
 
 .todo-edit {
   display: none;
+  width: 25rem;
 }
 
 .todo-edit .button {
@@ -171,6 +189,7 @@ ul > li {
 
 .todo-edit-show {
   display: flex;
+  justify-content: center;
   height: 30px;
 }
 
