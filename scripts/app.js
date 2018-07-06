@@ -826,12 +826,13 @@ const displayCtrlModule = (function (domWrapper) {
 /**
  * sortable  function for sortable list
  *
- * @param rootEl  Root element whose children will be draggable
- * @param selector  Limit the drop place which can be insert before, if it is with such a class name
- * @param onUpdate  A callback when the drag and drop process is finished
+ * @param rootEl  需要设置为draggable的元素的直接父元素
+ * @param handleSelector  鼠标点击符合handleSelector的元素，才会触发拖拽事件
+ * @param dndSelector  符合dndSelector的元素，才能进行排序，防止放置到预期外的位置上
+ * @param onUpdate  在拖放完成后，会触发该回调函数。在元素原地拾起，并在该元素上释放，不会触发该回调函数
  */
-function sortable(rootEl, selector, onUpdate) {
-  let dragEl, nextEl, clientYBefore, isMouseMoveDown, sortedFlag, positionBefore, positionAfter;
+function sortable(rootEl, handleSelector, dndSelector, onUpdate){
+  let dragEl, nextEl, mouseDownEl, clientYBefore, isMouseMoveDown, sortedFlag, positionBefore, positionAfter;
 
   // make all children draggable
   let sortingList = [];
@@ -843,35 +844,45 @@ function sortable(rootEl, selector, onUpdate) {
   });
 
   // Sorting start
+  rootEl.addEventListener('mousedown', _onMouseDown, false);
   rootEl.addEventListener('dragstart', _onDragStart, false);
 
+  function _onMouseDown(evt) {
+    mouseDownEl = evt.target;
+  }
+
   function _onDragStart(evt) {
-    // Remember the element that will move
-    dragEl = evt.target;
-    // Remember the nextSibling for judging valid movement
-    nextEl = dragEl.nextSibling;
 
-    // 使用sortingList作为判断节点位置初始位置的依据
-    sortingList = [];
-    sortingList.push(...rootEl.children);
+    if (mouseDownEl.matches(handleSelector)) {
+      // Remember the element that will move
+      dragEl = evt.target;
+      // Remember the nextSibling for judging valid movement
+      nextEl = dragEl.nextSibling;
 
-    // 使用sortingList中的位置，而不使用rootEl中的位置，是因为假如鼠标移动得太快，positionBefore的值有一定几率会是错误的。
-    // 在dragover过程中如果很快的完成了节点插入，这就会影响到了positionBefore的值并不是一开始的位置值，而变成插入位置的值。
-    // 同时也就使得了后续其他节点位置不能正确的更新。
-    // 上面的这个解释不一定完全正确，但确实避免了positionBefore错误的情况。
-    positionBefore = sortingList.indexOf(dragEl);
+      // 使用sortingList作为判断节点位置初始位置的依据
+      sortingList = [];
+      sortingList.push(...rootEl.children);
 
-    // Limit the type of dragging
-    evt.dataTransfer.effectAllowed = 'move';
+      // 使用sortingList中的位置，而不使用rootEl中的位置，是因为假如鼠标移动得太快，positionBefore的值有一定几率会是错误的。
+      // 在dragover过程中如果很快的完成了节点插入，这就会影响到了positionBefore的值并不是一开始的位置值，而变成插入位置的值。
+      // 同时也就使得了后续其他节点位置不能正确的更新。
+      // 上面的这个解释不一定完全正确，但确实避免了positionBefore错误的情况。
+      positionBefore = sortingList.indexOf(dragEl);
 
-    // Text未被使用
-    evt.dataTransfer.setData('Text', dragEl.textContent);
+      // Limit the type of dragging
+      evt.dataTransfer.effectAllowed = 'move';
 
-    // We are writing about events with dnd
-    rootEl.addEventListener('dragover', _onDragOver, false);
-    rootEl.addEventListener('dragend', _onDragEnd, false);
+      // Text未被使用
+      evt.dataTransfer.setData('Text', dragEl.textContent);
 
-    dragEl.classList.add('grabbing');
+      // We are writing about events with dnd
+      rootEl.addEventListener('dragover', _onDragOver, false);
+      rootEl.addEventListener('dragend', _onDragEnd, false);
+
+      dragEl.classList.add('grabbing');
+    } else {
+      evt.preventDefault();
+    }
   }
 
   // Function responsible for sorting, the dragEl is hovering above the target element
@@ -879,23 +890,26 @@ function sortable(rootEl, selector, onUpdate) {
     sortedFlag = false;
     const target = evt.target;
 
-    // use evt.preventDefault() to allow drop
-    evt.preventDefault();
-    evt.dataTransfer.dropEffect = 'move';
+    // dragover的target有可能是item中的其他元素，或者item本身。element.closest()包括元素本身的这种情况。
+    let dropPlace = target.closest(dndSelector);
 
-    // 当item已经被移动另一个位置，但鼠标原地并未释放时，target和dragEl是同一个元素，这时不再重复触发节点插入。
-    if (target && target !== dragEl && target.matches(selector)) {
+    // 当item已经被移动另一个位置，但鼠标原地并未释放时，dropPlace和dragEl是同一个元素，这时不再重复触发节点插入。
+    if(dropPlace && dropPlace !== dragEl){
+      // use evt.preventDefault() to allow drop
+      evt.preventDefault();
+      evt.dataTransfer.dropEffect = 'move';
+
       isMouseMoveDown = evt.clientY >= clientYBefore;
 
       // 从上到下，插入到target当前的位置
       if (isMouseMoveDown && target.nextSibling && !sortedFlag) {
-        rootEl.insertBefore(dragEl, target.nextSibling);
+        rootEl.insertBefore(dragEl, dropPlace.nextSibling);
         sortedFlag = true;
       }
 
       // 从下到上，插入到target的前一个位置
       if (!isMouseMoveDown && !sortedFlag) {
-        rootEl.insertBefore(dragEl, target);
+        rootEl.insertBefore(dragEl, dropPlace);
         sortedFlag = true;
       }
 
@@ -987,6 +1001,7 @@ async function addTodo(text) {
       const $li = createNewElementNode('li', 'todo', '', 'draggable', 'true', 'data-is-done', 'false', 'data-id', result._id, 'data-order', result.order);
       const $todoDisplay = createNewElementNode('div', 'todo-display');
       const $todoMain = createNewElementNode('div', 'todo-main');
+      const $dragHandle = createNewElementNode('span', 'todo-drag-handle', '.. .. ..');
       const $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
       const $todoContent = createNewElementNode('span', 'todo-content', text);
       const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
@@ -995,7 +1010,7 @@ async function addTodo(text) {
       // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
       domOperationModule.appendMultiChild($todoMain, $checkbox, $todoContent, $deleteButton);
 
-      domOperationModule.appendMultiChild($todoDisplay, $todoMain, $deleteButton);
+      domOperationModule.appendMultiChild($todoDisplay, $dragHandle, $todoMain, $deleteButton);
 
       $li.appendChild($todoDisplay);
 
@@ -1037,13 +1052,14 @@ function sortTodoInAscendingOrder(list) {
  *
  <ul class="todo-list">
    <li class='todo'>
-   <div class='todo-display'>
- <div class='todo-main'>
- <input class='todo-checkbox'>
- <span class='todo-content'></span>
- </div>
+     <div class='todo-display'>
+       <span class='todo-drag-handle'></span>
+       <div class='todo-main'>
+        <input class='todo-checkbox'>
+        <span class='todo-content'></span>
+       </div>
      <button class='button button-delete-todo'>X</button>
-   </div>
+    </div>
    </li>
  </ul>
  *
@@ -1056,6 +1072,7 @@ function renderTodoList(data) {
     const $li = createNewElementNode('li', 'todo', '', 'data-is-done', todo.isDone, 'data-id', todo._id);
     const $todoDisplay = createNewElementNode('div', 'todo-display');
     const $todoMain = createNewElementNode('div', 'todo-main');
+    const $dragHandle = createNewElementNode('span', 'todo-drag-handle', '.. .. ..');
     const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
     const $todoContent = createNewElementNode('span', 'todo-content', todo.text);
     const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
@@ -1070,8 +1087,7 @@ function renderTodoList(data) {
 
     domOperationModule.appendMultiChild($todoMain, $checkbox, $todoContent, $deleteButton);
 
-    // $li.appendChild($div);
-    domOperationModule.appendMultiChild($todoDisplay, $todoMain, $deleteButton);
+    domOperationModule.appendMultiChild($todoDisplay, $dragHandle, $todoMain, $deleteButton);
 
     $li.appendChild($todoDisplay);
 
@@ -1218,11 +1234,11 @@ function displayCtrlInit() {
  *
  * 负责更新位置发生改变的节点信息。只有dragEl移动前后位置之间的节点，以及dragEL本身的位置信息需要更新，同时包括数据库的更新
  *
- * @param positionBefore
- * @param positionAfter
- * @param deleteElPosition
- * @param rootEl
- * @param isMouseMoveDown
+ * @param {number} positionBefore  dragEl被移动前所处的位置
+ * @param {number} positionAfter  dragEl被移动后所处的位置
+ * @param {number} deleteElPosition  被删除的todo节点所处的位置
+ * @param rootEl  sortable list的直接父元素
+ * @param {boolean} isMouseMoveDown  鼠标在纵坐标上是否是向下移动
  */
 async function updatePositionChanged(positionBefore, positionAfter, deleteElPosition, rootEl, isMouseMoveDown) {
   const sortingList = [];
@@ -1362,7 +1378,7 @@ function appInit() {
 // 使用事件委托，将点击事件绑定到todo-list上，一个是checkbox的点击，另一个是content的点击(开启edit in place), 还有删除按钮的点击。在处理函数内部加上event.target判断
   $todoList.addEventListener('click', todoOnClick);
 
-  sortable($todoList, '.todo', updatePositionChanged);
+  sortable($todoList, '.todo-drag-handle', '.todo', updatePositionChanged);
 }
 
 /**
