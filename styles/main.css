@@ -56,64 +56,6 @@ ul > li {
 }
 
 
-/****** control todo display option ******/
-
-
-.todo-hidden {
-  display: none;
-}
-
-.display-ctrl {
-  display: flex;
-  width: 50%;
-  border: 2px solid salmon;
-  border-radius: .375rem;
-}
-
-.display-option {
-  flex: 1;
-  text-align: center;
-}
-
-.display-option .button {
-  height: 100%;
-  width: 100%;
-  padding: 10px;
-  background-color: #fff;
-  transition: background-color .15s;
-}
-
-.display-option .button:hover {
-  background-color: lightsalmon;
-}
-
-.display-option .button:active {
-  background-color: darksalmon;
-}
-
-.display-option .button:focus {
-  outline: none;
-}
-
-.display-option .selected {
-  background-color: salmon;
-}
-
-.display-option:not(:first-child) > .button {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-.display-option:not(:last-child) > .button {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.display-option:not(:last-child) {
-  border-right: 2px solid salmon;
-}
-
-
 /****** todo *******/
 
 
@@ -235,3 +177,60 @@ ul > li {
   align-self: center;
 }
 
+
+/****** control todo display option ******/
+
+
+.todo-hidden {
+  display: none;
+}
+
+.display-ctrl {
+  display: flex;
+  width: 50%;
+  border: 2px solid salmon;
+  border-radius: .375rem;
+}
+
+.display-option {
+  flex: 1;
+  text-align: center;
+}
+
+.display-option .button {
+  height: 100%;
+  width: 100%;
+  padding: 10px;
+  background-color: #fff;
+  transition: background-color .15s;
+}
+
+.display-option .button:hover {
+  background-color: lightsalmon;
+}
+
+.display-option .button:active {
+  background-color: darksalmon;
+}
+
+.display-option .button:focus {
+  outline: none;
+}
+
+.display-option .selected {
+  background-color: salmon;
+}
+
+.display-option:not(:first-child) > .button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.display-option:not(:last-child) > .button {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.display-option:not(:last-child) {
+  border-right: 2px solid salmon;
+}
