@@ -1,0 +1,235 @@
+@charset "UTF-8";
+
+.container {
+  width: 50rem;
+  margin: 0 auto;
+}
+
+.header {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.app {
+  display: flex;
+  /*justify-content: center;*/
+  align-items: center;
+  flex-direction: column;
+}
+
+.input-form {
+
+}
+
+input[type=text] {
+  margin: 0 5px 0 0;
+}
+
+input[name=todo-input] {
+  display: inline-block;
+  width: 15.625rem
+}
+
+ul {
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+ul > li {
+  list-style: none;
+}
+
+.todo-list {
+  width: 28.75rem;
+}
+
+.button {
+  border: 1px solid transparent;
+  padding: .25rem .5rem;
+  border-radius: .25rem;
+  cursor: pointer;
+}
+
+.grabbing {
+  opacity: .4;
+  cursor: move;
+}
+
+
+/****** todo *******/
+
+
+.todo {
+  display: flex;
+  justify-content: center;
+  padding: .25rem 0;
+}
+
+.todo-hidden {
+  display: none;
+}
+
+/****** todo display ******/
+
+
+.todo-display {
+  display: flex;
+  justify-content: center;
+}
+
+.todo-main {
+  display: flex;
+  box-sizing: border-box;
+  width: 25.25rem;
+  margin: 0 .25rem;
+  padding: .25rem .5rem;
+  border-radius: .25rem;
+  background-color: #eee;
+  transition: opacity 2000ms;
+  user-select: text;
+}
+
+.todo-display-hidden {
+  display: none;
+}
+
+.todo-drag-handle {
+  display: inline-block;
+  visibility: hidden;
+  width: 1rem;
+  color: #aaa;
+  cursor: move;
+  line-height: 6px;
+  padding: 0 0 0 .75rem;
+  text-shadow: 0 0 0 black;
+  user-select: none;
+}
+
+.todo:hover .todo-drag-handle {
+  visibility: visible;
+}
+
+.todo-checkbox {
+  align-self: baseline;
+  margin: 0;
+}
+
+.todo-content {
+  flex: 1;
+  width: 345px;
+  padding: 0 5px;
+  align-self: baseline;
+  cursor: text;
+}
+
+.todo .button-delete-todo {
+  visibility: hidden;
+  color: #fff;
+  background-color: salmon;
+  align-self: baseline;
+  margin: 0;
+}
+
+.todo:hover .button-delete-todo {
+  visibility: visible;
+}
+
+.todo-is-done {
+  color: #bbb;
+  text-decoration: line-through;
+}
+
+
+/****** todo edit ******/
+
+
+.todo-edit {
+  display: none;
+  width: 25rem;
+  padding: 0 .25rem;
+}
+
+.todo-edit .button:first-of-type {
+  margin: 0 .25rem;
+}
+
+.todo-edit-show {
+  display: flex;
+  justify-content: center;
+  height: 30px;
+}
+
+.todo-edit-bar {
+  flex: 1;
+  align-self: center;
+}
+
+.button-add-todo {
+  color: #fff;
+  background-color: #51e898;
+}
+
+.button-save-todo-edit {
+  color: #fff;
+  background-color: #1DA1F2;
+  align-self: center;
+}
+
+.button-cancel-todo-edit {
+  background-color: lightgray;
+  align-self: center;
+}
+
+
+/****** control todo display option ******/
+
+
+.display-ctrl {
+  display: flex;
+  width: 50%;
+  border: 2px solid salmon;
+  border-radius: .375rem;
+}
+
+.display-option {
+  flex: 1;
+  text-align: center;
+}
+
+.display-option .button {
+  height: 100%;
+  width: 100%;
+  padding: 10px;
+  background-color: #fff;
+  transition: background-color .15s;
+}
+
+.display-option .button:hover {
+  background-color: lightsalmon;
+}
+
+.display-option .button:active {
+  background-color: darksalmon;
+}
+
+.display-option .button:focus {
+  outline: none;
+}
+
+.display-option .selected {
+  background-color: salmon;
+}
+
+.display-option:not(:first-child) > .button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.display-option:not(:last-child) > .button {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.display-option:not(:last-child) {
+  border-right: 2px solid salmon;
+}
