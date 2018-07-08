@@ -1,18 +1,22 @@
 {
   "name": "todo-app",
   "version": "1.0.0",
-  "description": "A todo app build in Vanilla JS",
+  "description": "A todo app built in Vanilla JS",
   "main": "js/app.js",
   "scripts": {
-    "compile": "babel ./scripts/app.js -o ./scripts/compile/app.compatible.js"
+    "dev": "webpack --config ./config/webpack.dev.config.js",
+    "build": "webpack --config ./config/webpack.prod.config.js",
+    "doc": "webpack --config ./config/webpack.doc.config.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/NevenLeung/todo-app.git"
   },
   "keywords": [
+    "todo app",
     "todo-app",
-    "js"
+    "vanilla js",
+    "native js"
   ],
   "author": "NevenLeung",
   "license": "MIT",
@@ -21,12 +25,16 @@
   },
   "homepage": "https://github.com/NevenLeung/todo-app#readme",
   "devDependencies": {
-    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.5",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.7.0",
-    "regenerator-runtime": "^0.12.0",
+    "clean-webpack-plugin": "^0.1.19",
+    "copy-webpack-plugin": "^4.5.2",
+    "html-webpack-plugin": "^3.2.0",
     "webpack": "^4.15.1",
-    "webpack-cli": "^3.0.8"
+    "webpack-cli": "^3.0.8",
+    "webpack-merge": "^4.1.3"
   }
 }
