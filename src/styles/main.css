@@ -65,6 +65,9 @@ ul > li {
   padding: .25rem 0;
 }
 
+.todo-hidden {
+  display: none;
+}
 
 /****** todo display ******/
 
@@ -180,10 +183,6 @@ ul > li {
 
 /****** control todo display option ******/
 
-
-.todo-hidden {
-  display: none;
-}
 
 .display-ctrl {
   display: flex;
