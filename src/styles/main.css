@@ -128,11 +128,11 @@ ul > li {
   display: inline-block;
   visibility: hidden;
   width: 1rem;
-  color: #aaa;
-  cursor: move;
-  line-height: 6px;
   padding: 0 0 0 .75rem;
+  color: #aaa;
+  line-height: 6px;
   text-shadow: 0 0 0 black;
+  cursor: move;
   user-select: none;
 }
 
@@ -143,6 +143,102 @@ ul > li {
 .todo-checkbox {
   align-self: baseline;
   margin: 0;
+}
+
+input[type=checkbox] {
+  display: none;
+}
+
+.display-checkbox {
+  display: inline-block;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  margin: 0 10px 0 0;
+  vertical-align: -6px;
+  background-color: transparent;
+  transform-origin: center;
+  transition: background-color 150ms 200ms, transform 350ms cubic-bezier(0.78, -1.22, 0.17, 1.89);
+}
+
+.display-checkbox::before {
+  position: absolute;
+  top: 10px;
+  left: 6px;
+  width: 0;
+  height: 2px;
+  content: "";
+  border-radius: 2px;
+  background: #fff;
+  transform: rotate(45deg);
+  transform-origin: 0 0;
+  transition: width 50ms ease 50ms;
+}
+
+.display-checkbox::after {
+  position: absolute;
+  top: 14px;
+  left: 8px;
+  width: 0;
+  height: 2px;
+  content: "";
+  border-radius: 2px;
+  background: #fff;
+  transform: rotate(305deg);
+  transform-origin: 0 0;
+  transition: width 50ms ease;
+}
+
+/** hover时的动画 **/
+
+label:hover .display-checkbox::before {
+  width: 6px;
+  transition: width 100ms ease, background-color 350ms;
+}
+
+label:hover .display-checkbox::after {
+  width: 10px;
+  transition: width 150ms ease, background-color 350ms;
+}
+
+/** 维持点击后，checkbox的状态，假如label中有其他可点击的部分，点击和取消时的动画 **/
+
+input[type=checkbox]:checked+.display-checkbox {
+  background-color: #fff;
+  transform: scale(1.1);
+}
+
+input[type=checkbox]:checked+.display-checkbox::before {
+  width: 6px;
+  background: #000;
+  transition: width 150ms ease 100ms;
+}
+
+input[type=checkbox]:checked+.display-checkbox::after {
+  width: 10px;
+  background: #000;
+  transition: width 150ms ease 100ms;
+}
+
+/** 在checkbox上点击的动画，包括取消时的动画 **/
+
+label:hover input[type=checkbox]:checked+.display-checkbox {
+  background-color: #fff;
+  transform: scale(1.1);
+}
+
+label:hover input[type=checkbox]:checked+.display-checkbox::before {
+  width: 6px;
+  background: #000;
+  transition: width 150ms ease 100ms, background-color 300ms;
+}
+
+label:hover input[type=checkbox]:checked+.display-checkbox::after {
+  width: 10px;
+  background: #000;
+  transition: width 150ms ease 100ms, background-color 300ms;
 }
 
 .todo-content {
@@ -187,7 +283,7 @@ ul > li {
 .todo-edit-show {
   display: flex;
   justify-content: center;
-  height: 30px;
+  height: 2rem;
 }
 
 .todo-edit .input-bar {
@@ -196,8 +292,7 @@ ul > li {
 }
 
 .todo-edit-input {
-  /*flex: 1;*/
-  /*align-self: center;*/
+
 }
 
 .button-add-todo {

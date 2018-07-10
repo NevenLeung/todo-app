@@ -551,8 +551,14 @@ const todoEditInPlaceModule = (function (domWrapper) {
    <ul class='todo-list'>
      <li class="todo">
        <div class='todo-display'>
-         <input class='todo-checkbox'>
-         <span class='todo-content'></span>
+         <div class='todo-main'>
+           <span class='todo-drag-handle'></span>
+           <label class='todo-checkbox'>
+             <input type='checkbox' class='hidden-checkbox'>
+             <span class='display-checkbox'></span>
+           </label>
+           <span class='todo-content'></span>
+         </div>
          <button class='button button-delete-todo'>X</button>
        </div>
        <div class='todo-edit'>
@@ -1009,13 +1015,17 @@ async function addTodo(text) {
       const $todoDisplay = createNewElementNode('div', 'todo-display');
       const $todoMain = createNewElementNode('div', 'todo-main');
       const $dragHandle = createNewElementNode('span', 'todo-drag-handle', '.. .. ..');
-      const $checkbox = createNewElementNode('input', 'todo-checkbox', '', 'type', 'checkbox');
+      const $todoCheckbox = createNewElementNode('label', 'todo-checkbox');
+      const $hiddenCheckbox = createNewElementNode('input', 'hidden-checkbox', '',  'type', 'checkbox');
+      const $displayCheckbox = createNewElementNode('span', 'display-checkbox');
       const $todoContent = createNewElementNode('span', 'todo-content', text);
       const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
       const textNode = document.createTextNode(' ');
 
+      domOperationModule.appendMultiChild($todoCheckbox, $hiddenCheckbox, $displayCheckbox);
+
       // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
-      domOperationModule.appendMultiChild($todoMain, $checkbox, $todoContent, $deleteButton);
+      domOperationModule.appendMultiChild($todoMain, $todoCheckbox, $todoContent);
 
       domOperationModule.appendMultiChild($todoDisplay, $dragHandle, $todoMain, $deleteButton);
 
@@ -1062,11 +1072,14 @@ function sortTodoInAscendingOrder(list) {
      <div class='todo-display'>
        <span class='todo-drag-handle'></span>
        <div class='todo-main'>
-        <input class='todo-checkbox'>
-        <span class='todo-content'></span>
+         <label class='todo-checkbox'>
+           <input type='checkbox' class='hidden-checkbox'>
+           <span class='display-checkbox'></span>
+         </label>
+         <span class='todo-content'></span>
        </div>
-     <button class='button button-delete-todo'>X</button>
-    </div>
+       <button class='button button-delete-todo'>X</button>
+     </div>
    </li>
  </ul>
  *
@@ -1080,7 +1093,9 @@ function renderTodoList(data) {
     const $todoDisplay = createNewElementNode('div', 'todo-display');
     const $todoMain = createNewElementNode('div', 'todo-main');
     const $dragHandle = createNewElementNode('span', 'todo-drag-handle', '.. .. ..');
-    const $checkbox = createNewElementNode('input', 'todo-checkbox', '',  'type', 'checkbox');
+    const $todoCheckbox = createNewElementNode('label', 'todo-checkbox');
+    const $hiddenCheckbox = createNewElementNode('input', 'hidden-checkbox', '',  'type', 'checkbox');
+    const $displayCheckbox = createNewElementNode('span', 'display-checkbox');
     const $todoContent = createNewElementNode('span', 'todo-content', todo.text);
     const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
     const textNode = document.createTextNode(' ');
@@ -1089,10 +1104,12 @@ function renderTodoList(data) {
       // 为todo-content添加class 'todo-is-done'
       $todoContent.classList.add('todo-is-done');
       // 由于todo为已完成状态，需要将checkbox设置为已勾选状态
-      $checkbox.setAttribute('checked', 'checked');
+      $hiddenCheckbox.setAttribute('checked', 'checked');
     }
 
-    domOperationModule.appendMultiChild($todoMain, $checkbox, $todoContent, $deleteButton);
+    domOperationModule.appendMultiChild($todoCheckbox, $hiddenCheckbox, $displayCheckbox);
+
+    domOperationModule.appendMultiChild($todoMain, $todoCheckbox, $todoContent);
 
     domOperationModule.appendMultiChild($todoDisplay, $dragHandle, $todoMain, $deleteButton);
 
@@ -1158,7 +1175,7 @@ async function initRenderTodoList() {
  *
  * 切换todo的完成状态，更改显示样式，更改data中的数据，用作事件处理函数
  *
- * $el为todo-checkbox节点
+ * $el为todo-checkbox节点中的hidden-checkbox
  */
 async function toggleTodoStatus($el) {
   // 每一个todo的todo-content是checkbox的下一个同级元素
@@ -1333,8 +1350,8 @@ function displayTabsOnClick(event) {
  */
 function todoOnClick(event) {
   const $el = event.target;
-  // 判断点击的元素是不是todo-checkbox
-  if ($el.matches('.todo-checkbox')) {
+  // 判断点击的元素是不是todo-checkbox中的hidden-checkbox，虽然hidden-checkbox不显示，但由于它在label里面，实际点击到的还是它
+  if ($el.matches('.hidden-checkbox')) {
     toggleTodoStatus(event.target);
   }
   // 判断点击元素的是不是todo-content，是的话，开启edit in place功能
