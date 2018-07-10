@@ -10,11 +10,12 @@ const baseConfig = require('./webpack.base.config');
 
 module.exports = merge(baseConfig, {
   output: {
-    path: path.resolve(__dirname, '../dist')
+    path: path.resolve(__dirname, '../docs')
   },
   plugins: [
-    new CleanWebpackPlugin('dist', {
+    new CleanWebpackPlugin('docs', {
       root: path.join(__dirname, '../'),
+      // allowExternal: true
     }),
     new CopyWebpackPlugin([
       {
