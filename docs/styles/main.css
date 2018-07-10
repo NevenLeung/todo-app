@@ -17,12 +17,41 @@
   flex-direction: column;
 }
 
-.input-form {
+:focus {
+  outline: none;
+}
 
+.input-form {
+  display: flex;
+}
+
+.input-bar {
+  position: relative;
+  margin: 0 5px 0 0;
+  width: 15.625rem;
 }
 
 input[type=text] {
-  margin: 0 5px 0 0;
+  display: block;
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  padding: 4px 0;
+}
+
+input[type=text] + .focus-border {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: #4caf50;
+  transition: 0.4s;
+}
+
+input[type=text]:focus + .focus-border {
+  width: 100%;
+  left: 0;
 }
 
 input[name=todo-input] {
@@ -69,12 +98,14 @@ ul > li {
   display: none;
 }
 
+
 /****** todo display ******/
 
 
 .todo-display {
   display: flex;
   justify-content: center;
+  line-height: 1.375rem;
 }
 
 .todo-main {
@@ -159,9 +190,14 @@ ul > li {
   height: 30px;
 }
 
-.todo-edit-bar {
+.todo-edit .input-bar {
   flex: 1;
   align-self: center;
+}
+
+.todo-edit-input {
+  /*flex: 1;*/
+  /*align-self: center;*/
 }
 
 .button-add-todo {

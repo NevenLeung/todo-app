@@ -549,18 +549,21 @@ const todoEditInPlaceModule = (function (domWrapper) {
    * DOM 结构
    *
    <ul class='todo-list'>
-   <li class="todo">
-   <div class='todo-display'>
-   <input class='todo-checkbox'>
-   <span class='todo-content'></span>
-   <button class='button button-delete-todo'>X</button>
-   </div>
-   <div class='todo-edit'>
-   <input class='todo-edit-bar'>
-   <button class='button button-edit-save'>save</button>
-   <button class='button button-edit-cancel'>cancel</button>
-   </div>
-   </li>
+     <li class="todo">
+       <div class='todo-display'>
+         <input class='todo-checkbox'>
+         <span class='todo-content'></span>
+         <button class='button button-delete-todo'>X</button>
+       </div>
+       <div class='todo-edit'>
+         <div class='input-bar'>
+           <input type='text' class='todo-edit-bar'>
+           <span class='focus-border'></span>
+         </div>
+         <button class='button button-edit-save'>save</button>
+         <button class='button button-edit-cancel'>cancel</button>
+       </div>
+     </li>
    </ul>
    *
    */
@@ -580,17 +583,21 @@ const todoEditInPlaceModule = (function (domWrapper) {
         $todoDisplay.classList.add('todo-display-hidden');
 
         const $div = createNewElementNode('div', 'todo-edit todo-edit-show');
-        const $editBar = createNewElementNode('input', 'todo-edit-bar', '', 'type', 'text', 'value', $el.textContent);
+        const $inputBar = createNewElementNode('div', 'input-bar');
+        const $editBar = createNewElementNode('input', 'todo-edit-input', '', 'type', 'text', 'value', $el.textContent);
+        const $focusBorder = createNewElementNode('span', 'focus-border');
         const $saveButton =  createNewElementNode('button', 'button button-save-todo-edit', 'save');
         const $cancelButton =  createNewElementNode('button', 'button button-cancel-todo-edit', 'cancel');
 
-        domWrapper.appendMultiChild($div, $editBar, $saveButton, $cancelButton);
+        domOperationModule.appendMultiChild($inputBar, $editBar, $focusBorder);
+
+        domWrapper.appendMultiChild($div, $inputBar, $saveButton, $cancelButton);
 
         $todo.appendChild($div);
       } else {
         // 由于已经有了todo-edit，只需要改变display属性即可，无需重复创建，提高性能
         const $todoEdit = domWrapper.query($todo, '.todo-edit');
-        const $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
+        const $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-input');
         $todoDisplay.classList.add('todo-display-hidden');
         $todoEdit.classList.add('todo-edit-show');
 
@@ -615,7 +622,7 @@ const todoEditInPlaceModule = (function (domWrapper) {
     if ($el.matches('.button-save-todo-edit')) {
       const $todo = domWrapper.findClosestAncestor($el, '.todo');
       const $todoEdit = domWrapper.findClosestAncestor($el, '.todo-edit');
-      const $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-bar');
+      const $todoEditBar = domWrapper.query($todoEdit, '.todo-edit-input');
       const $todoDisplay = domWrapper.query($todo, '.todo-display');
       const $todoContent = domWrapper.query($todoDisplay, '.todo-content');
 
@@ -684,7 +691,7 @@ const todoEditInPlaceModule = (function (domWrapper) {
 
       // 待保存的content应该是input中的value，而不是$todoContent中的textContent，那应该如何保存value呢？
       // 通过todo-display节点，找到todo-edit，再找到相应todo-edit-bar，因为其中input的值，只有在重新进入edit in place才会被更新，所以此时input中value仍然是被修改后的值
-      const todoContentAfterEdited = domWrapper.query($todoEdit, '.todo-edit-bar').value;
+      const todoContentAfterEdited = domWrapper.query($todoEdit, '.todo-edit-input').value;
       const id = parseInt($lastEditedTodo.dataset.id);
       const data = {
         text: todoContentAfterEdited

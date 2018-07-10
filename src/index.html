@@ -12,8 +12,11 @@
       <h1>Todo App</h1>
     </header>
     <div class="app">
-      <form class="input-form" name="input-bar">
-        <input type="text" name="todo-input" placeholder="write down something you need to do" autofocus>
+      <form class="input-form">
+        <div class="input-bar">
+          <input type="text" name="todo-input" placeholder="write down something" autofocus autocomplete="off">
+          <span class="focus-border"></span>
+        </div>
         <button class="button button-add-todo" type="submit">add</button>
       </form>
       <ul class="display-ctrl">
