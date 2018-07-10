@@ -40,8 +40,8 @@
 
 ## scripts
 
-compile with babel
+build
 
 ```
-npm run compile
+npm run build
 ```
