@@ -1,13 +1,31 @@
 @charset "UTF-8";
 
+
+/****** the structure of app ******/
+
+
 .container {
   width: 50rem;
   margin: 0 auto;
 }
 
 .header {
+  display: flex;
   margin: 0 auto;
+  justify-content: center;
   text-align: center;
+}
+
+.app-name {
+  width: 25%;
+  padding: 4px;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, .2);
+  transition: text-shadow 500ms ease-in-out;
+}
+
+.app-name:hover {
+  text-shadow: 2px 1px 2px rgba(0, 0, 0, .4);
+  transition: text-shadow 500ms ease-in-out;
 }
 
 .app {
@@ -17,17 +35,50 @@
   flex-direction: column;
 }
 
+
+/****** general usage  ******/
+
+
 :focus {
   outline: none;
 }
 
-.input-form {
-  display: flex;
+ul {
+  padding: 0;
+  margin: 1rem 0 0;
 }
+
+ul > li {
+  list-style: none;
+}
+
+/*** button interaction ***/
+
+.button {
+  border: 1px solid transparent;
+  padding: .25rem .5rem;
+  border-radius: .25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  transition: box-shadow 100ms;
+  cursor: pointer;
+}
+
+.button:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .4);
+}
+
+.button:active {
+  opacity: 0.9;
+  transform: scale(0.9);
+  box-shadow: none;
+  transition: transform 100ms ease;
+}
+
+/*** stylish input text ***/
 
 .input-bar {
   position: relative;
-  margin: 0 5px 0 0;
+  margin: 0 .5rem 0 0;
   width: 15.625rem;
 }
 
@@ -35,7 +86,7 @@ input[type=text] {
   display: block;
   width: 100%;
   border: none;
-  border-bottom: 1px solid #ccc;
+  border-bottom: .125rem solid #ccc;
   padding: 4px 0;
 }
 
@@ -44,8 +95,8 @@ input[type=text] + .focus-border {
   bottom: 0;
   left: 50%;
   width: 0;
-  height: 2px;
-  background-color: #4caf50;
+  height: .125rem;
+  background-color: #0bbd5f;
   transition: 0.4s;
 }
 
@@ -54,34 +105,20 @@ input[type=text]:focus + .focus-border {
   left: 0;
 }
 
+
+/****** the main parts of todo list ******/
+
+.input-form {
+  display: flex;
+}
+
 input[name=todo-input] {
   display: inline-block;
   width: 15.625rem
 }
 
-ul {
-  padding-left: 0;
-  margin-bottom: 0;
-}
-
-ul > li {
-  list-style: none;
-}
-
 .todo-list {
   width: 28.75rem;
-}
-
-.button {
-  border: 1px solid transparent;
-  padding: .25rem .5rem;
-  border-radius: .25rem;
-  cursor: pointer;
-}
-
-.grabbing {
-  opacity: .4;
-  cursor: move;
 }
 
 
@@ -92,10 +129,17 @@ ul > li {
   display: flex;
   justify-content: center;
   padding: .25rem 0;
+  transition: opacity 2000ms;
 }
 
 .todo-hidden {
   display: none;
+}
+
+/** use it when the drag handle was picked **/
+.grabbing {
+  opacity: .4;
+  cursor: move;
 }
 
 
@@ -115,9 +159,14 @@ ul > li {
   margin: 0 .25rem;
   padding: .25rem .5rem;
   border-radius: .25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
   background-color: #eee;
-  transition: opacity 2000ms;
+  transition: box-shadow 100ms;
   user-select: text;
+}
+
+.todo-main:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .2);
 }
 
 .todo-display-hidden {
@@ -128,12 +177,19 @@ ul > li {
   display: inline-block;
   visibility: hidden;
   width: 1rem;
-  padding: 0 0 0 .75rem;
+  padding: 0 0 0 .5rem;
+  margin: 0 0 0 .5rem;
   color: #aaa;
   line-height: 6px;
-  text-shadow: 0 0 0 black;
+  text-align: center;
+  text-shadow: 0 0 0 rgba(0, 0, 0, .4);
+  transition: text-shadow 100ms;
   cursor: move;
   user-select: none;
+}
+
+.todo-drag-handle:hover {
+  text-shadow: 0 0 1px rgba(0, 0, 0, .4);
 }
 
 .todo:hover .todo-drag-handle {
@@ -145,7 +201,7 @@ ul > li {
   margin: 0;
 }
 
-input[type=checkbox] {
+.todo-checkbox input[type=checkbox] {
   display: none;
 }
 
@@ -161,6 +217,7 @@ input[type=checkbox] {
   background-color: transparent;
   transform-origin: center;
   transition: background-color 150ms 200ms, transform 350ms cubic-bezier(0.78, -1.22, 0.17, 1.89);
+  cursor: pointer;
 }
 
 .display-checkbox::before {
@@ -243,10 +300,17 @@ label:hover input[type=checkbox]:checked+.display-checkbox::after {
 
 .todo-content {
   flex: 1;
-  width: 345px;
-  padding: 0 5px;
+  width: 21.5625rem; /* 345px */
+  padding: 0 .3125rem;
   align-self: baseline;
+  color: #000;
+  transition: color 200ms;
   cursor: text;
+}
+
+.todo-content:active {
+  opacity: 0.6;
+  transition: opacity 100ms;
 }
 
 .todo .delete-button-wrapper {
@@ -257,7 +321,7 @@ label:hover input[type=checkbox]:checked+.display-checkbox::after {
 .todo .button-delete-todo {
   position: relative;
   visibility: hidden;
-  background-color: salmon;
+  background-color: #fa8072;  /* salmon */
   width: 100%;
   height: 100%;
   align-self: baseline;
@@ -265,8 +329,11 @@ label:hover input[type=checkbox]:checked+.display-checkbox::after {
   margin: 0;
   border: none;
   border-radius: 13%;
-  box-shadow: 0 .0625rem .125rem rgba(0, 0, 0, .4);
-  transition: box-shadow 400ms ease, transform 100ms ease;
+  transition: transform 100ms ease;
+}
+
+.todo:hover .button-delete-todo {
+  visibility: visible;
 }
 
 .button-delete-todo::before {
@@ -297,10 +364,6 @@ label:hover input[type=checkbox]:checked+.display-checkbox::after {
   transition: width 150ms ease-in-out 100ms;
 }
 
-.todo:hover .button-delete-todo {
-  visibility: visible;
-}
-
 .delete-button-wrapper:hover .button-delete-todo::before {
   width: 1.5rem;
   transition: width 150ms ease-in-out;
@@ -311,15 +374,10 @@ label:hover input[type=checkbox]:checked+.display-checkbox::after {
   transition: width 150ms ease-in-out 100ms;
 }
 
-.button-delete-todo:active {
-  opacity: 0.9;
-  transform: scale(0.9);
-  transition: transform 100ms ease;
-}
-
 .todo-is-done {
   color: #bbb;
   text-decoration: line-through;
+  transition: color 200ms;
 }
 
 
@@ -347,8 +405,12 @@ label:hover input[type=checkbox]:checked+.display-checkbox::after {
   align-self: center;
 }
 
-.todo-edit-input {
+/*.todo-edit-input {*/
 
+/*}*/
+
+.todo-edit input[type=text] + .focus-border {
+  background-color: #4e8dfd;
 }
 
 .button-add-todo {
@@ -374,7 +436,7 @@ label:hover input[type=checkbox]:checked+.display-checkbox::after {
 .display-ctrl {
   display: flex;
   width: 50%;
-  border: 2px solid salmon;
+  /*border: 2px solid salmon;*/
   border-radius: .375rem;
 }
 
@@ -388,15 +450,21 @@ label:hover input[type=checkbox]:checked+.display-checkbox::after {
   width: 100%;
   padding: 10px;
   background-color: #fff;
-  transition: background-color .15s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  transform: none;
+  transition: background-color 100ms, box-shadow 100ms;
 }
 
 .display-option .button:hover {
-  background-color: lightsalmon;
+  background-color: rgba(250, 128, 114, 0.8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .4);
+  transition: background-color 100ms, box-shadow 100ms;
 }
 
 .display-option .button:active {
-  background-color: darksalmon;
+  background-color: rgba(250, 128, 114, 0.7);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  transition: background-color 100ms, box-shadow 100ms;
 }
 
 .display-option .button:focus {
@@ -404,7 +472,8 @@ label:hover input[type=checkbox]:checked+.display-checkbox::after {
 }
 
 .display-option .selected {
-  background-color: salmon;
+  background-color: rgba(250, 128, 114, 0.8);  /** salmon 0.8 opacity **/
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .4);
 }
 
 .display-option:not(:first-child) > .button {
@@ -418,5 +487,5 @@ label:hover input[type=checkbox]:checked+.display-checkbox::after {
 }
 
 .display-option:not(:last-child) {
-  border-right: 2px solid salmon;
+  /*border-right: 2px solid salmon;*/
 }
