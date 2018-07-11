@@ -1019,7 +1019,8 @@ async function addTodo(text) {
       const $hiddenCheckbox = createNewElementNode('input', 'hidden-checkbox', '',  'type', 'checkbox');
       const $displayCheckbox = createNewElementNode('span', 'display-checkbox');
       const $todoContent = createNewElementNode('span', 'todo-content', text);
-      const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
+      const $deleteButtonWrapper = createNewElementNode('div', 'delete-button-wrapper ');
+      const $deleteButton = createNewElementNode('button', 'button button-delete-todo');
       const textNode = document.createTextNode(' ');
 
       domOperationModule.appendMultiChild($todoCheckbox, $hiddenCheckbox, $displayCheckbox);
@@ -1027,7 +1028,9 @@ async function addTodo(text) {
       // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
       domOperationModule.appendMultiChild($todoMain, $todoCheckbox, $todoContent);
 
-      domOperationModule.appendMultiChild($todoDisplay, $dragHandle, $todoMain, $deleteButton);
+      $deleteButtonWrapper.appendChild($deleteButton);
+
+      domOperationModule.appendMultiChild($todoDisplay, $dragHandle, $todoMain, $deleteButtonWrapper);
 
       $li.appendChild($todoDisplay);
 
@@ -1097,7 +1100,8 @@ function renderTodoList(data) {
     const $hiddenCheckbox = createNewElementNode('input', 'hidden-checkbox', '',  'type', 'checkbox');
     const $displayCheckbox = createNewElementNode('span', 'display-checkbox');
     const $todoContent = createNewElementNode('span', 'todo-content', todo.text);
-    const $deleteButton = createNewElementNode('button', 'button button-delete-todo', 'X');
+    const $deleteButtonWrapper = createNewElementNode('div', 'delete-button-wrapper ');
+    const $deleteButton = createNewElementNode('button', 'button button-delete-todo');
     const textNode = document.createTextNode(' ');
 
     if (todo.isDone) {
@@ -1111,7 +1115,9 @@ function renderTodoList(data) {
 
     domOperationModule.appendMultiChild($todoMain, $todoCheckbox, $todoContent);
 
-    domOperationModule.appendMultiChild($todoDisplay, $dragHandle, $todoMain, $deleteButton);
+    $deleteButtonWrapper.appendChild($deleteButton);
+
+    domOperationModule.appendMultiChild($todoDisplay, $dragHandle, $todoMain, $deleteButtonWrapper);
 
     $li.appendChild($todoDisplay);
 

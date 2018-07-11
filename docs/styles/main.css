@@ -249,16 +249,72 @@ label:hover input[type=checkbox]:checked+.display-checkbox::after {
   cursor: text;
 }
 
+.todo .delete-button-wrapper {
+  width: 2rem;
+  height: 2rem;
+}
+
 .todo .button-delete-todo {
+  position: relative;
   visibility: hidden;
-  color: #fff;
   background-color: salmon;
+  width: 100%;
+  height: 100%;
   align-self: baseline;
+  padding: 0;
   margin: 0;
+  border: none;
+  border-radius: 13%;
+  box-shadow: 0 .0625rem .125rem rgba(0, 0, 0, .4);
+  transition: box-shadow 400ms ease, transform 100ms ease;
+}
+
+.button-delete-todo::before {
+  position: absolute;
+  left: 9px;
+  top: 6px;
+  content: '';
+  width: 0;
+  height: .25rem;
+  background-color: #fff;
+  border-radius: .125rem;
+  transform: rotate(45deg);
+  transform-origin: 0 0;
+  transition: width 150ms ease-in-out;
+}
+
+.button-delete-todo::after {
+  position: absolute;
+  left: 26px;
+  top: 9px;
+  width: 0;
+  height: .25rem;
+  content: '';
+  background-color: #fff;
+  border-radius: .125rem;
+  transform: rotate(135deg);
+  transform-origin: 0 0;
+  transition: width 150ms ease-in-out 100ms;
 }
 
 .todo:hover .button-delete-todo {
   visibility: visible;
+}
+
+.delete-button-wrapper:hover .button-delete-todo::before {
+  width: 1.5rem;
+  transition: width 150ms ease-in-out;
+}
+
+.delete-button-wrapper:hover .button-delete-todo::after {
+  width: 1.5rem;
+  transition: width 150ms ease-in-out 100ms;
+}
+
+.button-delete-todo:active {
+  opacity: 0.9;
+  transform: scale(0.9);
+  transition: transform 100ms ease;
 }
 
 .todo-is-done {
