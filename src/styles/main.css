@@ -52,11 +52,16 @@ ul > li {
   list-style: none;
 }
 
+button, input {
+  line-height: normal;
+}
+
 /*** button interaction ***/
 
 .button {
+  align-self: center;
   border: 1px solid transparent;
-  padding: .25rem .5rem;
+  padding: .125rem .5rem;
   border-radius: .25rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, .4);
   transition: box-shadow 100ms;
@@ -86,7 +91,7 @@ input[type=text] {
   display: block;
   width: 100%;
   border: none;
-  border-bottom: .125rem solid #ccc;
+  border-bottom: .125rem solid #ddd;
   padding: 4px 0;
 }
 
@@ -96,7 +101,7 @@ input[type=text] + .focus-border {
   left: 50%;
   width: 0;
   height: .125rem;
-  background-color: #0bbd5f;
+  background-color: #02c78d;
   transition: 0.4s;
 }
 
@@ -110,11 +115,6 @@ input[type=text]:focus + .focus-border {
 
 .input-form {
   display: flex;
-}
-
-input[name=todo-input] {
-  display: inline-block;
-  width: 15.625rem
 }
 
 .todo-list {
@@ -285,6 +285,7 @@ label:hover .display-checkbox::after {
   padding: 0 .3125rem;
   align-self: baseline;
   color: #000;
+  line-height: 1.6;
   transition: color 200ms;
   cursor: text;
 }
@@ -402,12 +403,10 @@ label:hover .display-checkbox::after {
 .button-save-todo-edit {
   color: #fff;
   background-color: #1DA1F2;
-  align-self: center;
 }
 
 .button-cancel-todo-edit {
   background-color: lightgray;
-  align-self: center;
 }
 
 
