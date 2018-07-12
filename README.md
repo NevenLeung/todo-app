@@ -2,11 +2,31 @@
 
 一个使用原生js写的待办事项应用 :memo:
 
-## 数据管理
+## 项目亮点
 
-[数据管理信息说明图](https://www.processon.com/view/link/5b1c09eee4b02e4b26ff4246)：包括，如何管理todo app中数据变化，todo list的DOM结构，DOM节点上相关数据的信息说明。
+### 项目整体
 
-## 功能
+- 使用原生css和js实现，没有使用任何框架。
+- 代码注释充足。变量、函数，选择器命名语义明确。
+- 使用webpack、babel、PostCss对源码进行编译、压缩、打包。
+
+### 逻辑功能 
+
+- 实现了就地编辑功能(edit in place)。
+- 利用原生拖放的api，实现了todo的拖放排序(sortable list)。
+- 对IndexedDB的api进行了封装，每个操作方法都返回一个Promise。在本项目中使用IndexedDB实现数据的持久化管理。
+
+### UI交互
+
+- 大部分元素都具有交互动画。
+
+## 项目相关资源
+
+- [数据管理信息说明图 - ProcessOn](https://www.processon.com/view/link/5b1c09eee4b02e4b26ff4246): 包括，如何管理todo app中数据变化，todo list的DOM结构，DOM节点上相关数据的信息说明。
+- [Project-todo-list - Trello](https://trello.com/b/D5nX2C2b/project-todo-list): 记录个人在项目过程中遇到的问题，以及问题的解决方案、思路。
+
+
+## 功能列表
 
 ### 基础功能
 
