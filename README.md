@@ -12,13 +12,15 @@
 
 ### 逻辑功能 
 
-- 实现了就地编辑功能(edit in place)。
+- 实现了就地编辑(edit in place)功能。
 - 利用原生拖放的api，实现了todo的拖放排序(sortable list)。
 - 对IndexedDB的api进行了封装，每个操作方法都返回一个Promise。在本项目中使用IndexedDB实现数据的持久化管理。
 
 ### UI交互
 
-- 大部分元素都具有交互动画。
+- 所有元素都具有交互效果。
+- 动画化todo的添加、删除过程。
+- 根据todo的状态进行切换显示，edit in place的开启、关闭，都具有切换动画。
 
 ## 项目相关资源
 
