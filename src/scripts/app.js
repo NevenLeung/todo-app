@@ -1011,7 +1011,8 @@ async function addTodo(text) {
   try {
     const result = await todoStore.create(data);
     if (result) {
-      const $li = createNewElementNode('li', 'todo', '', 'draggable', 'true', 'data-is-done', 'false', 'data-id', result._id, 'data-order', result.order);
+      // 因为result只包含一个_id值，所以order直接使用提交时的order值
+      const $li = createNewElementNode('li', 'todo stretch-fade todo-with-padding', '', 'draggable', 'true', 'data-is-done', 'false', 'data-id', result._id, 'data-order', data.order);
       const $todoDisplay = createNewElementNode('div', 'todo-display');
       const $todoMain = createNewElementNode('div', 'todo-main');
       const $dragHandle = createNewElementNode('span', 'todo-drag-handle', '.. .. ..');
@@ -1036,6 +1037,15 @@ async function addTodo(text) {
 
       // 把li添加到todo-list上
       domOperationModule.appendMultiChild($todoList, $li, textNode);
+
+      setTimeout(() => {
+        $todoDisplay.classList.add('show-todo');
+      }, 20);
+
+      setTimeout(() => {
+        $todoContent.classList.add('show-content');
+      }, 200);
+
     } else {
       console.log('Data creation is failed');
     }
@@ -1092,7 +1102,7 @@ function renderTodoList(data) {
   sortTodoInAscendingOrder(data);
 
   data.forEach(function (todo) {
-    const $li = createNewElementNode('li', 'todo', '', 'data-is-done', todo.isDone, 'data-id', todo._id);
+    const $li = createNewElementNode('li', 'todo stretch-fade todo-with-padding', '', 'data-is-done', todo.isDone, 'data-id', todo._id);
     const $todoDisplay = createNewElementNode('div', 'todo-display');
     const $todoMain = createNewElementNode('div', 'todo-main');
     const $dragHandle = createNewElementNode('span', 'todo-drag-handle', '.. .. ..');
@@ -1122,6 +1132,14 @@ function renderTodoList(data) {
     $li.appendChild($todoDisplay);
 
     domOperationModule.appendMultiChild($todoList, $li, textNode);
+
+    setTimeout(() => {
+      $todoDisplay.classList.add('show-todo');
+    }, 20);
+
+    setTimeout(() => {
+      $todoContent.classList.add('show-content');
+    }, 200);
   });
 }
 
@@ -1234,13 +1252,29 @@ async function toggleTodoStatus($el) {
  */
 async function deleteTodo($el) {
   const $todo = domOperationModule.findClosestAncestor($el, '.todo');
+  const $todoDisplay = domOperationModule.query($todo, '.todo-display');
+  const $todoContent = domOperationModule.query($todo, '.todo-content');
   const id = parseInt($todo.dataset.id);
   const order = parseInt($todo.dataset.order);
 
   try {
     await todoStore.delete(id);
-    $todoList.removeChild($todo);
-    updatePositionChanged(undefined, undefined, order, $todoList, undefined);
+
+    $todoContent.classList.remove('show-content');
+
+    setTimeout(() => {
+      $todo.classList.remove('todo-with-padding');
+      $todoDisplay.classList.remove('show-todo');
+
+      setTimeout(() => {
+        $todoList.removeChild($todo);
+
+        updatePositionChanged(undefined, undefined, order, $todoList, undefined);
+      }, 300);
+
+    }, 200);
+
+
   }
   catch (err) {
     console.error(err);
