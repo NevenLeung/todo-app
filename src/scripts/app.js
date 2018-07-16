@@ -1012,7 +1012,7 @@ async function addTodo(text) {
     const result = await todoStore.create(data);
     if (result) {
       // 因为result只包含一个_id值，所以order直接使用提交时的order值
-      const $li = createNewElementNode('li', 'todo stretch-fade todo-with-padding', '', 'draggable', 'true', 'data-is-done', 'false', 'data-id', result._id, 'data-order', data.order);
+      const $li = createNewElementNode('li', 'todo stretch-fade', '', 'draggable', 'true', 'data-is-done', 'false', 'data-id', result._id, 'data-order', data.order);
       const $todoDisplay = createNewElementNode('div', 'todo-display');
       const $todoMain = createNewElementNode('div', 'todo-main');
       const $dragHandle = createNewElementNode('span', 'todo-drag-handle', '.. .. ..');
@@ -1038,6 +1038,7 @@ async function addTodo(text) {
       // 把li添加到todo-list上
       domOperationModule.appendMultiChild($todoList, $li, textNode);
 
+      // 每个setTimeout的延时时间大致与前一个动画的持续时间相同
       setTimeout(() => {
         $todoDisplay.classList.add('show-todo');
       }, 20);
@@ -1102,14 +1103,15 @@ function renderTodoList(data) {
   sortTodoInAscendingOrder(data);
 
   data.forEach(function (todo) {
-    const $li = createNewElementNode('li', 'todo stretch-fade todo-with-padding', '', 'data-is-done', todo.isDone, 'data-id', todo._id);
-    const $todoDisplay = createNewElementNode('div', 'todo-display');
+    // 由sortable()对初始化时的todo节点，写入data-order，因此data-order不在这里添加
+    const $li = createNewElementNode('li', 'todo stretch-fade', '', 'data-is-done', todo.isDone, 'data-id', todo._id);
+    const $todoDisplay = createNewElementNode('div', 'todo-display show-todo');
     const $todoMain = createNewElementNode('div', 'todo-main');
     const $dragHandle = createNewElementNode('span', 'todo-drag-handle', '.. .. ..');
     const $todoCheckbox = createNewElementNode('label', 'todo-checkbox');
     const $hiddenCheckbox = createNewElementNode('input', 'hidden-checkbox', '',  'type', 'checkbox');
     const $displayCheckbox = createNewElementNode('span', 'display-checkbox');
-    const $todoContent = createNewElementNode('span', 'todo-content', todo.text);
+    const $todoContent = createNewElementNode('span', 'todo-content show-content', todo.text);
     const $deleteButtonWrapper = createNewElementNode('div', 'delete-button-wrapper ');
     const $deleteButton = createNewElementNode('button', 'button button-delete-todo');
     const textNode = document.createTextNode(' ');
@@ -1133,13 +1135,15 @@ function renderTodoList(data) {
 
     domOperationModule.appendMultiChild($todoList, $li, textNode);
 
-    setTimeout(() => {
-      $todoDisplay.classList.add('show-todo');
-    }, 20);
+    // 只在todo的添加、删除使用动画，这样可以让打开app时，更快的显示内容，同时不会由于todo太多，需要加载太多的动画
 
-    setTimeout(() => {
-      $todoContent.classList.add('show-content');
-    }, 200);
+    // setTimeout(() => {
+    //   $todoDisplay.classList.add('show-todo');
+    // }, 20);
+    //
+    // setTimeout(() => {
+    //   $todoContent.classList.add('show-content');
+    // }, 200);
   });
 }
 
@@ -1262,8 +1266,8 @@ async function deleteTodo($el) {
 
     $todoContent.classList.remove('show-content');
 
+    // 每个setTimeout的延时时间大致与前一个动画的持续时间相同
     setTimeout(() => {
-      $todo.classList.remove('todo-with-padding');
       $todoDisplay.classList.remove('show-todo');
 
       setTimeout(() => {
