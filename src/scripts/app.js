@@ -1043,9 +1043,9 @@ async function addTodo(text) {
         $todoDisplay.classList.add('show-todo');
       }, 20);
 
-      setTimeout(() => {
-        $todoContent.classList.add('show-content');
-      }, 200);
+      // setTimeout(() => {
+      //   $todoContent.classList.add('show-content');
+      // }, 200);
 
     } else {
       console.log('Data creation is failed');
@@ -1111,7 +1111,7 @@ function renderTodoList(data) {
     const $todoCheckbox = createNewElementNode('label', 'todo-checkbox');
     const $hiddenCheckbox = createNewElementNode('input', 'hidden-checkbox', '',  'type', 'checkbox');
     const $displayCheckbox = createNewElementNode('span', 'display-checkbox');
-    const $todoContent = createNewElementNode('span', 'todo-content show-content', todo.text);
+    const $todoContent = createNewElementNode('span', 'todo-content', todo.text);
     const $deleteButtonWrapper = createNewElementNode('div', 'delete-button-wrapper ');
     const $deleteButton = createNewElementNode('button', 'button button-delete-todo');
     const textNode = document.createTextNode(' ');
@@ -1264,10 +1264,10 @@ async function deleteTodo($el) {
   try {
     await todoStore.delete(id);
 
-    $todoContent.classList.remove('show-content');
+    // $todoContent.classList.remove('show-content');
 
     // 每个setTimeout的延时时间大致与前一个动画的持续时间相同
-    setTimeout(() => {
+    // setTimeout(() => {
       $todoDisplay.classList.remove('show-todo');
 
       setTimeout(() => {
@@ -1276,7 +1276,7 @@ async function deleteTodo($el) {
         updatePositionChanged(undefined, undefined, order, $todoList, undefined);
       }, 300);
 
-    }, 200);
+    // }, 200);
 
 
   }

@@ -153,7 +153,7 @@ input[type=text]:focus + .focus-border {
   margin: 0;
   justify-content: center;
   line-height: 1.375rem;
-  transition: all 300ms ease-out, margin 150ms 100ms;
+  transition: max-height 300ms ease-out, margin 100ms 100ms;
 }
 
 .todo-display.show-todo {
@@ -166,7 +166,7 @@ input[type=text]:focus + .focus-border {
 .stretch-fade .todo-main {
   opacity: 0;
   width: 0;
-  transition: width 250ms ease-in-out, opacity 300ms;
+  transition: width 250ms ease-in-out, opacity 200ms;
 }
 
 .stretch-fade .show-todo .todo-main {
@@ -306,13 +306,13 @@ label:hover .display-checkbox::after {
 
 .todo-content {
   flex: 1;
-  width: 21.5625rem; /* 345px */
   padding: 0 .3125rem;
   align-self: baseline;
   color: #000;
   line-height: 1.6;
+  overflow-wrap: break-word;
+  /*white-space: nowrap;*/
   transition: all 200ms ease-out;
-  opacity: 0;
   cursor: text;
 }
 
@@ -321,8 +321,8 @@ label:hover .display-checkbox::after {
   transition: opacity 100ms;
 }
 
-.todo-content.show-content {
-  opacity: 1;
+.show-todo .todo-content {
+  /*white-space: normal;*/
 }
 
 .todo .delete-button-wrapper {
