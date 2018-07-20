@@ -1,12 +1,10 @@
 'use strict';
 
 const path = require('path');
-
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   context: path.resolve(__dirname, '../'),
-  mode: 'production',
   entry: './src/scripts/app.js',
   output: {
     path: path.resolve(__dirname, '../dist'),
@@ -35,7 +33,6 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      title: 'Todo App test',
       template: './src/index.html',
       minify: {
         removeComments: true

@@ -1,11 +1,16 @@
 'use strict';
 
 const merge = require('webpack-merge');
-const baseConfig = require('./webpack.base.config');
+const baseConfig = require('./webpack.base.config.js');
 
 module.exports = merge(baseConfig, {
   mode: 'development',
-  output: {
-    filename: 'bundle.[hash:8].js'
-  }
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ["style-loader", "css-loader"]
+      }
+    ]
+  },
 });

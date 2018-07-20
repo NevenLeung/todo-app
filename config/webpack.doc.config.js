@@ -9,6 +9,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const baseConfig = require('./webpack.base.config');
 
 module.exports = merge(baseConfig, {
+  mode: 'production',
   output: {
     path: path.resolve(__dirname, '../docs')
   },

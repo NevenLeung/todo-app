@@ -6,9 +6,10 @@ const merge = require('webpack-merge');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
-const baseConfig = require('./webpack.base.config');
+const baseConfig = require('./webpack.base.config.js');
 
 module.exports = merge(baseConfig, {
+  mode: 'production',
   output: {
     path: path.resolve(__dirname, '../dist')
   },
