@@ -16,24 +16,14 @@ module.exports = {
         use: {
           loader: "babel-loader",
         }
-      },
-      // {
-      //   test: /\.css$/,
-      //   use: {
-      //     loader: "file-loader",
-      //     options: {
-      //       name: '[name].[ext]',
-      //       outputPath: 'styles/'
-      //     }
-      //   }
-      // }
+      }
     ]
   },
   plugins: [
     new HtmlWebpackPlugin({
       template: './src/index.html',
       minify: {
-        removeComments: true
+        // removeComments: true
       }
     })
   ]

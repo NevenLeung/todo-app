@@ -63,7 +63,13 @@
 
 ## scripts
 
-build
+run dev server
+
+```
+npm run dev
+```
+
+build project files
 
 ```
 npm run build

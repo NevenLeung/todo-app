@@ -3,6 +3,8 @@
 const merge = require('webpack-merge');
 const baseConfig = require('./webpack.base.config.js');
 
+const webpack = require('webpack');
+
 module.exports = merge(baseConfig, {
   mode: 'development',
   module: {
@@ -13,4 +15,13 @@ module.exports = merge(baseConfig, {
       }
     ]
   },
+  plugins: [
+    new webpack.NamedChunksPlugin(),
+    new webpack.HotModuleReplacementPlugin()
+  ],
+  devtool: 'inline-source-map',
+  devServer: {
+    contentBase: './dist',
+    hot: true
+  }
 });

@@ -4,7 +4,6 @@ const path = require('path');
 const merge = require('webpack-merge');
 
 const CleanWebpackPlugin = require('clean-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractTextPlugin = require("mini-css-extract-plugin");
 
 const baseConfig = require('./webpack.base.config.js');
@@ -31,14 +30,8 @@ module.exports = merge(baseConfig, {
       root: path.join(__dirname, '../'),
       // allowExternal: true
     }),
-    // new CopyWebpackPlugin([
-    //   {
-    //     from: './src/styles/',
-    //     to: 'styles/'
-    //   }
-    // ]),
     new MiniCssExtractTextPlugin({
-      filename: 'styles.[hash:8].css'
+      filename: 'styles/styles.[hash:8].css'
     })
   ]
 });

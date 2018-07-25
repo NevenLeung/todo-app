@@ -4,7 +4,7 @@
   "description": "A todo app built in Vanilla JS",
   "main": "js/app.js",
   "scripts": {
-    "dev": "webpack --config ./config/webpack.dev.config.js",
+    "dev": "webpack-dev-server --open --config ./config/webpack.dev.config.js",
     "build": "webpack --config ./config/webpack.prod.config.js",
     "doc": "webpack --config ./config/webpack.doc.config.js"
   },
@@ -31,13 +31,13 @@
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.7.0",
     "clean-webpack-plugin": "^0.1.19",
-    "copy-webpack-plugin": "^4.5.2",
     "css-loader": "^1.0.0",
     "html-webpack-plugin": "^3.2.0",
     "mini-css-extract-plugin": "^0.4.1",
     "style-loader": "^0.21.0",
     "webpack": "^4.15.1",
     "webpack-cli": "^3.0.8",
+    "webpack-dev-server": "^3.1.5",
     "webpack-merge": "^4.1.3"
   }
 }
