@@ -1,5 +1,8 @@
 'use strict';
 
+import '../styles/normalize.css';
+import '../styles/main.css';
+
 // get the DOM elements
 
 const $inputForm = document.querySelector('.input-form');

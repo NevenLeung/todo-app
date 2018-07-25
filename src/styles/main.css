@@ -415,7 +415,7 @@ label:hover .display-checkbox::after {
   margin: .25rem 0;
   padding: 0 .25rem;
   justify-content: center;
-  height: 2.0625rem;  // 33px, eaqual to todo-display
+  height: 2.0625rem;
 }
 
 .todo-edit .input-bar {
