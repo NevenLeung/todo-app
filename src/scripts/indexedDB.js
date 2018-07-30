@@ -1,4 +1,71 @@
-const indexedDBModule = function (dbName, version, objectStorage, afterDataBaseConnected) {
+/**
+ * @module indexedDBModule  使用indexedDB管理数据
+ *
+ * @param {String} dbName  数据库名称
+ * @param {Number} version  数据库版本
+ * @param {String} objectStorage  对象存储空间（相当于table name）
+ * @param {Function} afterDataBaseConnected  需要在数据库初始化完成后执行的函数，一般为应用的初始化函数
+ *
+ * @return {Object} {getAll, get, create, update, delete, removeAll}
+ *
+ ---------------------------------------------------------------------------------------
+ * @method getAll()  获取todo object storage中的全部记录
+ *
+ * @return  返回一个Promise
+ *
+ * @resolve {Array}  一个包含数据记录的数组对象
+ * @reject {Object}  获取过程中的异常信息
+ *
+ ---------------------------------------------------------------------------------------
+ * @method get(query)  查找_id为query的数据记录
+ *
+ * @param {Number} query  数据记录的_id值，正整数
+ *
+ * @return  返回一个Promise
+ *
+ * @resolve {Object|Undefined}  查找到的数据对象，或者未查找到相应的数据记录时为undefined
+ * @reject {Object}  查找过程中的异常信息
+ * ---------------------------------------------------------------------------------------
+ * @method create(data)  创建新的数据记录（无需传入_id值，数据库会采用自增的主值）
+ *
+ * @param {Object} data 数据记录对象，包含除_id以外的其他对象属性
+ *                      如果传入的_id值与数据当前object storage中的数据记录相同，会抛出错误
+ *
+ * @return  返回一个Promise
+ *
+ * @resolve {Object}  仅包含新增的数据记录的_id属性的对象
+ * @reject {Object}  新增数据记录过程中的异常信息
+ * ---------------------------------------------------------------------------------------
+ * @method update(query， data)  更新_id为query的数据记录
+ *                               根据data更新数据库已有的记录，覆盖已有的属性，新增原本没有的属性
+ *                               如果传入的_id不存在于数据库的数据记录中，不会创建新的数据记录
+ *
+ * @param {Number} query  数据记录的_id值，正整数
+ * @param {Object} data  需要更新的数据对象，仅包含需要更新的部分
+ *
+ * @return  返回一个Promise
+ *
+ * @resolve {Object}  仅包含更新的数据记录的_id属性的对象
+ * @reject {Object}  更新数据记录过程中的异常信息
+ * ---------------------------------------------------------------------------------------
+ * @method delete(query)  删除_id为query的数据记录
+ *
+ * @param {Number} query  数据记录的_id值，正整数
+ *
+ * @return  返回一个Promise
+ *
+ * @resolve {String}  成功删除_id为query的数据记录的消息
+ * @reject {Object}  删除数据记录过程中的异常信息
+ * ---------------------------------------------------------------------------------------
+ * @method removeAll()  删除todo object storage中的全部记录
+ *
+ * @return  返回一个Promise
+ *
+ * @resolve {String}  成功删除所有数据记录的消息
+ * @reject {Object}  删除数据记录过程中的异常信息
+ */
+
+const indexedDBModule = function (dbName, version, objectStorage, afterDataBaseConnected=()=>{}) {
   const dbOpenRequest = window.indexedDB.open(dbName, version);
 
   // 模块中的局部变量，用于存储连接成功的数据库连接
@@ -85,6 +152,9 @@ const indexedDBModule = function (dbName, version, objectStorage, afterDataBaseC
           case 'removeAll':
             console.log('All items have been removed.');
             resolve('All items have been removed.');
+            break;
+          default:
+            console.log('Database operation is not valid.');
         }
       };
     });
