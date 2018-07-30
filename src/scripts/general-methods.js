@@ -39,4 +39,7 @@ function stringToBoolean(str) {
   }
 }
 
-export {createNewElementNode, stringToBoolean};
+export {
+  createNewElementNode,
+  stringToBoolean
+};
