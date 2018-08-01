@@ -4,7 +4,7 @@
   "description": "A todo app built in Vanilla JS",
   "main": "js/app.js",
   "scripts": {
-    "dev": "webpack-dev-server --open --config ./config/webpack.dev.config.js",
+    "dev": "webpack-dev-server --config ./config/webpack.dev.config.js",
     "build": "webpack --config ./config/webpack.prod.config.js",
     "doc": "webpack --config ./config/webpack.doc.config.js"
   },

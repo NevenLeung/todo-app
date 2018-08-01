@@ -12,7 +12,7 @@ module.exports = merge(baseConfig, {
   mode: 'production',
   output: {
     path: path.resolve(__dirname, '../docs'),
-    filename: "scripts/bundle.[hash:8].js"
+    filename: "scripts/[name].bundle.[hash:8].js"
   },
   module: {
     rules: [
@@ -33,5 +33,10 @@ module.exports = merge(baseConfig, {
     new MiniCssExtractTextPlugin({
       filename: 'styles/styles.[hash:8].css'
     })
-  ]
+  ],
+  optimization: {
+    splitChunks: {
+      chunks: 'all'
+    }
+  }
 });

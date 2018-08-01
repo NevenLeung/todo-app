@@ -22,6 +22,13 @@ module.exports = merge(baseConfig, {
   devtool: 'inline-source-map',
   devServer: {
     contentBase: './dist',
-    hot: true
+    hotOnly: true,
+    stats: 'errors-only',
+    open: true
+  },
+  optimization: {
+    splitChunks: {
+      chunks: 'all'
+    }
   }
 });
