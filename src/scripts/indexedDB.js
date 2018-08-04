@@ -6,8 +6,14 @@
  * @param {String} objectStorage  对象存储空间（相当于table name）
  * @param {Function} afterDataBaseConnected  需要在数据库初始化完成后执行的函数，一般为应用的初始化函数
  *
- * @return {Object} {getAll, get, create, update, delete, removeAll}
+ * @return {Object} {init, getAll, get, create, update, delete, removeAll}
  *
+ ---------------------------------------------------------------------------------------
+ * @method init()  用于应用初始化，只有这个方法会执行传入的afterDataBaseConnected回调函数
+ *
+ * @return  返回一个Promise
+ *
+ * @resolve {String}  'App init.'这个字符串
  ---------------------------------------------------------------------------------------
  * @method getAll()  获取todo object storage中的全部记录
  *
@@ -66,101 +72,114 @@
  */
 
 const indexedDBModule = function (dbName, version, objectStorage, afterDataBaseConnected=()=>{}) {
-  const dbOpenRequest = window.indexedDB.open(dbName, version);
-
-  // 模块中的局部变量，用于存储连接成功的数据库连接
-  let db;
-
-  dbOpenRequest.onerror = function (event) {
-    console.log('Something bad happened while trying to open: ' + event.target.errorCode);
-    reject(event.target);
-  };
-
-  dbOpenRequest.onupgradeneeded = function () {
-    const db = dbOpenRequest.result;
-    // 创建存储空间，使用自增的主值
-    const store = db.createObjectStore(objectStorage, {
-      keyPath: '_id',
-      autoIncrement: true
-    });
-  };
-
-  dbOpenRequest.onsuccess = function () {
-    db = dbOpenRequest.result;
-    afterDataBaseConnected();
-  };
-
   function useIndexedDB(action, dataParam) {
     return new Promise(function (resolve, reject) {
-      // 创建事务
-      const transaction = db.transaction(objectStorage, 'readwrite');
-      // 在事务上得到相应的存储空间，用于数据的读取与修改
-      const objectStore = transaction.objectStore(objectStorage);
+      const dbOpenRequest = window.indexedDB.open(dbName, version);
 
-      transaction.onabort = function (event) {
-        console.log('tx has been aborted.');
-        console.log(event.target);
-      };
-
-      let txOperationRequest;
-
-      switch (action) {
-        case 'getAll':
-          txOperationRequest = objectStore.getAll();
-          break;
-        case 'get':
-          txOperationRequest = objectStore.get(dataParam);
-          break;
-        case 'post':
-          txOperationRequest = objectStore.add(dataParam);
-          break;
-        case 'put':
-          txOperationRequest = objectStore.put(dataParam);
-          break;
-        case 'delete':
-          txOperationRequest = objectStore.delete(dataParam);
-          break;
-        case 'removeAll':
-          txOperationRequest = objectStore.clear();
-      }
-
-      txOperationRequest.onerror = function (event) {
-        console.log(event.target);
+      dbOpenRequest.onerror = function (event) {
+        console.log('Something bad happened while trying to open: ' + event.target.errorCode);
         reject(event.target);
       };
 
-      txOperationRequest.onsuccess = function (event) {
-        switch (action) {
-          case 'getAll':
-            resolve(txOperationRequest.result);
-            break;
-          case 'get':
-            resolve(txOperationRequest.result);
-            break;
-          case 'post':
-            console.log(`Item with _id ${txOperationRequest.result} has been added.`);
-            resolve({_id: txOperationRequest.result});
-            break;
-          case 'put':
-            console.log(`Item with _id ${txOperationRequest.result} has been updated.`);
-            resolve({_id: txOperationRequest.result});
-            break;
-          case 'delete':
-            console.log('Item has been removed.');
-            resolve('Item has been removed.');
-            break;
-          case 'removeAll':
-            console.log('All items have been removed.');
-            resolve('All items have been removed.');
-            break;
-          default:
-            console.log('Database operation is not valid.');
+      dbOpenRequest.onupgradeneeded = function () {
+        const db = dbOpenRequest.result;
+        // 创建存储空间，使用自增的主值
+        const store = db.createObjectStore(objectStorage, {
+          keyPath: '_id',
+          autoIncrement: true
+        });
+      };
+
+      dbOpenRequest.onsuccess = function () {
+        const db = dbOpenRequest.result;
+
+        // 初始化应用
+        if (action === 'init') {
+          afterDataBaseConnected();
+          resolve('App init.');
+          db.close();
+        } else {
+          // 进行数据库操作
+
+          // 创建事务
+          const transaction = db.transaction(objectStorage, 'readwrite');
+          // 在事务上得到相应的存储空间，用于数据的读取与修改
+          const objectStore = transaction.objectStore(objectStorage);
+
+          transaction.onabort = function (event) {
+            console.log('tx has been aborted.');
+            console.log(event.target);
+          };
+
+          let txOperationRequest;
+
+          switch (action) {
+            case 'getAll':
+              txOperationRequest = objectStore.getAll();
+              break;
+            case 'get':
+              txOperationRequest = objectStore.get(dataParam);
+              break;
+            case 'post':
+              txOperationRequest = objectStore.add(dataParam);
+              break;
+            case 'put':
+              txOperationRequest = objectStore.put(dataParam);
+              break;
+            case 'delete':
+              txOperationRequest = objectStore.delete(dataParam);
+              break;
+            case 'removeAll':
+              txOperationRequest = objectStore.clear();
+          }
+
+          txOperationRequest.onerror = function (event) {
+            console.log(event.target);
+            reject(event.target);
+          };
+
+          txOperationRequest.onsuccess = function (event) {
+            switch (action) {
+              case 'getAll':
+                resolve(txOperationRequest.result);
+                break;
+              case 'get':
+                resolve(txOperationRequest.result);
+                break;
+              case 'post':
+                console.log(`Item with _id ${txOperationRequest.result} has been added.`);
+                resolve({_id: txOperationRequest.result});
+                break;
+              case 'put':
+                console.log(`Item with _id ${txOperationRequest.result} has been updated.`);
+                resolve({_id: txOperationRequest.result});
+                break;
+              case 'delete':
+                console.log('Item has been removed.');
+                resolve('Item has been removed.');
+                break;
+              case 'removeAll':
+                console.log('All items have been removed.');
+                resolve('All items have been removed.');
+                break;
+              default:
+                console.log('Database operation is not valid.');
+            }
+          };
+
+          // 每个事务完成后，都会关闭当前的数据库连接
+          transaction.oncomplete = function () {
+            db.close();
+          };
         }
       };
     });
   }
 
   return {
+    init: function () {
+      return useIndexedDB('init', '');
+    },
     getAll: function () {
       return useIndexedDB('getAll', '');
     },

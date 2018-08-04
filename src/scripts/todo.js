@@ -12,8 +12,9 @@ const domOperationModule = domWrapper();
 const todoEditInPlaceModule = todoEditInPlaceWrapper(domOperationModule);
 const displayCtrlModule = displayCtrlWrapper(domOperationModule);
 
-const todoStore = indexedDBModule('TodoApp', 1, 'todo');
-
+const todoStore = function () {
+  return indexedDBModule('TodoApp', 1, 'todo');
+};
 
 /**
  * addTodo()
@@ -30,7 +31,7 @@ async function addTodo(text) {
   };
 
   try {
-    const result = await todoStore.create(data);
+    const result = await todoStore().create(data);
     if (result) {
       // 因为result只包含一个_id值，所以order直接使用提交时的order值
       const $li = createNewElementNode('li', 'todo stretch-fade', '', 'draggable', 'true', 'data-is-done', 'false', 'data-id', result._id, 'data-order', data.order);
@@ -189,12 +190,12 @@ async function addMockData() {
 
   // 添加模拟的数据
   const createPromises = mockData.map(item => {
-    return todoStore.create(item);
+    return todoStore().create(item);
   });
   await Promise.all(createPromises);
 
   // 在数据添加的完成后，再进行getAll操作
-  const queryResult = await todoStore.getAll();
+  const queryResult = await todoStore().getAll();
   if (Array.isArray(queryResult) && queryResult.length !== 0) {
     todoListRender(queryResult);
   }
@@ -207,7 +208,7 @@ async function addMockData() {
  */
 async function todoListRenderInit() {
   try {
-    const queryResult = await todoStore.getAll();
+    const queryResult = await todoStore().getAll();
     if (Array.isArray(queryResult) && queryResult.length !== 0) {
       todoListRender(queryResult);
     } else {
@@ -239,7 +240,7 @@ async function toggleTodoStatus($el) {
 
 
   try {
-    const result = await todoStore.update(id, data);
+    const result = await todoStore().update(id, data);
     if (result) {
       if ($todo.dataset.isDone === 'false') {
         $todoContent.classList.add('todo-is-done');
@@ -283,7 +284,7 @@ async function deleteTodo($el) {
   const order = parseInt($todo.dataset.order);
 
   try {
-    await todoStore.delete(id);
+    await todoStore().delete(id);
 
     // $todoContent.classList.remove('show-content');
 
@@ -331,7 +332,7 @@ async function updatePositionChanged(positionBefore, positionAfter, deleteElPosi
       node.dataset.order = orderValue;
 
       try {
-        await todoStore.update(id, {order: orderValue});
+        await todoStore().update(id, {order: orderValue});
       } catch (err) {
         console.error(err);
       }
@@ -349,7 +350,7 @@ async function updatePositionChanged(positionBefore, positionAfter, deleteElPosi
       node.dataset.order = orderValue;
 
       try {
-        await todoStore.update(id, {order: orderValue});
+        await todoStore().update(id, {order: orderValue});
       } catch (err) {
         console.error(err);
       }
@@ -366,7 +367,7 @@ async function updatePositionChanged(positionBefore, positionAfter, deleteElPosi
       node.dataset.order = orderValue;
 
       try {
-        await todoStore.update(id, {order: orderValue});
+        await todoStore().update(id, {order: orderValue});
       } catch (err) {
         console.error(err);
       }

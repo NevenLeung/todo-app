@@ -1,7 +1,9 @@
 import { createNewElementNode } from './general-methods.js';
 import indexedDBModule from './indexedDB.js';
 
-const todoStore = indexedDBModule('TodoApp', 1, 'todo');
+const todoStore = function () {
+  return indexedDBModule('TodoApp', 1, 'todo');
+};
 
 /**
  * @module todoEditInPlaceModule 就地编辑(edit in place)的相关功能
@@ -132,7 +134,7 @@ const todoEditInPlaceModule = function (domWrapper) {
         };
 
         try {
-          const result = await todoStore.update(id, data);
+          const result = await todoStore().update(id, data);
           if (result) {
             $todoContent.textContent = $todoEditBar.value;
 
@@ -194,7 +196,7 @@ const todoEditInPlaceModule = function (domWrapper) {
       };
 
       try {
-        const result = await todoStore.update(id, data);
+        const result = await todoStore().update(id, data);
         if (result) {
           // 保存修改
           $todoContent.textContent = todoContentAfterEdited;

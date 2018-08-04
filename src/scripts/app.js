@@ -1,6 +1,6 @@
 'use strict';
 
-import polyfills from './polyfills.js';
+import './polyfills.js';
 import indexedDBModule from './indexedDB.js';
 
 import { todoListRenderInit, displayCtrlInit, sortableInit } from "./todo";
@@ -10,11 +10,8 @@ import eventListenerInit from './event-listeners';
 import '../styles/normalize.css';
 import '../styles/main.css';
 
-// 使polyfill生效
-polyfills();
-
-// 创建TodoApp的数据库管理实例，并开始启动应用
-const todoStore = indexedDBModule('TodoApp', 1, 'todo', afterDataBaseConnected);
+// 创建TodoApp的数据库管理实例，并启动应用
+indexedDBModule('TodoApp', 1, 'todo', afterDataBaseConnected).init();
 
 /**
  * appInit()  应用的初始化函数，包括各种事件处理函数绑定，控制元素的渲染
