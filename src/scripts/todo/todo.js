@@ -8,14 +8,14 @@
 
 // -------------------- module start -------------------
 
-import { $todoList, $displayCtrl } from "./DOM-elements";
-import { createNewElementNode, stringToBoolean } from "./general-methods";
+import { $todoList, $displayCtrl } from "../DOM/DOM-elements";
+import { createNewElementNode, stringToBoolean } from "../utility/general-functions";
 
-import DOM_OperationModule from './DOM-operations.js';
+import DOM_OperationModule from '../DOM/DOM-operations.js';
 import todoEditInPlaceModule from './todo-edit-in-place.js';
 import displayCtrlModule from './todo-display-ctrl.js';
-import indexedDBModule from "./indexedDB.js";
-import sortable from "./sortable-list.js";
+import indexedDBModule from "../utility/indexedDB.js";
+import sortable from "../features/sortable-list.js";
 
 const todoStore = function () {
   return indexedDBModule('TodoApp', 1, 'todo');

@@ -8,9 +8,9 @@
 
 // --------------- module start ---------------------
 
-import { createNewElementNode } from './general-methods.js';
-import DOM_OperationModule from './DOM-operations.js';
-import indexedDBModule from './indexedDB.js';
+import { createNewElementNode } from '../utility/general-functions.js';
+import DOM_OperationModule from '../DOM/DOM-operations.js';
+import indexedDBModule from '../utility/indexedDB.js';
 
 const todoStore = function () {
   return indexedDBModule('TodoApp', 1, 'todo');

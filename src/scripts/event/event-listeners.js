@@ -8,7 +8,7 @@
 
 // -------------------- module start -------------------
 
-import { $inputForm, $displayCtrl, $todoList } from "./DOM-elements.js";
+import { $inputForm, $displayCtrl, $todoList } from "../DOM/DOM-elements.js";
 import { inputFormOnSubmit, displayTabsOnClick, todoOnClick } from "./event-handlers.js";
 
 function eventListenerInit() {

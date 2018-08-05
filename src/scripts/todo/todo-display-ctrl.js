@@ -8,8 +8,8 @@
 
 // -------------------- module start -------------------
 
-import {$todoList, $displayCtrl} from "./DOM-elements";
-import DOM_OperationModule from './DOM-operations.js';
+import {$todoList, $displayCtrl} from "../DOM/DOM-elements";
+import DOM_OperationModule from '../DOM/DOM-operations.js';
 
 
 let $lastOption;

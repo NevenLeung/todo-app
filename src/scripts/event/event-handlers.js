@@ -8,10 +8,10 @@
 
 // -------------------- module start -------------------
 
-import { $inputForm } from "./DOM-elements.js";
+import { $inputForm } from "../DOM/DOM-elements.js";
 
-import { addTodo, toggleTodoStatus, deleteTodo, todoEditInPlaceModule } from "./todo.js";
-import displayCtrlModule from './todo-display-ctrl.js';
+import { addTodo, toggleTodoStatus, deleteTodo, todoEditInPlaceModule } from "../todo/todo.js";
+import displayCtrlModule from '../todo/todo-display-ctrl.js';
 
 /**
  * inputFormOnSubmit

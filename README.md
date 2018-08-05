@@ -8,32 +8,28 @@
 
 ![add-and-delete-todo](https://github.com/NevenLeung/todo-app/blob/master/demo/add-and-delete-todo.gif)
 
-add and delete todo 
-
+add and delete todo   
 添加和删除todo
 
 ---
 
 ![status-toggle-and-display-control](https://github.com/NevenLeung/todo-app/blob/master/demo/status-toggle-and-display-control.gif)
 
-toggle todo status and display control 
-
+toggle todo status and display control  
 改变todo的完成状态与按照todo的完成状态进行显示
 
 ---
 
 ![todo-edit-in-place](https://github.com/NevenLeung/todo-app/blob/master/demo/edit-in-place.gif)
 
-edit todo in place (click the content to activate it)
-
-就地编辑(点击内容部分启动该功能)
+edit todo in place (click the content to activate it)  
+就地编辑 (点击内容部分启动该功能)
 
 ---
 
 ![reorder-by-drag&drop](https://github.com/NevenLeung/todo-app/blob/master/demo/reorder-by-drag%26drop.gif)
 
-reorder todo by drag&drop
-
+reorder todo by drag&drop  
 拖放todo进行排序
 
 ## 项目说明
