@@ -2,6 +2,15 @@
 
 一个使用原生js写的待办事项应用 :memo:
 
+## Demo
+
+[demo url](https://nevenleung.github.io/todo-app/)
+
+![add-and-delete-todo](https://github.com/NevenLeung/todo-app/blob/master/demo/add-and-delete-todo.gif)
+![status-toggle-and-display-control](https://github.com/NevenLeung/todo-app/blob/master/demo/status-toggle-and-display-control.gif)
+![todo-edit-in-place](https://github.com/NevenLeung/todo-app/blob/master/demo/edit-in-place.gif)
+![reorder-by-drag&drop](https://github.com/NevenLeung/todo-app/blob/master/demo/reorder-by-drag%26drop.gif)
+
 ## 项目说明
 
 ### 项目整体
@@ -14,7 +23,7 @@
 
 - 实现了就地编辑(edit in place)功能。
 - 利用原生拖放的api，实现了todo的拖放排序(sortable list)。
-- 对IndexedDB的api进行了封装，每个操作方法都返回一个Promise。在本项目中使用IndexedDB实现数据的持久化管理。
+- 在本项目中使用IndexedDB实现数据的持久化管理，并对IndexedDB的api进行了封装，每个操作方法都返回一个Promise。
 
 ### UI交互
 
