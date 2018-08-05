@@ -1,10 +1,12 @@
 /**
- * sortable  function for sortable list
+ * @module sortable  function for sortable list
  *
  * @param rootEl  需要设置为draggable的元素的直接父元素
  * @param handleSelector  鼠标点击符合handleSelector的元素，才会触发拖拽事件
  * @param dndSelector  符合dndSelector的元素，才能进行排序，防止放置到预期外的位置上
  * @param onUpdate  在拖放完成后，会触发该回调函数。在元素原地拾起，并在该元素上释放，不会触发该回调函数
+ *
+ * @export sortable
  */
 
 function sortable(rootEl, handleSelector, dndSelector, onUpdate){

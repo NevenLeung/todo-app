@@ -12,9 +12,7 @@ import { createNewElementNode } from '../utility/general-functions.js';
 import DOM_OperationModule from '../DOM/DOM-operations.js';
 import indexedDBModule from '../utility/indexedDB.js';
 
-const todoStore = function () {
-  return indexedDBModule('TodoApp', 1, 'todo');
-};
+const todoStore = indexedDBModule('TodoApp', 1, 'todo');
 
 let $lastEditedTodo;
 
@@ -125,7 +123,7 @@ async function saveTodoEdit($el) {
       };
 
       try {
-        const result = await todoStore().update(id, data);
+        const result = await todoStore.update(id, data);
         if (result) {
           $todoContent.textContent = $todoEditBar.value;
 
@@ -189,7 +187,7 @@ async function saveUnsavedEdition() {
     };
 
     try {
-      const result = await todoStore().update(id, data);
+      const result = await todoStore.update(id, data);
       if (result) {
         // 保存修改
         $todoContent.textContent = todoContentAfterEdited;
