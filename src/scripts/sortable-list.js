@@ -66,7 +66,7 @@ function sortable(rootEl, handleSelector, dndSelector, onUpdate){
     sortedFlag = false;
     const target = evt.target;
 
-    // dragover的target有可能是item中的其他元素，或者item本身。element.closest()包括元素本身的这种情况。
+    // dragover事件的target有可能是item中的其他元素，或者item本身。element.closest()包括元素本身的这种情况。
     let dropPlace = target.closest(dndSelector);
 
     // 当item已经被移动另一个位置，但鼠标原地并未释放时，dropPlace和dragEl是同一个元素，这时不再重复触发节点插入。
@@ -107,7 +107,7 @@ function sortable(rootEl, handleSelector, dndSelector, onUpdate){
     if (nextEl !== dragEl.nextSibling) {
       positionAfter = [].indexOf.call(rootEl.children, dragEl);
 
-      console.log(`positionBefore: ${positionBefore}, positionAfter: ${positionAfter}`);
+      // console.log(`positionBefore: ${positionBefore}, positionAfter: ${positionAfter}`);
 
       onUpdate(positionBefore, positionAfter, undefined, rootEl, isMouseMoveDown);
     }

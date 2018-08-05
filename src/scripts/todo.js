@@ -1,16 +1,21 @@
-import { $todoList, $displayCtrl } from "./dom-elements";
+/**
+ * @module Todo Module
+ *
+ * 跟todo相关的所有操作的函数与功能模块集合地
+ *
+ * @export {addTodo, toggleTodoStatus, deleteTodo, todoEditInPlaceModule, todoListRenderInit, displayCtrlInit, sortableInit}
+ */
+
+// -------------------- module start -------------------
+
+import { $todoList, $displayCtrl } from "./DOM-elements";
 import { createNewElementNode, stringToBoolean } from "./general-methods";
 
-import domWrapper from './dom-operations';
-import todoEditInPlaceWrapper from './todo-edit-in-place.js';
-import displayCtrlWrapper from './todo-display-ctrl.js';
+import DOM_OperationModule from './DOM-operations.js';
+import todoEditInPlaceModule from './todo-edit-in-place.js';
+import displayCtrlModule from './todo-display-ctrl.js';
 import indexedDBModule from "./indexedDB.js";
 import sortable from "./sortable-list.js";
-
-
-const domOperationModule = domWrapper();
-const todoEditInPlaceModule = todoEditInPlaceWrapper(domOperationModule);
-const displayCtrlModule = displayCtrlWrapper(domOperationModule);
 
 const todoStore = function () {
   return indexedDBModule('TodoApp', 1, 'todo');
@@ -46,19 +51,19 @@ async function addTodo(text) {
       const $deleteButton = createNewElementNode('button', 'button button-delete-todo');
       const textNode = document.createTextNode(' ');
 
-      domOperationModule.appendMultiChild($todoCheckbox, $hiddenCheckbox, $displayCheckbox);
+      DOM_OperationModule.appendMultiChild($todoCheckbox, $hiddenCheckbox, $displayCheckbox);
 
       // 将checkbox和todo-content、delete-button节点分别添加到div节点，作为其子节点
-      domOperationModule.appendMultiChild($todoMain, $todoCheckbox, $todoContent);
+      DOM_OperationModule.appendMultiChild($todoMain, $todoCheckbox, $todoContent);
 
       $deleteButtonWrapper.appendChild($deleteButton);
 
-      domOperationModule.appendMultiChild($todoDisplay, $dragHandle, $todoMain, $deleteButtonWrapper);
+      DOM_OperationModule.appendMultiChild($todoDisplay, $dragHandle, $todoMain, $deleteButtonWrapper);
 
       $li.appendChild($todoDisplay);
 
       // 把li添加到todo-list上
-      domOperationModule.appendMultiChild($todoList, $li, textNode);
+      DOM_OperationModule.appendMultiChild($todoList, $li, textNode);
 
       // 每个setTimeout的延时时间大致与前一个动画的持续时间相同
       setTimeout(() => {
@@ -145,17 +150,17 @@ function todoListRender(data) {
       $hiddenCheckbox.setAttribute('checked', 'checked');
     }
 
-    domOperationModule.appendMultiChild($todoCheckbox, $hiddenCheckbox, $displayCheckbox);
+    DOM_OperationModule.appendMultiChild($todoCheckbox, $hiddenCheckbox, $displayCheckbox);
 
-    domOperationModule.appendMultiChild($todoMain, $todoCheckbox, $todoContent);
+    DOM_OperationModule.appendMultiChild($todoMain, $todoCheckbox, $todoContent);
 
     $deleteButtonWrapper.appendChild($deleteButton);
 
-    domOperationModule.appendMultiChild($todoDisplay, $dragHandle, $todoMain, $deleteButtonWrapper);
+    DOM_OperationModule.appendMultiChild($todoDisplay, $dragHandle, $todoMain, $deleteButtonWrapper);
 
     $li.appendChild($todoDisplay);
 
-    domOperationModule.appendMultiChild($todoList, $li, textNode);
+    DOM_OperationModule.appendMultiChild($todoList, $li, textNode);
 
     // 只在todo的添加、删除使用动画，这样可以让打开app时，更快的显示内容，同时不会由于todo太多，需要加载太多的动画
 
@@ -229,8 +234,8 @@ async function todoListRenderInit() {
  */
 async function toggleTodoStatus($el) {
   // 每一个todo的todo-content是checkbox的下一个同级元素
-  const $todo = domOperationModule.findClosestAncestor($el, '.todo');
-  const $todoContent = domOperationModule.query($todo, '.todo-content');
+  const $todo = DOM_OperationModule.findClosestAncestor($el, '.todo');
+  const $todoContent = DOM_OperationModule.query($todo, '.todo-content');
   const $displayOptionSelected = displayCtrlModule.getDisplayOption();
 
   const id = parseInt($todo.dataset.id);
@@ -249,6 +254,7 @@ async function toggleTodoStatus($el) {
         // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
         if (!$displayOptionSelected.matches('.display-all')) {
           $todo.classList.add('todo-hidden');
+          console.log('1');
         }
 
       } else {
@@ -258,6 +264,7 @@ async function toggleTodoStatus($el) {
         // 如果display option不是All，则在其他两个tab中，对todo的状态进行toggle操作，都是需要在当前的tab中使它消失
         if (!$displayOptionSelected.matches('.display-all')) {
           $todo.classList.add('todo-hidden');
+          console.log('2');
         }
 
       }
@@ -277,9 +284,9 @@ async function toggleTodoStatus($el) {
  * $el为button-delete-todo节点
  */
 async function deleteTodo($el) {
-  const $todo = domOperationModule.findClosestAncestor($el, '.todo');
-  const $todoDisplay = domOperationModule.query($todo, '.todo-display');
-  const $todoContent = domOperationModule.query($todo, '.todo-content');
+  const $todo = DOM_OperationModule.findClosestAncestor($el, '.todo');
+  const $todoDisplay = DOM_OperationModule.query($todo, '.todo-display');
+  const $todoContent = DOM_OperationModule.query($todo, '.todo-content');
   const id = parseInt($todo.dataset.id);
   const order = parseInt($todo.dataset.order);
 
@@ -383,7 +390,7 @@ async function updatePositionChanged(positionBefore, positionAfter, deleteElPosi
  * 初始化应用时，默认选中display all，显示所有的todo
  */
 function displayCtrlInit() {
-  const $buttonDisplayAll = domOperationModule.query($displayCtrl, 'display-all');
+  const $buttonDisplayAll = DOM_OperationModule.query($displayCtrl, 'display-all');
 
   // 应用初始化时，默认选中display all
   displayCtrlModule.selectAnOption($buttonDisplayAll);
@@ -399,15 +406,11 @@ function sortableInit() {
 }
 
 export {
-  sortTodoInAscendingOrder,
-  todoListRender,
-  addMockData,
-  todoListRenderInit,
   addTodo,
   toggleTodoStatus,
   deleteTodo,
   todoEditInPlaceModule,
-  updatePositionChanged,
+  todoListRenderInit,
   displayCtrlInit,
   sortableInit
 };

@@ -1,11 +1,17 @@
-import domWrapper from './dom-operations.js';
-import displayCtrlWrapper from './todo-display-ctrl.js';
+/**
+ * @module Event handler Module
+ *
+ * 存放事件处理函数的模块
+ *
+ * @export { inputFormOnSubmit, displayTabsOnClick, todoOnClick }
+ */
 
-import { $inputForm } from "./dom-elements.js";
+// -------------------- module start -------------------
+
+import { $inputForm } from "./DOM-elements.js";
+
 import { addTodo, toggleTodoStatus, deleteTodo, todoEditInPlaceModule } from "./todo.js";
-
-const domOperationModule = domWrapper();
-const displayCtrlModule = displayCtrlWrapper(domOperationModule);
+import displayCtrlModule from './todo-display-ctrl.js';
 
 /**
  * inputFormOnSubmit
@@ -37,6 +43,7 @@ function inputFormOnSubmit(event) {
  */
 function displayTabsOnClick(event) {
   const $el = event.target;
+
   if ($el.matches('.display-all')) {
     displayCtrlModule.displayTodoAll($el);
   }

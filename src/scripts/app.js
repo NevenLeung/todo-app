@@ -1,3 +1,7 @@
+/**
+ * @file 应用入口文件
+ */
+
 'use strict';
 
 import './polyfills.js';

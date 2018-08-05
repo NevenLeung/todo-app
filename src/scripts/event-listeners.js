@@ -1,4 +1,14 @@
-import { $inputForm, $displayCtrl, $todoList } from "./dom-elements.js";
+/**
+ * @module Event Listener Module
+ *
+ * 事件监听模块
+ *
+ * @export eventListenerInit
+ */
+
+// -------------------- module start -------------------
+
+import { $inputForm, $displayCtrl, $todoList } from "./DOM-elements.js";
 import { inputFormOnSubmit, displayTabsOnClick, todoOnClick } from "./event-handlers.js";
 
 function eventListenerInit() {
