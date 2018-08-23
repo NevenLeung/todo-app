@@ -8,8 +8,8 @@
 
 // -------------------- module start -------------------
 
-import { $todoList, $displayCtrl } from "../DOM/DOM-elements";
-import { createNewElementNode, stringToBoolean } from "../utility/general-functions";
+import { $todoList, $displayCtrl } from "../DOM/DOM-elements.js";
+import {createNewElementNode, delay, stringToBoolean} from "../utility/general-functions.js";
 
 import DOM_OperationModule from '../DOM/DOM-operations.js';
 import todoEditInPlaceModule from './todo-edit-in-place.js';
@@ -64,9 +64,13 @@ async function addTodo(text) {
       DOM_OperationModule.appendMultiChild($todoList, $li, textNode);
 
       // 每个setTimeout的延时时间大致与前一个动画的持续时间相同
-      setTimeout(() => {
-        $todoDisplay.classList.add('show-todo');
-      }, 20);
+      // setTimeout(() => {
+      //   $todoDisplay.classList.add('show-todo');
+      // }, 20);
+
+      await delay(20);
+
+      $todoDisplay.classList.add('show-todo');
 
       // setTimeout(() => {
       //   $todoContent.classList.add('show-content');
@@ -297,13 +301,19 @@ async function deleteTodo($el) {
     // setTimeout(() => {
     $todoDisplay.classList.remove('show-todo');
 
-    setTimeout(() => {
-      $todoList.removeChild($todo);
-
-      updatePositionChanged(undefined, undefined, order, $todoList, undefined);
-    }, 300);
+    // setTimeout(() => {
+    //   $todoList.removeChild($todo);
+    //
+    //   updatePositionChanged(undefined, undefined, order, $todoList, undefined);
+    // }, 300);
 
     // }, 200);
+
+    await delay(300);
+
+    $todoList.removeChild($todo);
+
+    updatePositionChanged(undefined, undefined, order, $todoList, undefined);
 
 
   }
