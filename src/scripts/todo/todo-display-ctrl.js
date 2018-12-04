@@ -36,9 +36,17 @@ function selectAnOption($el) {
   if (typeof $lastOption === 'undefined') {
     $lastOption = DOM_OperationModule.query($displayCtrl, '.display-all');
     $lastOption.classList.add('selected');
+
+    // 已经被选中的选项不能够被再次点击
+    $lastOption.disabled = true;
   } else {
     $lastOption.classList.remove('selected');
+    // 恢复上一次选项为可点击
+    $lastOption.disabled = false;
+
     $el.classList.add('selected');
+    // 已经被选中的选项不能够被再次点击
+    $el.disabled = true;
 
     $lastOption = $el;
   }
