@@ -9,7 +9,7 @@
 // -------------------- module start -------------------
 
 import { $inputForm, $displayCtrl, $todoList } from "../DOM/DOM-elements.js";
-import { inputFormOnSubmit, displayTabsOnClick, todoOnClick } from "./event-handlers.js";
+import { inputFormOnSubmit, displayTabsOnClick, todoOnClick } from "./event-handler.js";
 
 function eventListenerInit() {
   // 使用表单提交todo的内容

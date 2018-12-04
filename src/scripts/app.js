@@ -8,7 +8,7 @@ import './utility/polyfills.js';
 import indexedDBModule from './utility/indexedDB.js';
 
 import { todoListRenderInit, displayCtrlInit, sortableInit } from "./todo/todo";
-import eventListenerInit from './event/event-listeners';
+import eventListenerInit from './event/event-listener';
 
 // 导入其他资源
 import '../styles/normalize.css';
