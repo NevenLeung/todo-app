@@ -421,6 +421,10 @@ button, input {
   transition: transform 100ms ease;
 }
 
+.button[disabled] {
+  color: #000;
+}
+
 /*** stylish input text ***/
 
 .input-bar {
